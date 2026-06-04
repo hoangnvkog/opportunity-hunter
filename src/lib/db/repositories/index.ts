@@ -1,0 +1,21 @@
+/**
+ * Repositories barrel.
+ */
+export { SourcesRepository } from "./sources.repository";
+export {
+  RawPostsRepository,
+  type ListRawPostsOptions,
+} from "./raw-posts.repository";
+export {
+  PainPointsRepository,
+  type ListPainPointsOptions,
+} from "./pain-points.repository";
+export { PainClustersRepository } from "./pain-clusters.repository";
+export {
+  OpportunitiesRepository,
+  type ListOpportunitiesOptions,
+} from "./opportunities.repository";
+export {
+  StartupIdeasRepository,
+  type ListStartupIdeasOptions,
+} from "./startup-ideas.repository";
