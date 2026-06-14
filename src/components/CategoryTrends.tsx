@@ -1,18 +1,10 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { getCategoryCounts } from "@/services/opportunities";
 
-const categories = [
-  "Customer Service",
-  "Productivity",
-  "Marketing",
-  "E-commerce",
-  "Finance",
-  "Healthcare",
-];
+interface CategoryTrendsProps {
+  trends: Array<{ category: string; count: number }>;
+}
 
-export async function CategoryTrends() {
-  const counts = await getCategoryCounts(categories);
-  
+export function CategoryTrends({ trends }: CategoryTrendsProps) {
   return (
     <Card>
       <CardHeader>
@@ -20,7 +12,7 @@ export async function CategoryTrends() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {counts.map(({ category, count }) => {
+          {trends.map(({ category, count }) => {
             const maxCount = 30;
             const width = (count / maxCount) * 100;
 
@@ -28,7 +20,9 @@ export async function CategoryTrends() {
               <div key={category}>
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span>{category}</span>
-                  <span className="text-muted-foreground">{count} opportunities</span>
+                  <span className="text-muted-foreground">
+                    {count} opportunities
+                  </span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-secondary">
                   <div

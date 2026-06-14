@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { findOpportunities } from "@/services/opportunities";
+import type { OpportunityView } from "@/services/opportunities";
 
-export async function RecentOpportunities() {
-  const opportunities = await findOpportunities({ limit: 5 });
+interface RecentOpportunitiesProps {
+  opportunities: OpportunityView[];
+}
 
+export function RecentOpportunities({
+  opportunities,
+}: RecentOpportunitiesProps) {
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -19,8 +23,11 @@ export async function RecentOpportunities() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {opportunities.slice(0, 5).map((opportunity) => (
-            <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`}>
+          {opportunities.map((opportunity) => (
+            <Link
+              key={opportunity.id}
+              href={`/opportunities/${opportunity.id}`}
+            >
               <div className="rounded-lg border bg-secondary p-4 transition-colors hover:bg-secondary/80">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1 flex-1">

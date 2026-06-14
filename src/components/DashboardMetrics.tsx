@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { TrendingUp, AlertCircle, Users, Target } from "lucide-react";
+import type { DashboardMetrics as DashboardMetricsType } from "@/services/dashboard";
 
 interface MetricCardProps {
   title: string;
@@ -29,31 +30,32 @@ function MetricCard({ title, value, change, icon }: MetricCardProps) {
   );
 }
 
-export function DashboardMetrics() {
+interface DashboardMetricsProps {
+  metrics: DashboardMetricsType;
+}
+
+export function DashboardMetrics({ metrics }: DashboardMetricsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <MetricCard
         title="Total Opportunities"
-        value="156"
-        change="+12% from last week"
+        value={metrics.totalOpportunities}
         icon={<Target className="h-4 w-4" />}
       />
       <MetricCard
-        title="Pain Points Identified"
-        value="2,341"
-        change="+23% from last week"
+        title="Average Score"
+        value={metrics.averageScore}
         icon={<AlertCircle className="h-4 w-4" />}
       />
       <MetricCard
-        title="High Priority"
-        value="47"
-        change="+8 from yesterday"
+        title="Validated"
+        value={metrics.validatedCount}
+        change="Score ≥ 70"
         icon={<TrendingUp className="h-4 w-4" />}
       />
       <MetricCard
-        title="Categories Tracked"
-        value="12"
-        change="No change"
+        title="Top Category"
+        value={metrics.topCategory}
         icon={<Users className="h-4 w-4" />}
       />
     </div>
