@@ -46,8 +46,8 @@ export interface OpportunityInput {
 export interface StartupIdeaInput {
   id: string;
   opportunity_id: string;
-  name: string;
-  description: string;
-  target_market: string;
-  monetization: string;
+  problem: string;
+  solution: string;
+  mvp: string;
+  pricing: string;
 }

@@ -29,10 +29,10 @@ function toOpportunityInput(row: OpportunityRow): OpportunityInput {
 function toStartupIdeaInsert(input: StartupIdeaInput): StartupIdeaInsert {
   return {
     opportunity_id: input.opportunity_id,
-    problem: input.description, // Map description → problem
-    solution: input.name, // Map name → solution
-    mvp: input.target_market, // Map target_market → mvp
-    pricing: input.monetization, // Map monetization → pricing
+    problem: input.problem,
+    solution: input.solution,
+    mvp: input.mvp,
+    pricing: input.pricing,
   };
 }
 

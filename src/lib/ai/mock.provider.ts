@@ -108,10 +108,10 @@ export class MockProvider implements AIProvider {
       .map((opportunity, index) => ({
         id: `idea-${opportunity.id}`,
         opportunity_id: opportunity.id,
-        name: `AI-Powered Solution ${index + 1}`,
-        description: `Automated platform that solves the pain points identified in this opportunity cluster using machine learning and intelligent workflows.`,
-        target_market: `Small to medium businesses struggling with manual processes and inefficiency`,
-        monetization: `SaaS subscription model with tiered pricing based on usage volume`,
+        problem: `Businesses struggle with manual processes and inefficiency in this area`,
+        solution: `AI-Powered Solution ${index + 1} - Automated platform using machine learning`,
+        mvp: `Small to medium businesses with 10-100 employees`,
+        pricing: `$99-$499/month SaaS subscription based on usage volume`,
       }));
   }
 }
