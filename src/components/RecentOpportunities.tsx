@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { OpportunityCard } from "@/components/OpportunityCard";
 import type { OpportunityView } from "@/services/opportunities";
 
 interface RecentOpportunitiesProps {
@@ -24,31 +24,10 @@ export function RecentOpportunities({
       <CardContent>
         <div className="space-y-4">
           {opportunities.map((opportunity) => (
-            <Link
+            <OpportunityCard
               key={opportunity.id}
-              href={`/opportunities/${opportunity.id}`}
-            >
-              <div className="rounded-lg border bg-secondary p-4 transition-colors hover:bg-secondary/80">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1 flex-1">
-                    <h3 className="font-medium">{opportunity.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {opportunity.description}
-                    </p>
-                    <div className="flex items-center gap-2 pt-2">
-                      <Badge variant="secondary">{opportunity.category}</Badge>
-                      <Badge>{opportunity.source}</Badge>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-primary">
-                      {opportunity.score}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Score</div>
-                  </div>
-                </div>
-              </div>
-            </Link>
+              opportunity={opportunity}
+            />
           ))}
         </div>
       </CardContent>

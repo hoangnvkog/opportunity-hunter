@@ -48,6 +48,13 @@ export interface ListOpportunitiesOptions {
   offset?: number;
 }
 
+export interface FindManyOptions {
+  limit?: number;
+  offset?: number;
+  category?: string;
+  minScore?: number;
+}
+
 export class OpportunitiesRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
@@ -104,6 +111,31 @@ export class OpportunitiesRepository {
       .order("score", { ascending: false })
       .range(0, limit - 1);
 
+    if (error) throw translateError(ENTITY, error);
+    return (data ?? []) as unknown as OpportunityWithCluster[];
+  }
+
+  async findMany(
+    filters: FindManyOptions = {},
+  ): Promise<OpportunityWithCluster[]> {
+    const { limit = 50, offset = 0, category, minScore } = filters;
+
+    let query = this.client
+      .from(ENTITY)
+      .select("*, pain_clusters!inner(id, cluster_name, description)")
+      .order("score", { ascending: false });
+
+    if (category) {
+      query = query.eq("pain_clusters.cluster_name", category);
+    }
+
+    if (minScore !== undefined) {
+      query = query.gte("score", minScore);
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error } = await query;
     if (error) throw translateError(ENTITY, error);
     return (data ?? []) as unknown as OpportunityWithCluster[];
   }

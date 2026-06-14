@@ -55,6 +55,13 @@ export interface OpportunityView {
   createdAt: Date | undefined;
 }
 
+export interface FindOpportunitiesFilters {
+  limit?: number;
+  offset?: number;
+  category?: string;
+  minScore?: number;
+}
+
 function toView(row: OpportunityWithCluster): OpportunityView {
   return {
     id: row.id,
@@ -76,23 +83,26 @@ function toView(row: OpportunityWithCluster): OpportunityView {
  * repository).
  */
 export async function findOpportunities(
-  opts: { limit?: number } = {},
+  filters: FindOpportunitiesFilters = {},
 ): Promise<OpportunityView[]> {
   const repo = await OpportunitiesRepository.create();
-  const rows = await repo.listTopWithCluster(opts.limit ?? 50);
+  const rows = await repo.findMany(filters);
   return rows.map(toView);
 }
 
 /**
  * Look up a single opportunity by id, projected into the view shape.
- * Returns `null` if the row does not exist (page-level `notFound()`).
+ * Throws Error if the row does not exist.
  */
-export async function findOpportunityById(
+export async function getOpportunityById(
   id: string,
-): Promise<OpportunityView | null> {
+): Promise<OpportunityView> {
   const repo = await OpportunitiesRepository.create();
   const row = await repo.findByIdWithCluster(id);
-  return row ? toView(row) : null;
+  if (!row) {
+    throw new Error("Opportunity not found");
+  }
+  return toView(row);
 }
 
 /**
