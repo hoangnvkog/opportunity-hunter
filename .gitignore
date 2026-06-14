@@ -18,6 +18,10 @@ out/
 dist/
 build/
 
+# SSH keys
+opportunity-hunter
+opportunity-hunter.pub
+
 # Doxygen output (auto-generated)
 doc/
 

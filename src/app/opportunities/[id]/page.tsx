@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { findOpportunityById, type OpportunityView } from "@/services/opportunities";
+import { findOpportunityById } from "@/services/opportunities";
 import { TrendingUp, AlertCircle, Users, Target, ArrowLeft } from "lucide-react";
 
 interface OpportunityPageProps {
