@@ -18,6 +18,13 @@ out/
 dist/
 build/
 
+# Doxygen output (auto-generated)
+doc/
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/
+
 # VS Code
 .vscode/
 
