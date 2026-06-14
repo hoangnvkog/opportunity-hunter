@@ -3,10 +3,10 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { getMockOpportunities } from "@/services/mockData";
+import { findOpportunities } from "@/services/opportunities";
 
-export default function OpportunitiesPage() {
-  const opportunities = getMockOpportunities();
+export default async function OpportunitiesPage() {
+  const opportunities = await findOpportunities();
 
   return (
     <div className="flex min-h-screen">
@@ -68,7 +68,7 @@ export default function OpportunitiesPage() {
                           <span>Severity: {opportunity.severity}</span>
                           <span>Buying Intent: {opportunity.buyingIntent}</span>
                           <span className="ml-auto">
-                            Created: {opportunity.createdAt.toLocaleDateString()}
+                            Created: {opportunity.createdAt?.toLocaleDateString() ?? "N/A"}
                           </span>
                         </div>
                       </div>

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { getMockOpportunities } from "@/services/mockData";
+import { findOpportunities } from "@/services/opportunities";
 
-export function RecentOpportunities() {
-  const opportunities = getMockOpportunities();
+export async function RecentOpportunities() {
+  const opportunities = await findOpportunities({ limit: 5 });
 
   return (
     <Card className="col-span-1 lg:col-span-2">

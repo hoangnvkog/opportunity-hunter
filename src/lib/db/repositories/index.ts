@@ -14,6 +14,8 @@ export { PainClustersRepository } from "./pain-clusters.repository";
 export {
   OpportunitiesRepository,
   type ListOpportunitiesOptions,
+  type OpportunityWithCluster,
+  type OpportunityClusterNameOnly,
 } from "./opportunities.repository";
 export {
   StartupIdeasRepository,

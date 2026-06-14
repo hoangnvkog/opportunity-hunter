@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { getMockOpportunities, type Opportunity } from "@/services/mockData";
+import { findOpportunityById, type OpportunityView } from "@/services/opportunities";
 import { TrendingUp, AlertCircle, Users, Target, ArrowLeft } from "lucide-react";
 
 interface OpportunityPageProps {
@@ -13,14 +13,9 @@ interface OpportunityPageProps {
   }>;
 }
 
-async function getOpportunity(id: string): Promise<Opportunity | undefined> {
-  const opportunities = getMockOpportunities();
-  return opportunities.find((op) => op.id === id);
-}
-
 export default async function OpportunityDetailPage({ params }: OpportunityPageProps) {
   const { id } = await params;
-  const opportunity = await getOpportunity(id);
+  const opportunity = await findOpportunityById(id);
 
   if (!opportunity) {
     notFound();
@@ -189,7 +184,7 @@ export default async function OpportunityDetailPage({ params }: OpportunityPageP
                     <div>
                       <span className="text-muted-foreground">First Detected:</span>{" "}
                       <span className="font-medium">
-                        {opportunity.createdAt.toLocaleDateString()}
+                        {opportunity.createdAt?.toLocaleDateString() ?? "N/A"}
                       </span>
                     </div>
                     <div>

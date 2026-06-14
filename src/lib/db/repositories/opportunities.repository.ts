@@ -16,6 +16,31 @@ import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "opportunities";
 
+/**
+ * Joined shape returned from ``opportunities`` with ``pain_clusters``.
+ * The cluster is wrapped as a single object (PostgREST `!inner` join).
+ */
+export interface OpportunityWithCluster {
+  id: Uuid;
+  cluster_id: Uuid;
+  score: number;
+  frequency: number;
+  severity: number;
+  buying_intent: number;
+  pain_clusters: {
+    id: Uuid;
+    cluster_name: string;
+    description: string;
+  };
+}
+
+/** Single-row projection used for category aggregation. */
+export interface OpportunityClusterNameOnly {
+  pain_clusters: {
+    cluster_name: string;
+  };
+}
+
 export interface ListOpportunitiesOptions {
   clusterId?: Uuid;
   minScore?: number;
@@ -68,6 +93,53 @@ export class OpportunitiesRepository {
 
   async listTop(limit = 10): Promise<OpportunityRow[]> {
     return this.list({ limit });
+  }
+
+  async listTopWithCluster(
+    limit = 50,
+  ): Promise<OpportunityWithCluster[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*, pain_clusters!inner(id, cluster_name, description)")
+      .order("score", { ascending: false })
+      .range(0, limit - 1);
+
+    if (error) throw translateError(ENTITY, error);
+    return (data ?? []) as unknown as OpportunityWithCluster[];
+  }
+
+  async findByIdWithCluster(
+    id: Uuid,
+  ): Promise<OpportunityWithCluster | null> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*, pain_clusters!inner(id, cluster_name, description)")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) throw translateError(ENTITY, error);
+    return (data ?? null) as unknown as OpportunityWithCluster | null;
+  }
+
+  async countByClusterName(
+    categories: readonly string[],
+  ): Promise<Map<string, number>> {
+    if (categories.length === 0) return new Map();
+
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("pain_clusters!inner(cluster_name)")
+      .in("pain_clusters.cluster_name", [...categories]);
+
+    if (error) throw translateError(ENTITY, error);
+
+    const counts = new Map<string, number>();
+    for (const category of categories) counts.set(category, 0);
+    for (const row of (data ?? []) as unknown as OpportunityClusterNameOnly[]) {
+      const name = row.pain_clusters.cluster_name;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return counts;
   }
 
   async create(input: OpportunityInsert): Promise<OpportunityRow> {

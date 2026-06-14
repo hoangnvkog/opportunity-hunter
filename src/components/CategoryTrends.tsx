@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { getCategoryCount } from "@/services/mockData";
+import { getCategoryCounts } from "@/services/opportunities";
 
 const categories = [
   "Customer Service",
@@ -10,7 +10,9 @@ const categories = [
   "Healthcare",
 ];
 
-export function CategoryTrends() {
+export async function CategoryTrends() {
+  const counts = await getCategoryCounts(categories);
+  
   return (
     <Card>
       <CardHeader>
@@ -18,8 +20,7 @@ export function CategoryTrends() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {categories.map((category) => {
-            const count = getCategoryCount(category);
+          {counts.map(({ category, count }) => {
             const maxCount = 30;
             const width = (count / maxCount) * 100;
 
