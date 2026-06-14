@@ -16,7 +16,9 @@
     "clusters": "tsx src/scripts/clusters.ts",
     "opportunities": "tsx src/scripts/opportunities.ts",
     "startup-ideas": "tsx src/scripts/startup-ideas.ts",
-    "pipeline": "tsx src/scripts/pipeline.ts"
+    "pipeline": "tsx src/scripts/pipeline.ts",
+    "job:reddit": "tsx src/jobs/reddit.job.ts",
+    "job:pipeline": "tsx src/jobs/pipeline.job.ts"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.15",
