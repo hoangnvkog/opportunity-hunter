@@ -20,6 +20,19 @@ const ServerEnvSchema = z.object({
     .string()
     .url("SUPABASE_DB_URL must be a valid PostgreSQL connection string")
     .optional(),
+  // AI Provider configuration
+  AI_PROVIDER: z
+    .enum(["mock", "openai", "gemini"])
+    .default("mock")
+    .optional(),
+  OPENAI_API_KEY: z
+    .string()
+    .min(1, "OPENAI_API_KEY is required when AI_PROVIDER=openai")
+    .optional(),
+  GEMINI_API_KEY: z
+    .string()
+    .min(1, "GEMINI_API_KEY is required when AI_PROVIDER=gemini")
+    .optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
@@ -32,6 +45,9 @@ export function getServerEnv(): ServerEnv {
   const parsed = ServerEnvSchema.safeParse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     SUPABASE_DB_URL: process.env.SUPABASE_DB_URL,
+    AI_PROVIDER: process.env.AI_PROVIDER || "mock",
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   });
 
   if (!parsed.success) {
