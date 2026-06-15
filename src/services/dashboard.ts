@@ -61,8 +61,8 @@ export interface PaginatedResult<T> {
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const repo = await OpportunitiesRepository.create();
 
-  // Fetch all opportunities with cluster data
-  const allOpportunities = await repo.listTopWithCluster(1000);
+  // Fetch all opportunities with cluster data (use findMany for consistency)
+  const allOpportunities = await repo.findMany({ limit: 1000 });
 
   // Calculate metrics
   const totalOpportunities = allOpportunities.length;
