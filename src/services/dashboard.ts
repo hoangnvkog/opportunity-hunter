@@ -30,6 +30,30 @@ export interface DashboardMetrics {
 }
 
 /**
+ * Extended filters for dashboard queries.
+ */
+export interface DashboardFilters {
+  q?: string;
+  minScore?: number;
+  minSeverity?: number;
+  minBuyingIntent?: number;
+  sort?: 'score_desc' | 'score_asc' | 'buying_intent_desc' | 'newest';
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Paginated result shape.
+ */
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/**
  * Get dashboard metrics from the database.
  *
  * @returns Aggregated metrics for the dashboard header cards.
@@ -87,6 +111,100 @@ export async function getRecentOpportunities(
   limit = 5
 ): Promise<OpportunityView[]> {
   return findOpportunities({ limit });
+}
+
+/**
+ * Get opportunities with search, filter, sort, and pagination.
+ *
+ * @param filters - Search, filter, sort, and pagination parameters.
+ * @returns Paginated opportunities matching the criteria.
+ */
+export async function getOpportunitiesWithFilters(
+  filters: DashboardFilters = {}
+): Promise<PaginatedResult<OpportunityView>> {
+  const {
+    q,
+    minScore,
+    minSeverity,
+    minBuyingIntent,
+    sort = 'score_desc',
+    page = 1,
+    pageSize = 10,
+  } = filters;
+
+  const repo = await OpportunitiesRepository.create();
+  
+  // Fetch all opportunities with cluster data
+  let allOpportunities = await repo.listTopWithCluster(1000);
+
+  // Apply search filter (server-side)
+  if (q && q.trim()) {
+    const searchTerm = q.toLowerCase().trim();
+    allOpportunities = allOpportunities.filter(opp => 
+      opp.pain_clusters.cluster_name.toLowerCase().includes(searchTerm) ||
+      opp.pain_clusters.description.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  // Apply score filter
+  if (minScore !== undefined) {
+    allOpportunities = allOpportunities.filter(opp => opp.score >= minScore);
+  }
+
+  // Apply severity filter
+  if (minSeverity !== undefined) {
+    allOpportunities = allOpportunities.filter(opp => opp.severity >= minSeverity);
+  }
+
+  // Apply buying intent filter
+  if (minBuyingIntent !== undefined) {
+    allOpportunities = allOpportunities.filter(opp => opp.buying_intent >= minBuyingIntent);
+  }
+
+  // Apply sorting
+  switch (sort) {
+    case 'score_asc':
+      allOpportunities.sort((a, b) => a.score - b.score);
+      break;
+    case 'buying_intent_desc':
+      allOpportunities.sort((a, b) => b.buying_intent - a.buying_intent);
+      break;
+    case 'newest':
+      // No created_at column, so just keep original order (score desc)
+      break;
+    case 'score_desc':
+    default:
+      allOpportunities.sort((a, b) => b.score - a.score);
+      break;
+  }
+
+  // Calculate pagination
+  const total = allOpportunities.length;
+  const totalPages = Math.ceil(total / pageSize);
+  const offset = (page - 1) * pageSize;
+  const paginatedData = allOpportunities.slice(offset, offset + pageSize);
+
+  // Convert to OpportunityView
+  const data = paginatedData.map(row => ({
+    id: row.id,
+    title: row.pain_clusters.cluster_name,
+    description: row.pain_clusters.description,
+    frequency: row.frequency,
+    severity: row.severity,
+    buyingIntent: row.buying_intent,
+    score: row.score,
+    category: row.pain_clusters.cluster_name,
+    source: "Cluster",
+    createdAt: undefined,
+  }));
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
 }
 
 /**
