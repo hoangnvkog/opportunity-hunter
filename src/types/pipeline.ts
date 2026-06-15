@@ -36,18 +36,27 @@ export interface PainClusterInput {
 export interface OpportunityInput {
   id: string;
   cluster_id: string;
+
   score: number;
   frequency: number;
   severity: number;
   buying_intent: number;
+
+  cluster_name?: string;
+  cluster_description?: string;
 }
 
 /** Startup idea generated from an opportunity */
 export interface StartupIdeaInput {
   id: string;
   opportunity_id: string;
+
   problem: string;
   solution: string;
   mvp: string;
   pricing: string;
+
+  customer: string;
+  distribution: string;
+  competitors: string;
 }

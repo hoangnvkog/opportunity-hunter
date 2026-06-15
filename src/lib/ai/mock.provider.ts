@@ -104,14 +104,31 @@ export class MockProvider implements AIProvider {
     opportunities: OpportunityInput[],
   ): Promise<StartupIdeaInput[]> {
     return opportunities
-      .filter((opp) => opp.score > 70)
-      .map((opportunity, index) => ({
-        id: `idea-${opportunity.id}`,
-        opportunity_id: opportunity.id,
-        problem: `Businesses struggle with manual processes and inefficiency in this area`,
-        solution: `AI-Powered Solution ${index + 1} - Automated platform using machine learning`,
-        mvp: `Small to medium businesses with 10-100 employees`,
-        pricing: `$99-$499/month SaaS subscription based on usage volume`,
-      }));
+  .filter((opp) => opp.score > 70)
+  .map((opportunity, index) => ({
+    id: `idea-${opportunity.id}`,
+    opportunity_id: opportunity.id,
+
+    problem:
+      "Businesses struggle with manual processes and inefficiency in this area",
+
+    solution:
+      `AI-Powered Solution ${index + 1} - Automated platform using machine learning`,
+
+    mvp:
+      "Simple web dashboard with AI assistant",
+
+    pricing:
+      "$99-$499/month SaaS subscription based on usage volume",
+
+    customer:
+      "Small and medium businesses with 10-100 employees",
+
+    distribution:
+      "SEO + Content Marketing + Reddit + Product Hunt",
+
+    competitors:
+      "Existing SaaS tools and manual workflows",
+  }));
   }
 }
