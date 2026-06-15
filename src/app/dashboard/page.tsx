@@ -1,7 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { DashboardMetrics } from "@/components/DashboardMetrics";
-import { RecentOpportunities } from "@/components/RecentOpportunities";
+import { MetricsGrid } from "@/components/dashboard/metrics-grid";
+import { RecentOpportunitiesSection } from "@/components/dashboard/recent-opportunities-section";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { Pagination } from "@/components/dashboard/Pagination";
 import { RunPipelineButton } from "@/components/dashboard/RunPipelineButton";
@@ -62,13 +62,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </div>
           </div>
 
-          <DashboardMetrics metrics={metrics} />
+          <MetricsGrid metrics={metrics} />
 
           <DashboardFilters currentFilters={filters} />
 
           {filteredOpportunities.data.length > 0 ? (
             <>
-              <RecentOpportunities opportunities={filteredOpportunities.data} />
+              <RecentOpportunitiesSection opportunities={filteredOpportunities.data} />
               <Pagination 
                 currentPage={filteredOpportunities.page}
                 totalPages={filteredOpportunities.totalPages}

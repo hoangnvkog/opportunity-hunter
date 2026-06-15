@@ -7,9 +7,9 @@ interface ErrorProps {
   reset: () => void;
 }
 
-export default function DashboardError({ error, reset }: ErrorProps) {
+export default function OpportunitiesError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error("Dashboard error:", error);
+    console.error("Opportunities error:", error);
   }, [error]);
 
   return (
@@ -17,7 +17,7 @@ export default function DashboardError({ error, reset }: ErrorProps) {
       <div className="text-center space-y-4">
         <h2 className="text-2xl font-semibold">Something went wrong</h2>
         <p className="text-muted-foreground">
-          There was an error loading the dashboard.
+          There was an error loading opportunities.
         </p>
         <button
           onClick={reset}
