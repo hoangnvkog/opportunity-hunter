@@ -7,9 +7,9 @@ import { Pagination } from "@/components/dashboard/Pagination";
 import { RunPipelineButton } from "@/components/dashboard/RunPipelineButton";
 import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import {
-  getDashboardMetrics,
-  getOpportunitiesWithFilters,
-} from "@/services/dashboard";
+  getDashboardDataAction,
+  getOpportunitiesWithFiltersAction,
+} from "@/actions/dashboard.actions";
 
 interface DashboardPageProps {
   searchParams: Promise<{
@@ -35,10 +35,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     page: params.page ? parseInt(params.page, 10) : 1,
   };
 
-  const [metrics, filteredOpportunities] = await Promise.all([
-    getDashboardMetrics(),
-    getOpportunitiesWithFilters(filters),
+  const [dashboardData, filteredOpportunities] = await Promise.all([
+    getDashboardDataAction(),
+    getOpportunitiesWithFiltersAction(filters),
   ]);
+
+  const { metrics } = dashboardData;
 
   return (
     <div className="flex min-h-screen">

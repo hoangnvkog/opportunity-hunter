@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { OpportunityDetail } from "@/components/OpportunityDetail";
-import { getOpportunityById } from "@/services/opportunities";
+import { findOpportunityByIdAction } from "@/actions/opportunities.actions";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -17,7 +17,7 @@ export default async function OpportunityDetailPage({
 
   let opportunity;
   try {
-    opportunity = await getOpportunityById(id);
+    opportunity = await findOpportunityByIdAction(id);
   } catch (error) {
     if (error instanceof Error && error.message === "Opportunity not found") {
       notFound();
