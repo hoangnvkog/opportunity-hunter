@@ -2,6 +2,7 @@ interface OpportunityTableProps {
   opportunities: unknown[];
 }
 
-export function OpportunityTable({ opportunities }: OpportunityTableProps) {
+export default function OpportunityTable(props: OpportunityTableProps) {
   return null;
 }
+export { OpportunityTable };

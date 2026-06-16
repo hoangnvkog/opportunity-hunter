@@ -2,6 +2,7 @@ interface RecentOpportunitiesSectionProps {
   opportunities: unknown[];
 }
 
-export function RecentOpportunitiesSection({ opportunities }: RecentOpportunitiesSectionProps) {
+export default function RecentOpportunitiesSection(props: RecentOpportunitiesSectionProps) {
   return null;
 }
+export { RecentOpportunitiesSection };

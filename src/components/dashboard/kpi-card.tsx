@@ -3,6 +3,7 @@ interface KpiCardProps {
   value: string | number;
 }
 
-export function KpiCard({ title, value }: KpiCardProps) {
+export default function KpiCard(props: KpiCardProps) {
   return null;
 }
+export { KpiCard };

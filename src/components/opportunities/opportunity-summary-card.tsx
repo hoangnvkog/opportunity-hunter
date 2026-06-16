@@ -5,6 +5,7 @@ interface OpportunitySummaryCardProps {
   buyingIntent: number;
 }
 
-export function OpportunitySummaryCard({ score, frequency, severity, buyingIntent }: OpportunitySummaryCardProps) {
+export default function OpportunitySummaryCard(props: OpportunitySummaryCardProps) {
   return null;
 }
+export { OpportunitySummaryCard };

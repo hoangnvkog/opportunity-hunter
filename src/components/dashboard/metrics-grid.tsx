@@ -2,6 +2,7 @@ interface MetricsGridProps {
   metrics: unknown;
 }
 
-export function MetricsGrid({ metrics }: MetricsGridProps) {
+export default function MetricsGrid(props: MetricsGridProps) {
   return null;
 }
+export { MetricsGrid };

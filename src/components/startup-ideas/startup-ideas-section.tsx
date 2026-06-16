@@ -2,6 +2,7 @@ interface StartupIdeasSectionProps {
   ideas: unknown[];
 }
 
-export function StartupIdeasSection({ ideas }: StartupIdeasSectionProps) {
+export default function StartupIdeasSection(props: StartupIdeasSectionProps) {
   return null;
 }
+export { StartupIdeasSection };

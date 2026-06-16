@@ -2,6 +2,7 @@ interface CategoryTrendsSectionProps {
   trends: unknown[];
 }
 
-export function CategoryTrendsSection({ trends }: CategoryTrendsSectionProps) {
+export default function CategoryTrendsSection(props: CategoryTrendsSectionProps) {
   return null;
 }
+export { CategoryTrendsSection };

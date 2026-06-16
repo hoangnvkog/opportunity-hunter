@@ -8,6 +8,7 @@ interface StartupIdeaCardProps {
   competitors: string;
 }
 
-export function StartupIdeaCard({ problem, solution, mvp, pricing, customer, distribution, competitors }: StartupIdeaCardProps) {
+export default function StartupIdeaCard(props: StartupIdeaCardProps) {
   return null;
 }
+export { StartupIdeaCard };
