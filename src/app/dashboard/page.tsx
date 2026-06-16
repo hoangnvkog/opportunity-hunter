@@ -3,18 +3,14 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { DashboardMetrics } from "@/components/DashboardMetrics";
 import { RecentOpportunities } from "@/components/RecentOpportunities";
 import { CategoryTrends } from "@/components/CategoryTrends";
-import {
-  getDashboardMetrics,
-  getRecentOpportunities,
-  getCategoryTrends,
-} from "@/services/dashboard";
+import { getDashboardDataAction } from "@/actions/dashboard.actions";
 
 export default async function DashboardPage() {
-  const [metrics, recentOpportunities, categoryTrends] = await Promise.all([
-    getDashboardMetrics(),
-    getRecentOpportunities(),
-    getCategoryTrends(),
-  ]);
+  const {
+  metrics,
+  recentOpportunities,
+  categoryTrends,
+} = await getDashboardDataAction();
 
   return (
     <div className="flex min-h-screen">

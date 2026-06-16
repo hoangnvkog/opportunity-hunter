@@ -17,7 +17,7 @@ import {
  * 
  * @returns Dashboard metrics, recent opportunities, and category trends
  */
-export async function refreshDashboardAction() {
+export async function getDashboardDataAction() {
   const [metrics, recentOpportunities, categoryTrends] = await Promise.all([
     getDashboardMetrics(),
     getRecentOpportunities(),

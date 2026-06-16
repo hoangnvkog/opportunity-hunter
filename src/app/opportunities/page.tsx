@@ -1,11 +1,11 @@
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { findOpportunities } from "@/services/opportunities";
+import { findOpportunitiesAction } from "@/actions/opportunities.actions";
 import { OpportunityCard } from "@/components/OpportunityCard";
 
 export default async function OpportunitiesPage() {
-  const opportunities = await findOpportunities();
+  const opportunities = await findOpportunitiesAction();
 
   return (
     <div className="flex min-h-screen">
