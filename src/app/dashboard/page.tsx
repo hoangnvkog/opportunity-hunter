@@ -1,5 +1,4 @@
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
 import { RecentOpportunitiesSection } from "@/components/dashboard/recent-opportunities-section";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -25,7 +24,6 @@ interface DashboardPageProps {
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const params = await searchParams;
   
-  // Parse search params
   const filters = {
     q: params.q,
     minScore: params.minScore ? parseFloat(params.minScore) : undefined,
@@ -43,46 +41,40 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { metrics } = dashboardData;
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-6 space-y-6 overflow-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
-                Welcome back! Here&apos;s what&apos;s happening with your
-                opportunities.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <RunPipelineButton />
-              <ExportCsvButton data={filteredOpportunities.data} />
-            </div>
-          </div>
-
-          <MetricsGrid metrics={metrics} />
-
-          <DashboardFilters currentFilters={filters} />
-
-          {filteredOpportunities.data.length > 0 ? (
-            <>
-              <RecentOpportunitiesSection opportunities={filteredOpportunities.data} />
-              <Pagination 
-                currentPage={filteredOpportunities.page}
-                totalPages={filteredOpportunities.totalPages}
-              />
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                {filters.q ? "No matching opportunities" : "No opportunities found"}
-              </p>
-            </div>
-          )}
-        </main>
+    <AppLayout>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Welcome back! Here&apos;s what&apos;s happening with your
+            opportunities.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <RunPipelineButton />
+          <ExportCsvButton data={filteredOpportunities.data} />
+        </div>
       </div>
-    </div>
+
+      <MetricsGrid metrics={metrics} />
+
+      <DashboardFilters currentFilters={filters} />
+
+      {filteredOpportunities.data.length > 0 ? (
+        <>
+          <RecentOpportunitiesSection opportunities={filteredOpportunities.data} />
+          <Pagination 
+            currentPage={filteredOpportunities.page}
+            totalPages={filteredOpportunities.totalPages}
+          />
+        </>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            {filters.q ? "No matching opportunities" : "No opportunities found"}
+          </p>
+        </div>
+      )}
+    </AppLayout>
   );
 }

@@ -3,6 +3,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 export default function OpportunityDetailLoading() {
   return (
     <div className="space-y-6">
+      {/* Title Skeleton */}
+      <div className="space-y-2">
+        <div className="h-8 w-2/3 bg-muted animate-pulse rounded" />
+        <div className="h-4 w-full bg-muted animate-pulse rounded" />
+      </div>
+
       {/* Summary Card Skeleton */}
       <Card>
         <CardHeader>

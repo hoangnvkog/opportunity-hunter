@@ -12,21 +12,11 @@ export default function OpportunitiesLoading() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4">
-                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                  </th>
-                  <th className="text-left py-3 px-4">
-                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                  </th>
-                  <th className="text-left py-3 px-4">
-                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                  </th>
-                  <th className="text-left py-3 px-4">
-                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                  </th>
-                  <th className="text-left py-3 px-4">
-                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                  </th>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <th key={i} className="text-left py-3 px-4">
+                      <div className="h-4 w-16 bg-muted animate-pulse rounded" />
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
