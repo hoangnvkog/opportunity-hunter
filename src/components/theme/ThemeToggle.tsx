@@ -15,7 +15,21 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return null;
+    return (
+      <div className="flex gap-1">
+        <Button variant="ghost" size="icon" aria-label="Light mode">
+          <Sun className="h-4 w-4" />
+        </Button>
+
+        <Button variant="ghost" size="icon" aria-label="Dark mode">
+          <Moon className="h-4 w-4" />
+        </Button>
+
+        <Button variant="ghost" size="icon" aria-label="System theme">
+          <Monitor className="h-4 w-4" />
+        </Button>
+      </div>
+    );
   }
 
   return (
