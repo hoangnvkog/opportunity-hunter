@@ -65,13 +65,13 @@ export interface FindOpportunitiesFilters {
 function toView(row: OpportunityWithCluster): OpportunityView {
   return {
     id: row.id,
-    title: row.pain_clusters.cluster_name,
+    title: row.pain_clusters.name,
     description: row.pain_clusters.description,
     frequency: row.frequency,
     severity: row.severity,
     buyingIntent: row.buying_intent,
     score: row.score,
-    category: row.pain_clusters.cluster_name,
+    category: row.pain_clusters.name,
     source: "Cluster",
     createdAt: undefined,
   };

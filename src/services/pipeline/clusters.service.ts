@@ -28,7 +28,7 @@ function toPainPointInput(row: PainPointRow): PainPointInput {
  */
 function toPainClusterInsert(input: PainClusterInput): PainClusterInsert {
   return {
-    cluster_name: input.cluster_name,
+    name: input.cluster_name,
     description: input.description,
   };
 }
@@ -90,7 +90,7 @@ export async function clusterPainPointsFromDatabase(
   // Load existing clusters to detect duplicates
   const existingClusters = await clustersRepo.listAll();
   const existingNames = new Set(
-    existingClusters.map(c => c.cluster_name.toLowerCase())
+    existingClusters.map(c => c.name.toLowerCase())
   );
   
   // Filter out duplicates and convert to insert format
@@ -108,7 +108,7 @@ export async function clusterPainPointsFromDatabase(
       inserted++;
     } catch (error) {
       // Skip duplicates that were inserted between check and insert
-      console.error(`Failed to insert cluster ${cluster.cluster_name}:`, error);
+      console.error(`Failed to insert cluster ${cluster.name}:`, error);
     }
   }
   

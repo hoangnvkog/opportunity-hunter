@@ -141,7 +141,7 @@ export async function getOpportunitiesWithFilters(
   if (q && q.trim()) {
     const searchTerm = q.toLowerCase().trim();
     allOpportunities = allOpportunities.filter(opp => 
-      opp.pain_clusters.cluster_name.toLowerCase().includes(searchTerm) ||
+      opp.pain_clusters.name.toLowerCase().includes(searchTerm) ||
       opp.pain_clusters.description.toLowerCase().includes(searchTerm)
     );
   }
@@ -187,13 +187,13 @@ export async function getOpportunitiesWithFilters(
   // Convert to OpportunityView
   const data = paginatedData.map(row => ({
     id: row.id,
-    title: row.pain_clusters.cluster_name,
+    title: row.pain_clusters.name,
     description: row.pain_clusters.description,
     frequency: row.frequency,
     severity: row.severity,
     buyingIntent: row.buying_intent,
     score: row.score,
-    category: row.pain_clusters.cluster_name,
+    category: row.pain_clusters.name,
     source: "Cluster",
     createdAt: undefined,
   }));

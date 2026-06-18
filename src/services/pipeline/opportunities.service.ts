@@ -15,7 +15,7 @@ import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
 function toPainClusterInput(row: PainClusterRow): PainClusterInput {
   return {
     id: row.id,
-    cluster_name: row.cluster_name,
+    cluster_name: row.name,
     description: row.description,
     pain_point_ids: [], // Not stored in DB, AI provider will handle
   };

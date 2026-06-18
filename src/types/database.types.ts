@@ -79,7 +79,7 @@ export type PainPointRow = {
 
 export type PainClusterRow = {
   id: Uuid;
-  cluster_name: string;
+  name: string;
   description: string;
 };
 
@@ -136,7 +136,7 @@ export type PainPointInsert = {
 
 export type PainClusterInsert = {
   id?: Uuid;
-  cluster_name: string;
+  name: string;
   description: string;
 };
 

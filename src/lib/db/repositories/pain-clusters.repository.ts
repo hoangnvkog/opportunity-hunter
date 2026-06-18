@@ -44,7 +44,7 @@ export class PainClustersRepository {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
-      .eq("cluster_name", name)
+      .eq("name", name)
       .maybeSingle();
 
     if (error) throw translateError(ENTITY, error);

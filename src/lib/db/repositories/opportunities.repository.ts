@@ -29,7 +29,7 @@ export interface OpportunityWithCluster {
   buying_intent: number;
   pain_clusters: {
     id: Uuid;
-    cluster_name: string;
+    name: string;
     description: string;
   };
 }
@@ -37,7 +37,7 @@ export interface OpportunityWithCluster {
 /** Single-row projection used for category aggregation. */
 export interface OpportunityClusterNameOnly {
   pain_clusters: {
-    cluster_name: string;
+    name: string;
   };
 }
 
@@ -107,7 +107,7 @@ export class OpportunitiesRepository {
   ): Promise<OpportunityWithCluster[]> {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select("*, pain_clusters!inner(id, cluster_name, description)")
+      .select("*, pain_clusters!inner(id, name, description)")
       .order("score", { ascending: false })
       .range(0, limit - 1);
 
@@ -122,11 +122,11 @@ export class OpportunitiesRepository {
 
     let query = this.client
       .from(ENTITY)
-      .select("*, pain_clusters!inner(id, cluster_name, description)")
+      .select("*, pain_clusters!inner(id, name, description)")
       .order("score", { ascending: false });
 
     if (category) {
-      query = query.eq("pain_clusters.cluster_name", category);
+      query = query.eq("pain_clusters.name", category);
     }
 
     if (minScore !== undefined) {
@@ -145,7 +145,7 @@ export class OpportunitiesRepository {
   ): Promise<OpportunityWithCluster | null> {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select("*, pain_clusters!inner(id, cluster_name, description)")
+      .select("*, pain_clusters!inner(id, name, description)")
       .eq("id", id)
       .maybeSingle();
 
@@ -160,15 +160,15 @@ export class OpportunitiesRepository {
 
     const { data, error } = await this.client
       .from(ENTITY)
-      .select("pain_clusters!inner(cluster_name)")
-      .in("pain_clusters.cluster_name", [...categories]);
+      .select("pain_clusters!inner(name)")
+      .in("pain_clusters.name", [...categories]);
 
     if (error) throw translateError(ENTITY, error);
 
     const counts = new Map<string, number>();
     for (const category of categories) counts.set(category, 0);
     for (const row of (data ?? []) as unknown as OpportunityClusterNameOnly[]) {
-      const name = row.pain_clusters.cluster_name;
+      const name = row.pain_clusters.name;
       counts.set(name, (counts.get(name) ?? 0) + 1);
     }
     return counts;
