@@ -2,11 +2,11 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import type { OpportunityView } from "@/services/opportunities";
 
-interface OpportunityCardProps {
+interface OpportunityListItemProps {
   opportunity: OpportunityView;
 }
 
-export function OpportunityCard({ opportunity }: OpportunityCardProps) {
+export function OpportunityListItem({ opportunity }: OpportunityListItemProps) {
   return (
     <Link
       href={`/opportunities/${opportunity.id}`}
@@ -26,16 +26,13 @@ export function OpportunityCard({ opportunity }: OpportunityCardProps) {
             <span>Frequency: {opportunity.frequency}</span>
             <span>Severity: {opportunity.severity}</span>
             <span>Buying Intent: {opportunity.buyingIntent}</span>
-            <span className="ml-auto">
-              Created: {opportunity.createdAt?.toLocaleDateString() ?? "N/A"}
-            </span>
           </div>
         </div>
         <div className="text-right flex-shrink-0">
           <div className="text-2xl font-bold text-primary">
             {opportunity.score}
           </div>
-          <div className="text-xs text-muted-foreground">Overall Score</div>
+          <div className="text-xs text-muted-foreground">Score</div>
         </div>
       </div>
     </Link>

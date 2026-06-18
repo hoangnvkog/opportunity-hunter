@@ -12,6 +12,12 @@ import OpenAI from "openai";
 import { randomUUID } from "crypto";
 
 import type { AIProvider } from "@/types/ai";
+import {
+  PainPointSchema,
+  ClusterSchema,
+  OpportunitySchema,
+  StartupIdeaSchema,
+} from "./schemas";
 import type {
   RawPostInput,
   PainPointInput,
@@ -74,7 +80,7 @@ export class OpenAIProvider implements AIProvider {
       response.choices[0]?.message?.content?.trim() ?? "";
 
     try {
-      const parsed = JSON.parse(content);
+      const parsed = PainPointSchema.parse(JSON.parse(content));
 
       result.push({
         id: randomUUID(),
@@ -136,7 +142,7 @@ Return ONLY valid JSON:
       response.choices[0]?.message?.content?.trim() ?? "";
 
     try {
-      const parsed = JSON.parse(content);
+      const parsed = ClusterSchema.parse(JSON.parse(content));
 
       clusters.push({
         id: randomUUID(),
@@ -147,8 +153,8 @@ Return ONLY valid JSON:
     } catch {
       clusters.push({
         id: randomUUID(),
-        cluster_name: "General",
-        description: painPoint.pain,
+        cluster_name: "general",
+        description: "General cluster",
         pain_point_ids: [painPoint.id],
       });
     }
@@ -205,7 +211,7 @@ ${cluster.description}
       response.choices[0]?.message?.content?.trim() ?? "";
 
     try {
-      const parsed = JSON.parse(content);
+      const parsed = OpportunitySchema.parse(JSON.parse(content));
 
       opportunities.push({
   id: randomUUID(),
@@ -318,7 +324,7 @@ ${opportunity.buying_intent}
       const content =
         response.choices[0].message.content ?? "{}";
 
-      const parsed = JSON.parse(content);
+      const parsed = StartupIdeaSchema.parse(JSON.parse(content));
 
       ideas.push({
         id: randomUUID(),

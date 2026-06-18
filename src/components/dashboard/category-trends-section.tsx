@@ -1,14 +1,30 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
-interface CategoryTrendsProps {
-  trends: Array<{ category: string; count: number }>;
+interface CategoryTrendsSectionProps {
+  trends: Array<{
+    category: string;
+    count: number;
+  }>;
 }
 
-export function CategoryTrends({ trends }: CategoryTrendsProps) {
+export default function CategoryTrendsSection({ trends }: CategoryTrendsSectionProps) {
+  if (trends.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Trends by Category</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No trends data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-lg font-semibold">Trends by Category</h2>
+        <CardTitle>Trends by Category</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -27,7 +43,7 @@ export function CategoryTrends({ trends }: CategoryTrendsProps) {
                 <div className="h-2 w-full rounded-full bg-secondary">
                   <div
                     className="h-2 rounded-full bg-primary transition-all"
-                    style={{ width: `${width}%` }}
+                    style={{ width: `${Math.min(width, 100)}%` }}
                   />
                 </div>
               </div>
@@ -38,3 +54,4 @@ export function CategoryTrends({ trends }: CategoryTrendsProps) {
     </Card>
   );
 }
+export { CategoryTrendsSection };
