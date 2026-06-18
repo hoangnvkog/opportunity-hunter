@@ -14,7 +14,6 @@ import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
  */
 function toRawPostInput(row: RawPostRow): RawPostInput {
   return {
-    id: row.id,
     source: row.source,
     title: row.title,
     content: row.content,

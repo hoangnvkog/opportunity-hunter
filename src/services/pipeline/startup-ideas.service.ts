@@ -14,7 +14,6 @@ import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
  */
 function toOpportunityInput(row: OpportunityRow): OpportunityInput {
   return {
-    id: row.id,
     cluster_id: row.cluster_id,
     title: row.title,
     description: row.description,

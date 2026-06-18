@@ -14,10 +14,8 @@ import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
  */
 function toPainPointInput(row: PainPointRow): PainPointInput {
   return {
-    id: row.id,
-    raw_post_id: row.id, // Use pain point id as placeholder
     pain: row.description,
-    category: 'uncategorized', // Default category
+    category: 'general', // Default category for legacy data
     severity: parseFloat(row.severity),
     buying_intent: parseFloat(row.buying_intent),
   };

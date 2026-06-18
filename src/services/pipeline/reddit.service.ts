@@ -3,7 +3,6 @@
  * Currently returns mock data. Ready for real API integration.
  */
 
-import { randomUUID } from "crypto";
 import type { RawPostInput } from "@/types/pipeline";
 
 /**
@@ -13,9 +12,9 @@ import type { RawPostInput } from "@/types/pipeline";
 export async function fetchRawPosts(): Promise<RawPostInput[]> {
   // Mock implementation - returns sample posts
   // In production, this would call Reddit API or other sources
+  // Note: id is NOT included - database will generate UUID after insert
   return [
     {
-      id: randomUUID(),
       source: "reddit",
       title: "Struggling with inventory management for my small e-commerce business",
       content:
@@ -25,7 +24,6 @@ export async function fetchRawPosts(): Promise<RawPostInput[]> {
       created_at: new Date().toISOString(),
     },
     {
-      id: randomUUID(),
       source: "reddit",
       title: "Customer support is eating all my time",
       content:
@@ -35,7 +33,6 @@ export async function fetchRawPosts(): Promise<RawPostInput[]> {
       created_at: new Date().toISOString(),
     },
     {
-      id: randomUUID(),
       source: "reddit",
       title: "Need help tracking remote team productivity",
       content:
