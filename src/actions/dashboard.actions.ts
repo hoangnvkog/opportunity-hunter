@@ -34,26 +34,6 @@ export async function getDashboardDataAction() {
 }
 
 /**
- * Get all dashboard data
- * Server action wrapper for dashboard services
- * 
- * @returns Dashboard metrics, recent opportunities, and category trends
- */
-export async function getDashboardDataAction() {
-  const [metrics, recentOpportunities, categoryTrends] = await Promise.all([
-    getDashboardMetrics(),
-    getRecentOpportunities(),
-    getCategoryTrends(),
-  ]);
-
-  return {
-    metrics,
-    recentOpportunities,
-    categoryTrends,
-  };
-}
-
-/**
  * Get opportunities with filters
  * Server action wrapper for getOpportunitiesWithFilters()
  * 
