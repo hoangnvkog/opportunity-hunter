@@ -38,6 +38,12 @@ export async function ingestSubreddit(
 }> {
   // Fetch posts from Reddit
   const response = await fetchSubredditPosts(subreddit, limit);
+
+  if (!response) {
+    console.warn("Reddit unavailable — returning empty result");
+    return { fetched: 0, skipped: 0, inserted: 0 };
+  }
+
   const posts = response.data.children;
   
   if (posts.length === 0) {

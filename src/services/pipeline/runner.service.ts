@@ -6,6 +6,8 @@
  */
 
 import { ingestSubreddit } from "@/services/reddit";
+import { fetchRawPosts } from "./reddit.service";
+import { RawPostsRepository } from "@/lib/db/repositories";
 import { extractPainPointsFromPosts } from "./pain-points.service";
 import { clusterPainPointsFromDatabase } from "./clusters.service";
 import { generateOpportunitiesFromDatabase } from "./opportunities.service";
@@ -52,10 +54,33 @@ export interface PipelineRunResult {
 export async function runPipeline(): Promise<PipelineRunResult> {
   try {
     // Stage 1: Ingest Reddit posts
-    const rawPosts = await ingestSubreddit("Entrepreneur", 25);
+    let rawPosts = await ingestSubreddit("Entrepreneur", 25);
     
     if (rawPosts.inserted === 0) {
-      console.log("No new raw posts ingested (all duplicates)");
+      console.warn("Reddit unavailable or all duplicates. Falling back to mock posts.");
+      
+      // Fetch mock posts and insert them
+      const mockPosts = await fetchRawPosts();
+      const repository = await RawPostsRepository.create();
+      
+      // Check for existing URLs to prevent duplicates
+      const existingPosts = await repository.list({ limit: 1000 });
+      const existingUrls = new Set(existingPosts.map(post => post.url));
+      
+      // Filter out duplicates
+      const newMockPosts = mockPosts.filter(post => !existingUrls.has(post.url));
+      
+      if (newMockPosts.length > 0) {
+        const result = await repository.createMany(newMockPosts);
+        rawPosts = {
+          fetched: mockPosts.length,
+          skipped: mockPosts.length - result.length,
+          inserted: result.length,
+        };
+        console.log(`Inserted ${result.length} mock posts`);
+      } else {
+        console.log("No new mock posts to insert (all duplicates)");
+      }
     }
     
     // Stage 2: Extract pain points
