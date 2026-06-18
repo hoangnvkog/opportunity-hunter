@@ -38,7 +38,7 @@ import {
 /** View shape consumed by the dashboard / opportunities pages. */
 export interface OpportunityView {
   id: string;
-  /** Sourced from `pain_clusters.cluster_name`. */
+  /** Sourced from `pain_clusters.name`. */
   title: string;
   /** Sourced from `pain_clusters.description`. */
   description: string;
@@ -47,7 +47,7 @@ export interface OpportunityView {
   /** camelCase alias for `buying_intent`. */
   buyingIntent: number;
   score: number;
-  /** Sourced from `pain_clusters.cluster_name` (one category per cluster). */
+  /** Sourced from `pain_clusters.name` (one category per cluster). */
   category: string;
   /** Schema does not store a platform-level source per opportunity. */
   source: string;
