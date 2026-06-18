@@ -216,7 +216,8 @@ ${cluster.description}
       opportunities.push({
   id: randomUUID(),
   cluster_id: cluster.id,
-
+  title: parsed.title || `${cluster.cluster_name} Solution`,
+  description: parsed.description || `AI-generated opportunity addressing: ${cluster.description}`,
   score: parsed.score,
   frequency: parsed.frequency,
   severity: parsed.severity,
@@ -229,7 +230,8 @@ ${cluster.description}
       opportunities.push({
   id: randomUUID(),
   cluster_id: cluster.id,
-
+  title: `${cluster.cluster_name} Solution`,
+  description: `AI-generated opportunity addressing: ${cluster.description}`,
   score: 50,
   frequency: 1,
   severity: 0.5,

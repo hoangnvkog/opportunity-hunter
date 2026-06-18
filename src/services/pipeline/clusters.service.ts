@@ -15,9 +15,9 @@ import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
 function toPainPointInput(row: PainPointRow): PainPointInput {
   return {
     id: row.id,
-    raw_post_id: row.raw_post_id,
-    pain: row.pain,
-    category: row.category,
+    raw_post_id: row.id, // Use pain point id as placeholder
+    pain: row.description,
+    category: 'uncategorized', // Default category
     severity: parseFloat(row.severity),
     buying_intent: parseFloat(row.buying_intent),
   };
@@ -50,7 +50,7 @@ export async function clusterPainPoints(
 /**
  * Cluster pain points from database and insert into pain_clusters.
  * Uses AI provider from environment (default: MockProvider).
- * Skips duplicate clusters by cluster_name.
+ * Skips duplicate clusters by name.
  * 
  * @param limit - Maximum number of pain points to process (default: 100)
  * @returns Object with counts: processed, clustered, skipped, inserted

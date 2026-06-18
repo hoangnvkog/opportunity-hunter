@@ -23,10 +23,13 @@ const ENTITY = "opportunities";
 export interface OpportunityWithCluster {
   id: Uuid;
   cluster_id: Uuid;
+  title: string;
+  description: string;
   score: number;
   frequency: number;
   severity: number;
   buying_intent: number;
+  created_at: string;
   pain_clusters: {
     id: Uuid;
     name: string;

@@ -29,9 +29,7 @@ function toRawPostInput(row: RawPostRow): RawPostInput {
  */
 function toPainPointInsert(input: PainPointInput): PainPointInsert {
   return {
-    raw_post_id: input.raw_post_id,
-    pain: input.pain,
-    category: input.category,
+    description: input.pain,
     severity: input.severity.toString(),
     buying_intent: input.buying_intent.toString(),
   };
@@ -54,7 +52,7 @@ export async function extractPainPoints(
 /**
  * Extract pain points from raw_posts in database and insert into pain_points.
  * Uses AI provider from environment (default: MockProvider).
- * Skips duplicates by checking (raw_post_id, pain) combination.
+ * Skips duplicates by checking description content.
  * 
  * @param limit - Maximum number of raw posts to process (default: 50)
  * @returns Object with counts: processed, extracted, skipped, inserted
@@ -94,12 +92,12 @@ export async function extractPainPointsFromPosts(
   // Load existing pain points to detect duplicates
   const existingPoints = await painPointsRepo.list({ limit: 1000 });
   const existingKeys = new Set(
-    existingPoints.map(p => `${p.raw_post_id}:${p.pain}`)
+    existingPoints.map(p => p.description.toLowerCase())
   );
   
   // Filter out duplicates and convert to insert format
   const newPoints = extractedPoints
-    .filter(point => !existingKeys.has(`${point.raw_post_id}:${point.pain}`))
+    .filter(point => !existingKeys.has(point.pain.toLowerCase()))
     .map(toPainPointInsert);
   
   const skipped = extractedPoints.length - newPoints.length;

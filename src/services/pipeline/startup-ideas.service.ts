@@ -16,6 +16,8 @@ function toOpportunityInput(row: OpportunityRow): OpportunityInput {
   return {
     id: row.id,
     cluster_id: row.cluster_id,
+    title: row.title,
+    description: row.description,
     score: parseFloat(row.score),
     frequency: row.frequency,
     severity: parseFloat(row.severity),

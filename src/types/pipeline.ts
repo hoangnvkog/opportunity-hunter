@@ -36,7 +36,8 @@ export interface PainClusterInput {
 export interface OpportunityInput {
   id: string;
   cluster_id: string;
-
+  title: string;
+  description: string;
   score: number;
   frequency: number;
   severity: number;

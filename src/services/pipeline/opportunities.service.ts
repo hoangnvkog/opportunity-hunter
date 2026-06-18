@@ -27,6 +27,8 @@ function toPainClusterInput(row: PainClusterRow): PainClusterInput {
 function toOpportunityInsert(input: OpportunityInput): OpportunityInsert {
   return {
     cluster_id: input.cluster_id,
+    title: input.title || `Opportunity for cluster ${input.cluster_id}`,
+    description: input.description || `AI-generated opportunity based on pain cluster analysis`,
     score: input.score.toString(),
     frequency: input.frequency,
     severity: input.severity.toString(),

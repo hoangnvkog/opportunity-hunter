@@ -89,6 +89,8 @@ export class MockProvider implements AIProvider {
       return {
         id: `opp-${cluster.id}`,
         cluster_id: cluster.id,
+        title: `${cluster.cluster_name} Solution`,
+        description: `AI-generated opportunity addressing: ${cluster.description}`,
         score,
         frequency,
         severity,

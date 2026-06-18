@@ -14,9 +14,8 @@ import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 const ENTITY = "pain_points";
 
 export interface ListPainPointsOptions {
-  rawPostId?: Uuid;
-  category?: string;
   minSeverity?: number;
+  minFrequency?: number;
   minBuyingIntent?: number;
   limit?: number;
   offset?: number;
@@ -49,9 +48,8 @@ export class PainPointsRepository {
 
   async list(opts: ListPainPointsOptions = {}): Promise<PainPointRow[]> {
     const {
-      rawPostId,
-      category,
       minSeverity,
+      minFrequency,
       minBuyingIntent,
       limit = 50,
       offset = 0,
@@ -63,10 +61,10 @@ export class PainPointsRepository {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (rawPostId !== undefined) query = query.eq("raw_post_id", rawPostId);
-    if (category !== undefined) query = query.eq("category", category);
     if (minSeverity !== undefined)
       query = query.gte("severity", minSeverity);
+    if (minFrequency !== undefined)
+      query = query.gte("frequency", minFrequency);
     if (minBuyingIntent !== undefined)
       query = query.gte("buying_intent", minBuyingIntent);
 

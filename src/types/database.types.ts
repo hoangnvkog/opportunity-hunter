@@ -69,10 +69,9 @@ export type RawPostRow = {
 
 export type PainPointRow = {
   id: Uuid;
-  raw_post_id: Uuid;
-  pain: string;
-  category: string;
+  description: string;
   severity: Decimal3;
+  frequency: number;
   buying_intent: Decimal3;
   created_at: string;
 };
@@ -86,11 +85,14 @@ export type PainClusterRow = {
 export type OpportunityRow = {
   id: Uuid;
   cluster_id: Uuid;
+  title: string;
+  description: string;
   /** Derived score in [0, 100]. */
   score: Decimal6;
   frequency: number;
   severity: Decimal3;
   buying_intent: Decimal3;
+  created_at: string;
 };
 
 export type StartupIdeaRow = {
@@ -126,10 +128,9 @@ export type RawPostInsert = {
 
 export type PainPointInsert = {
   id?: Uuid;
-  raw_post_id: Uuid;
-  pain: string;
-  category: string;
+  description: string;
   severity: Decimal3;
+  frequency?: number;
   buying_intent: Decimal3;
   created_at?: string;
 };
@@ -143,10 +144,13 @@ export type PainClusterInsert = {
 export type OpportunityInsert = {
   id?: Uuid;
   cluster_id: Uuid;
+  title: string;
+  description: string;
   score: Decimal6;
   frequency?: number;
   severity: Decimal3;
   buying_intent: Decimal3;
+  created_at?: string;
 };
 
 export type StartupIdeaInsert = {
@@ -164,7 +168,7 @@ export type StartupIdeaInsert = {
 
 export type SourceUpdate = Partial<Omit<SourceInsert, "id">>;
 export type RawPostUpdate = Partial<Omit<RawPostInsert, "id">>;
-export type PainPointUpdate = Partial<Omit<PainPointInsert, "id" | "raw_post_id">>;
+export type PainPointUpdate = Partial<Omit<PainPointInsert, "id">>;
 export type PainClusterUpdate = Partial<Omit<PainClusterInsert, "id">>;
 export type OpportunityUpdate = Partial<Omit<OpportunityInsert, "id" | "cluster_id">>;
 export type StartupIdeaUpdate = Partial<Omit<StartupIdeaInsert, "id" | "opportunity_id">>;
@@ -202,15 +206,7 @@ export interface Database {
         Row: PainPointRow;
         Insert: PainPointInsert;
         Update: PainPointUpdate;
-        Relationships: [
-          {
-            foreignKeyName: "pain_points_raw_post_id_fkey";
-            columns: ["raw_post_id"];
-            isOneToOne: false;
-            referencedRelation: "raw_posts";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       pain_clusters: {
         Row: PainClusterRow;
