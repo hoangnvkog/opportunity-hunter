@@ -1,12 +1,6 @@
 /**
- * OpenAI Provider - stub implementation
- * TODO: Implement with OpenAI SDK (openai) when ready
- *
- * This provider will use OpenAI's GPT models for:
- * - Pain point extraction from raw posts
- * - Semantic clustering of pain points
- * - Opportunity scoring and generation
- * - Startup idea generation
+ * OpenAI Provider - uses GPT models for AI-powered pipeline stages.
+ * Optimized with batch processing to reduce API calls by ~90%.
  */
 import OpenAI from "openai";
 
@@ -24,13 +18,16 @@ import type {
   OpportunityInput,
   StartupIdeaInput,
 } from "@/types/pipeline";
+import { splitIntoChunks } from "@/lib/utils/chunk";
+
+const BATCH_SIZE = 10;
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
-  
+
   constructor(
-  private readonly apiKey?: string,
-  private readonly model: string = "gpt-4o-mini",
+    private readonly apiKey?: string,
+    private readonly model: string = "gpt-4o-mini",
   ) {
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY is required");
@@ -41,283 +38,403 @@ export class OpenAIProvider implements AIProvider {
     });
   }
 
-  /**
-   * Extract pain points using OpenAI GPT
-   */
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
     const result: PainPointInput[] = [];
+    const chunks = splitIntoChunks(posts, BATCH_SIZE);
 
-    for (const post of posts) {
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: "system",
-            content: `
-        Extract one business pain point.
-
-        Return ONLY valid JSON:
-
-        {
-          "pain": "string",
-          "category": "string",
-          "severity": number,
-          "buying_intent": number
-        }
-
-        severity and buying_intent must be between 0 and 1.
-        `,
-          },
-          {
-            role: "user",
-            content: `${post.title}\n\n${post.content}`,
-          },
-        ],
-      });
-
-      const content =
-        response.choices[0]?.message?.content?.trim() ?? "";
-
+    for (const chunk of chunks) {
       try {
-        const parsed = PainPointSchema.parse(JSON.parse(content));
+        const response = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [
+            {
+              role: "system",
+              content: `
+You will receive an array of Reddit posts.
+Extract one business pain point for each post.
 
-        result.push({
-          pain: parsed.pain,
-          category: parsed.category,
-          severity: parsed.severity,
-          buying_intent: parsed.buying_intent,
+Return ONLY a valid JSON array with exactly ${chunk.length} objects:
+
+[
+  {
+    "pain": "string",
+    "category": "string",
+    "severity": number,
+    "buying_intent": number
+  }
+]
+
+severity and buying_intent must be between 0 and 1.
+Return exactly ${chunk.length} objects, one for each post.
+`,
+            },
+            {
+              role: "user",
+              content: JSON.stringify(
+                chunk.map((post) => ({
+                  title: post.title,
+                  content: post.content,
+                })),
+              ),
+            },
+          ],
         });
-      } catch {
-        result.push({
-          pain: "Unknown pain point",
-          category: "general",
-          severity: 0.5,
-          buying_intent: 0.5,
-        });
+
+        const content = response.choices[0]?.message?.content?.trim() ?? "";
+        const parsed = JSON.parse(content);
+
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            try {
+              const validated = PainPointSchema.parse(item);
+              result.push({
+                pain: validated.pain,
+                category: validated.category,
+                severity: validated.severity,
+                buying_intent: validated.buying_intent,
+              });
+            } catch {
+              result.push({
+                pain: "Unknown pain point",
+                category: "general",
+                severity: 0.5,
+                buying_intent: 0.5,
+              });
+            }
+          }
+        } else {
+          // Response is not an array, add fallbacks for all items in chunk
+          for (let i = 0; i < chunk.length; i++) {
+            result.push({
+              pain: "Unknown pain point",
+              category: "general",
+              severity: 0.5,
+              buying_intent: 0.5,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Batch extractPainPoints failed:", error);
+        // Add fallbacks for all items in chunk
+        for (let i = 0; i < chunk.length; i++) {
+          result.push({
+            pain: "Unknown pain point",
+            category: "general",
+            severity: 0.5,
+            buying_intent: 0.5,
+          });
+        }
       }
     }
 
     return result;
   }
 
-  /**
-   * Cluster pain points using OpenAI embeddings or GPT
-   */
-  async clusterPainPoints(
-    painPoints: PainPointInput[],
-  ): Promise<PainClusterInput[]> {
-    const clusters = new Map<string, PainClusterInput>();
+  async clusterPainPoints(painPoints: PainPointInput[]): Promise<PainClusterInput[]> {
+    const clusterMap = new Map<string, { name: string; description: string; indexes: number[] }>();
+    const chunks = splitIntoChunks(painPoints, BATCH_SIZE);
+    let globalIndex = 0;
 
-    for (const painPoint of painPoints) {
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: "system",
-            content: `
-Group this pain point into a business cluster.
-
-Return ONLY valid JSON:
-
-{
-  "cluster_name": "string",
-  "description": "string"
-}
-`,
-          },
-          {
-            role: "user",
-            content: painPoint.pain,
-          },
-        ],
-      });
-
-      const content =
-        response.choices[0]?.message?.content?.trim() ?? "";
-
+    for (const chunk of chunks) {
       try {
-        const parsed = ClusterSchema.parse(JSON.parse(content));
-        const clusterName = parsed.cluster_name;
-        
-        if (!clusters.has(clusterName)) {
-          clusters.set(clusterName, {
-            cluster_name: parsed.cluster_name,
-            description: parsed.description,
-          });
+        const response = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [
+            {
+              role: "system",
+              content: `
+You will receive an array of pain points.
+Group them into business clusters.
+
+Return ONLY a valid JSON array:
+
+[
+  {
+    "cluster_name": "string",
+    "description": "string"
+  }
+]
+
+Each pain point should be assigned to a cluster.
+Similar pain points should be in the same cluster.
+`,
+            },
+            {
+              role: "user",
+              content: JSON.stringify(
+                chunk.map((pp) => ({
+                  pain: pp.pain,
+                  category: pp.category,
+                })),
+              ),
+            },
+          ],
+        });
+
+        const content = response.choices[0]?.message?.content?.trim() ?? "";
+        const parsed = JSON.parse(content);
+
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            try {
+              const validated = ClusterSchema.parse(item);
+              const name = validated.cluster_name;
+              if (!clusterMap.has(name)) {
+                clusterMap.set(name, { name, description: validated.description, indexes: [] });
+              }
+              // Assign current pain point to this cluster
+              clusterMap.get(name)!.indexes.push(globalIndex);
+              globalIndex++;
+            } catch {
+              const name = "general";
+              if (!clusterMap.has(name)) {
+                clusterMap.set(name, { name, description: "General cluster", indexes: [] });
+              }
+              clusterMap.get(name)!.indexes.push(globalIndex);
+              globalIndex++;
+            }
+          }
+        } else {
+          // Response is not an array, add all items to general cluster
+          const name = "general";
+          if (!clusterMap.has(name)) {
+            clusterMap.set(name, { name, description: "General cluster", indexes: [] });
+          }
+          for (let i = 0; i < chunk.length; i++) {
+            clusterMap.get(name)!.indexes.push(globalIndex);
+            globalIndex++;
+          }
         }
-      } catch {
-        if (!clusters.has("general")) {
-          clusters.set("general", {
-            cluster_name: "general",
-            description: "General cluster",
-          });
+      } catch (error) {
+        console.error("Batch clusterPainPoints failed:", error);
+        // Add all items in chunk to general cluster
+        const name = "general";
+        if (!clusterMap.has(name)) {
+          clusterMap.set(name, { name, description: "General cluster", indexes: [] });
+        }
+        for (let i = 0; i < chunk.length; i++) {
+          clusterMap.get(name)!.indexes.push(globalIndex);
+          globalIndex++;
         }
       }
     }
 
-    return Array.from(clusters.values());
+    return Array.from(clusterMap.values()).map((c) => ({
+      cluster_name: c.name,
+      description: c.description,
+      pain_point_indexes: c.indexes,
+    }));
   }
 
-  /**
-   * Generate opportunities using OpenAI GPT
-   */
-  async generateOpportunities(
-    clusters: PainClusterInput[],
-  ): Promise<OpportunityInput[]> {
+  async generateOpportunities(clusters: PainClusterInput[]): Promise<OpportunityInput[]> {
     const opportunities: OpportunityInput[] = [];
+    const chunks = splitIntoChunks(clusters, BATCH_SIZE);
 
-    for (const cluster of clusters) {
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: "system",
-            content: `
-Analyze this business pain cluster.
+    for (const chunk of chunks) {
+      try {
+        const response = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [
+            {
+              role: "system",
+              content: `
+You will receive an array of pain clusters.
+Analyze each cluster and return one opportunity for each.
 
-Return ONLY valid JSON:
+Return ONLY a valid JSON array with exactly ${chunk.length} objects:
 
-{
-  "title": "string (optional)",
-  "description": "string (optional)",
-  "score": number,
-  "frequency": number,
-  "severity": number,
-  "buying_intent": number
-}
+[
+  {
+    "score": number,
+    "frequency": number,
+    "severity": number,
+    "buying_intent": number
+  }
+]
 
 score: 0-100
 frequency: integer
 severity: 0-1
 buying_intent: 0-1
+
+Return exactly ${chunk.length} objects, one for each cluster.
 `,
-          },
-          {
-            role: "user",
-            content: `
-Cluster name: ${cluster.cluster_name}
-
-Description:
-${cluster.description}
-`,
-          },
-        ],
-      });
-
-      const content =
-        response.choices[0]?.message?.content?.trim() ?? "";
-
-      try {
-        const parsed = OpportunitySchema.parse(JSON.parse(content));
-
-        opportunities.push({
-          cluster_id: cluster.cluster_name, // Will be replaced by real UUID after insert
-          title: parsed.title || `${cluster.cluster_name} Solution`,
-          description: parsed.description || `AI-generated opportunity addressing: ${cluster.description}`,
-          score: parsed.score,
-          frequency: parsed.frequency,
-          severity: parsed.severity,
-          buying_intent: parsed.buying_intent,
+            },
+            {
+              role: "user",
+              content: JSON.stringify(
+                chunk.map((cluster) => ({
+                  cluster_name: cluster.cluster_name,
+                  description: cluster.description,
+                })),
+              ),
+            },
+          ],
         });
-      } catch {
-        opportunities.push({
-          cluster_id: cluster.cluster_name,
-          title: `${cluster.cluster_name} Solution`,
-          description: `AI-generated opportunity addressing: ${cluster.description}`,
-          score: 50,
-          frequency: 1,
-          severity: 0.5,
-          buying_intent: 0.5,
-        });
+
+        const content = response.choices[0]?.message?.content?.trim() ?? "";
+        const parsed = JSON.parse(content);
+
+        if (Array.isArray(parsed)) {
+          for (let i = 0; i < parsed.length; i++) {
+            const item = parsed[i];
+            const cluster = chunk[i];
+            try {
+              const validated = OpportunitySchema.parse(item);
+              opportunities.push({
+                score: validated.score,
+                frequency: validated.frequency,
+                severity: validated.severity,
+                buying_intent: validated.buying_intent,
+                cluster_name: cluster?.cluster_name,
+                cluster_description: cluster?.description,
+              });
+            } catch {
+              opportunities.push({
+                score: 50,
+                frequency: 1,
+                severity: 0.5,
+                buying_intent: 0.5,
+                cluster_name: cluster?.cluster_name,
+                cluster_description: cluster?.description,
+              });
+            }
+          }
+        } else {
+          // Response is not an array, add fallbacks for all items in chunk
+          for (const cluster of chunk) {
+            opportunities.push({
+              score: 50,
+              frequency: 1,
+              severity: 0.5,
+              buying_intent: 0.5,
+              cluster_name: cluster.cluster_name,
+              cluster_description: cluster.description,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Batch generateOpportunities failed:", error);
+        // Add fallbacks for all items in chunk
+        for (const cluster of chunk) {
+          opportunities.push({
+            score: 50,
+            frequency: 1,
+            severity: 0.5,
+            buying_intent: 0.5,
+            cluster_name: cluster.cluster_name,
+            cluster_description: cluster.description,
+          });
+        }
       }
     }
 
     return opportunities;
   }
 
-  /**
-   * Generate startup ideas using OpenAI GPT
-   */
-  async generateStartupIdeas(
-    opportunities: OpportunityInput[],
-  ): Promise<StartupIdeaInput[]> {
+  async generateStartupIdeas(opportunities: OpportunityInput[]): Promise<StartupIdeaInput[]> {
     const ideas: StartupIdeaInput[] = [];
+    const chunks = splitIntoChunks(opportunities, BATCH_SIZE);
 
-    for (const opportunity of opportunities) {
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: "system",
-            content: `
-You are a startup founder.
-
-Given a business opportunity, Generate:
-
-- problem
-- solution
-- mvp
-- pricing
-- customer
-- distribution
-- competitors
-
-Return ONLY valid JSON.
-
-Example:
-
-{
-  "problem":"...",
-  "solution":"...",
-  "mvp":"...",
-  "pricing":"...",
-  "customer":"...",
-  "distribution":"...",
-  "competitors":"..."
-}
-`,
-          },
-          {
-            role: "user",
-            content: `
-Title: ${opportunity.title}
-Description: ${opportunity.description}
-Score: ${opportunity.score}
-Frequency: ${opportunity.frequency}
-Severity: ${opportunity.severity}
-Buying intent: ${opportunity.buying_intent}
-`,
-          },
-        ],
-      });
-
+    for (const chunk of chunks) {
       try {
-        const content =
-          response.choices[0].message.content ?? "{}";
+        const response = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [
+            {
+              role: "system",
+              content: `
+You are a startup founder.
+You will receive an array of business opportunities.
+Generate one startup idea for each opportunity.
 
-        const parsed = StartupIdeaSchema.parse(JSON.parse(content));
+Return ONLY a valid JSON array with exactly ${chunk.length} objects:
 
-        ideas.push({
-          opportunity_id: opportunity.cluster_id, // Will be replaced by real UUID after insert
-          problem: parsed.problem,
-          solution: parsed.solution,
-          mvp: parsed.mvp,
-          pricing: parsed.pricing,
-          customer: parsed.customer,
-          distribution: parsed.distribution,
-          competitors: parsed.competitors,
+[
+  {
+    "problem": "string",
+    "solution": "string",
+    "mvp": "string",
+    "pricing": "string",
+    "customer": "string",
+    "distribution": "string",
+    "competitors": "string"
+  }
+]
+
+Return exactly ${chunk.length} objects, one for each opportunity.
+`,
+            },
+            {
+              role: "user",
+              content: JSON.stringify(
+                chunk.map((opp) => ({
+                  cluster_name: opp.cluster_name,
+                  score: opp.score,
+                  severity: opp.severity,
+                })),
+              ),
+            },
+          ],
         });
-      } catch {
-        ideas.push({
-          opportunity_id: opportunity.cluster_id,
-          problem: "Unknown problem",
-          solution: "Unknown solution",
-          mvp: "Basic MVP",
-          pricing: "$29/month",
-          customer: "Small businesses",
-          distribution: "SEO + Content Marketing",
-          competitors: "Existing SaaS tools",
-        });
+
+        const content = response.choices[0]?.message?.content?.trim() ?? "";
+        const parsed = JSON.parse(content);
+
+        if (Array.isArray(parsed)) {
+          for (let i = 0; i < parsed.length; i++) {
+            const item = parsed[i];
+            try {
+              const validated = StartupIdeaSchema.parse(item);
+              ideas.push({
+                problem: validated.problem,
+                solution: validated.solution,
+                mvp: validated.mvp,
+                pricing: validated.pricing,
+                customer: validated.customer,
+                distribution: validated.distribution,
+                competitors: validated.competitors,
+              });
+            } catch {
+              ideas.push({
+                problem: "Unknown problem",
+                solution: "Unknown solution",
+                mvp: "Basic MVP",
+                pricing: "$29/month",
+                customer: "Small businesses",
+                distribution: "SEO + Content Marketing",
+                competitors: "Existing SaaS tools",
+              });
+            }
+          }
+        } else {
+          // Response is not an array, add fallbacks for all items in chunk
+          for (let i = 0; i < chunk.length; i++) {
+            ideas.push({
+              problem: "Unknown problem",
+              solution: "Unknown solution",
+              mvp: "Basic MVP",
+              pricing: "$29/month",
+              customer: "Small businesses",
+              distribution: "SEO + Content Marketing",
+              competitors: "Existing SaaS tools",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Batch generateStartupIdeas failed:", error);
+        // Add fallbacks for all items in chunk
+        for (let i = 0; i < chunk.length; i++) {
+          ideas.push({
+            problem: "Unknown problem",
+            solution: "Unknown solution",
+            mvp: "Basic MVP",
+            pricing: "$29/month",
+            customer: "Small businesses",
+            distribution: "SEO + Content Marketing",
+            competitors: "Existing SaaS tools",
+          });
+        }
       }
     }
 
