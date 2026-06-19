@@ -1,18 +1,8 @@
 import { StartupIdeaCard } from "./startup-idea-card";
-
-interface StartupIdea {
-  id: string;
-  problem: string;
-  solution: string;
-  mvp: string;
-  pricing: string;
-  customer: string;
-  distribution: string;
-  competitors: string;
-}
+import type { StartupIdeaCardData } from "@/types/dashboard";
 
 interface StartupIdeasSectionProps {
-  ideas: StartupIdea[];
+  ideas: StartupIdeaCardData[];
 }
 
 export default function StartupIdeasSection({ ideas }: StartupIdeasSectionProps) {
@@ -33,9 +23,8 @@ export default function StartupIdeasSection({ ideas }: StartupIdeasSectionProps)
           solution={idea.solution}
           mvp={idea.mvp}
           pricing={idea.pricing}
-          customer={idea.customer}
-          distribution={idea.distribution}
-          competitors={idea.competitors}
+          clusterName={idea.cluster_name}
+          clusterDescription={idea.cluster_description}
         />
       ))}
     </div>

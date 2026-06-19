@@ -262,6 +262,51 @@ export class OpportunitiesRepository {
     return data;
   }
 
+  async search(filters: import("@/types/filters").OpportunityFilters): Promise<OpportunityCardData[]> {
+    const { search, minScore, minFrequency, minSeverity, minBuyingIntent, limit = 10 } = filters;
+
+    let query = this.client
+      .from(ENTITY)
+      .select("id, score, frequency, severity, buying_intent, pain_clusters!inner(name, description)")
+      .order("score", { ascending: false });
+
+    // Text search on cluster name or description
+    if (search && search.trim()) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`, { referencedTable: "pain_clusters" });
+    }
+
+    // Numeric filters
+    if (minScore !== undefined) query = query.gte("score", minScore);
+    if (minFrequency !== undefined) query = query.gte("frequency", minFrequency);
+    if (minSeverity !== undefined) query = query.gte("severity", minSeverity);
+    if (minBuyingIntent !== undefined) query = query.gte("buying_intent", minBuyingIntent);
+
+    query = query.limit(limit);
+
+    const { data, error } = await query;
+    if (error) throw translateError(ENTITY, error);
+
+    return (data ?? []).map((row: unknown) => {
+      const r = row as {
+        id: string;
+        score: number;
+        frequency: number;
+        severity: number;
+        buying_intent: number;
+        pain_clusters: { name: string; description: string };
+      };
+      return {
+        id: r.id,
+        score: r.score,
+        frequency: r.frequency,
+        severity: r.severity,
+        buying_intent: r.buying_intent,
+        cluster_name: r.pain_clusters.name,
+        cluster_description: r.pain_clusters.description,
+      };
+    });
+  }
+
   async delete(id: Uuid): Promise<void> {
     const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 

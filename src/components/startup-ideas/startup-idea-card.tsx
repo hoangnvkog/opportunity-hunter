@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 
 interface StartupIdeaCardProps {
   problem: string;
   solution: string;
   mvp: string;
   pricing: string;
-  customer: string;
-  distribution: string;
-  competitors: string;
+  clusterName: string;
+  clusterDescription: string;
 }
 
 export default function StartupIdeaCard({
@@ -15,16 +15,20 @@ export default function StartupIdeaCard({
   solution,
   mvp,
   pricing,
-  customer,
-  distribution,
-  competitors,
+  clusterName,
+  clusterDescription,
 }: StartupIdeaCardProps) {
   return (
     <Card>
       <CardHeader>
+        <Badge variant="secondary" className="w-fit mb-2">{clusterName}</Badge>
         <CardTitle className="text-lg">{problem}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div>
+          <h4 className="font-semibold text-sm text-muted-foreground mb-1">Context</h4>
+          <p className="text-sm">{clusterDescription}</p>
+        </div>
         <div>
           <h4 className="font-semibold text-sm text-muted-foreground mb-1">Solution</h4>
           <p className="text-sm">{solution}</p>
@@ -36,18 +40,6 @@ export default function StartupIdeaCard({
         <div>
           <h4 className="font-semibold text-sm text-muted-foreground mb-1">Pricing</h4>
           <p className="text-sm">{pricing}</p>
-        </div>
-        <div>
-          <h4 className="font-semibold text-sm text-muted-foreground mb-1">Customer</h4>
-          <p className="text-sm">{customer}</p>
-        </div>
-        <div>
-          <h4 className="font-semibold text-sm text-muted-foreground mb-1">Distribution</h4>
-          <p className="text-sm">{distribution}</p>
-        </div>
-        <div>
-          <h4 className="font-semibold text-sm text-muted-foreground mb-1">Competitors</h4>
-          <p className="text-sm">{competitors}</p>
         </div>
       </CardContent>
     </Card>

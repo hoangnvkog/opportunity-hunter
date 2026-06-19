@@ -153,6 +153,83 @@ export class StartupIdeasRepository {
     });
   }
 
+  async search(filters: import("@/types/filters").StartupIdeaFilters): Promise<StartupIdeaCardData[]> {
+    const { search, limit = 10 } = filters;
+
+    let query = this.client
+      .from(ENTITY)
+      .select(`
+        id,
+        problem,
+        solution,
+        mvp,
+        pricing,
+        created_at,
+        opportunities!inner(
+          score,
+          pain_clusters!inner(
+            name,
+            description
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    // Text search on problem, solution, or cluster name
+    if (search && search.trim()) {
+      query = query.or(`problem.ilike.%${search}%,solution.ilike.%${search}%`);
+      // Note: Supabase doesn't support nested or on joined tables directly,
+      // so cluster name search would need post-filtering or a different approach
+    }
+
+    query = query.limit(limit);
+
+    const { data, error } = await query;
+    if (error) throw translateError(ENTITY, error);
+
+    let results = (data ?? []).map((row: unknown) => {
+      const r = row as {
+        id: string;
+        problem: string;
+        solution: string;
+        mvp: string;
+        pricing: string;
+        created_at: string;
+        opportunities: {
+          score: number;
+          pain_clusters: {
+            name: string;
+            description: string;
+          };
+        };
+      };
+      return {
+        id: r.id,
+        problem: r.problem,
+        solution: r.solution,
+        mvp: r.mvp,
+        pricing: r.pricing,
+        score: r.opportunities.score,
+        cluster_name: r.opportunities.pain_clusters.name,
+        cluster_description: r.opportunities.pain_clusters.description,
+        created_at: r.created_at,
+      };
+    });
+
+    // Post-filter for cluster name search if needed
+    if (search && search.trim()) {
+      const searchLower = search.toLowerCase();
+      results = results.filter(
+        (idea) =>
+          idea.problem.toLowerCase().includes(searchLower) ||
+          idea.solution.toLowerCase().includes(searchLower) ||
+          idea.cluster_name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return results;
+  }
+
   async delete(id: Uuid): Promise<void> {
     const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 

@@ -21,6 +21,7 @@ import type {
   OpportunityCardData,
   StartupIdeaCardData,
 } from "@/types/dashboard";
+import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
 
 /**
  * Get dashboard stats from the database.
@@ -77,4 +78,24 @@ export async function getLatestStartupIdeas(
 ): Promise<StartupIdeaCardData[]> {
   const startupIdeasRepo = await StartupIdeasRepository.create();
   return startupIdeasRepo.listLatest(limit);
+}
+
+/**
+ * Get filtered opportunities.
+ */
+export async function getFilteredOpportunities(
+  filters: OpportunityFilters
+): Promise<OpportunityCardData[]> {
+  const opportunitiesRepo = await OpportunitiesRepository.create();
+  return opportunitiesRepo.search(filters);
+}
+
+/**
+ * Get filtered startup ideas.
+ */
+export async function getFilteredStartupIdeas(
+  filters: StartupIdeaFilters
+): Promise<StartupIdeaCardData[]> {
+  const startupIdeasRepo = await StartupIdeasRepository.create();
+  return startupIdeasRepo.search(filters);
 }

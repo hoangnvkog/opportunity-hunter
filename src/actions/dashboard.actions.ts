@@ -1,47 +1,44 @@
-/**
- * Dashboard server actions
- * Next.js server actions for dashboard data
- */
-
 "use server";
 
+import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
+import type { OpportunityCardData, StartupIdeaCardData } from "@/types/dashboard";
 import {
-  getDashboardMetrics,
-  getRecentOpportunities,
-  getCategoryTrends,
-  getOpportunitiesWithFilters,
-} from "@/services/dashboard";
-import type { DashboardFilters } from "@/services/dashboard";
+  getFilteredOpportunities,
+  getFilteredStartupIdeas,
+} from "@/services/dashboard/dashboard.service";
 
-/**
- * Refresh dashboard data
- * Server action wrapper for dashboard services
- * 
- * @returns Dashboard metrics, recent opportunities, and category trends
- */
-export async function getDashboardDataAction() {
-  const [metrics, recentOpportunities, categoryTrends] = await Promise.all([
-    getDashboardMetrics(),
-    getRecentOpportunities(),
-    getCategoryTrends(),
-  ]);
-
-  return {
-    metrics,
-    recentOpportunities,
-    categoryTrends,
-  };
+interface ActionResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
 
-/**
- * Get opportunities with filters
- * Server action wrapper for getOpportunitiesWithFilters()
- * 
- * @param filters - Dashboard filters (q, category, minScore, etc.)
- * @returns Filtered opportunities
- */
-export async function getOpportunitiesWithFiltersAction(
-  filters: DashboardFilters
-) {
-  return getOpportunitiesWithFilters(filters);
+export async function getFilteredOpportunitiesAction(
+  filters: OpportunityFilters
+): Promise<ActionResponse<OpportunityCardData[]>> {
+  try {
+    const data = await getFilteredOpportunities(filters);
+    return { success: true, data };
+  } catch (error) {
+    console.error("Failed to fetch filtered opportunities:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function getFilteredStartupIdeasAction(
+  filters: StartupIdeaFilters
+): Promise<ActionResponse<StartupIdeaCardData[]>> {
+  try {
+    const data = await getFilteredStartupIdeas(filters);
+    return { success: true, data };
+  } catch (error) {
+    console.error("Failed to fetch filtered startup ideas:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }

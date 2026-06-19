@@ -1,9 +1,9 @@
 import { MetricCard } from "./metric-card";
 import { TrendingUp, AlertCircle, Target } from "lucide-react";
-import type { DashboardMetrics } from "@/services/dashboard";
+import type { DashboardStats } from "@/types/dashboard";
 
 interface MetricsGridProps {
-  metrics: DashboardMetrics;
+  metrics: DashboardStats;
 }
 
 export default function MetricsGrid({ metrics }: MetricsGridProps) {
@@ -11,18 +11,17 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <MetricCard
         title="Total Opportunities"
-        value={metrics.totalOpportunities}
+        value={metrics.opportunities}
         icon={<Target className="h-4 w-4" />}
       />
       <MetricCard
-        title="Validated Opportunities"
-        value={metrics.validatedCount}
+        title="Pain Points"
+        value={metrics.painPoints}
         icon={<AlertCircle className="h-4 w-4" />}
-        change="Score ≥ 70"
       />
       <MetricCard
-        title="Average Score"
-        value={metrics.averageScore.toFixed(1)}
+        title="Startup Ideas"
+        value={metrics.ideas}
         icon={<TrendingUp className="h-4 w-4" />}
       />
     </div>

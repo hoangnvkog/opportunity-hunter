@@ -1,44 +1,24 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
-import { RecentOpportunitiesSection } from "@/components/dashboard/recent-opportunities-section";
-import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
-import { Pagination } from "@/components/dashboard/Pagination";
+import RecentOpportunitiesSection from "@/components/dashboard/recent-opportunities-section";
+import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
+import DashboardFiltersClient from "@/components/dashboard/dashboard-filters-client";
 import { RunPipelineButton } from "@/components/dashboard/RunPipelineButton";
-import { ExportCsvButton } from "@/components/dashboard/ExportCsvButton";
 import {
-  getDashboardDataAction,
-  getOpportunitiesWithFiltersAction,
+  getFilteredOpportunitiesAction,
+  getFilteredStartupIdeasAction,
 } from "@/actions/dashboard.actions";
+import { getDashboardStats } from "@/services/dashboard/dashboard.service";
 
-interface DashboardPageProps {
-  searchParams: Promise<{
-    q?: string;
-    minScore?: string;
-    minSeverity?: string;
-    minBuyingIntent?: string;
-    sort?: string;
-    page?: string;
-  }>;
-}
-
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
-  const params = await searchParams;
-  
-  const filters = {
-    q: params.q,
-    minScore: params.minScore ? parseFloat(params.minScore) : undefined,
-    minSeverity: params.minSeverity ? parseFloat(params.minSeverity) : undefined,
-    minBuyingIntent: params.minBuyingIntent ? parseFloat(params.minBuyingIntent) : undefined,
-    sort: params.sort as 'score_desc' | 'score_asc' | 'buying_intent_desc' | 'newest' | undefined,
-    page: params.page ? parseInt(params.page, 10) : 1,
-  };
-
-  const [dashboardData, filteredOpportunities] = await Promise.all([
-    getDashboardDataAction(),
-    getOpportunitiesWithFiltersAction(filters),
+export default async function DashboardPage() {
+  const [stats, opportunitiesResult, ideasResult] = await Promise.all([
+    getDashboardStats(),
+    getFilteredOpportunitiesAction({ limit: 10 }),
+    getFilteredStartupIdeasAction({ limit: 10 }),
   ]);
 
-  const { metrics } = dashboardData;
+  const opportunities = opportunitiesResult.success ? opportunitiesResult.data || [] : [];
+  const ideas = ideasResult.success ? ideasResult.data || [] : [];
 
   return (
     <AppLayout>
@@ -52,29 +32,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
         <div className="flex gap-2">
           <RunPipelineButton />
-          <ExportCsvButton data={filteredOpportunities.data} />
         </div>
       </div>
 
-      <MetricsGrid metrics={metrics} />
+      <MetricsGrid metrics={stats} />
 
-      <DashboardFilters currentFilters={filters} />
+      <DashboardFiltersClient
+        initialOpportunities={opportunities}
+        initialIdeas={ideas}
+      />
 
-      {filteredOpportunities.data.length > 0 ? (
-        <>
-          <RecentOpportunitiesSection opportunities={filteredOpportunities.data} />
-          <Pagination 
-            currentPage={filteredOpportunities.page}
-            totalPages={filteredOpportunities.totalPages}
-          />
-        </>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">
-            {filters.q ? "No matching opportunities" : "No opportunities found"}
-          </p>
-        </div>
-      )}
+      <div className="mt-8 space-y-8">
+        <RecentOpportunitiesSection opportunities={opportunities} />
+        <StartupIdeasSection ideas={ideas} />
+      </div>
     </AppLayout>
   );
 }
