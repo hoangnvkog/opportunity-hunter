@@ -118,6 +118,37 @@ export class RawPostsRepository {
     return data;
   }
 
+  async listUnprocessed(limit = 50): Promise<RawPostRow[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .eq("processed", false)
+      .order("created_at", { ascending: true })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
+  async markProcessed(id: Uuid): Promise<void> {
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({ processed: true })
+      .eq("id", id);
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
+  async markProcessedMany(ids: Uuid[]): Promise<void> {
+    if (ids.length === 0) return;
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({ processed: true })
+      .in("id", ids);
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
   async delete(id: Uuid): Promise<void> {
     const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 

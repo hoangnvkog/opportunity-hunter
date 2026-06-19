@@ -60,6 +60,27 @@ export class PainClustersRepository {
     return data ?? [];
   }
 
+  async listUnprocessedForOpportunities(limit = 50): Promise<PainClusterRow[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .eq("opportunity_generated", false)
+      .order("created_at", { ascending: true })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
+  async markOpportunityGenerated(id: Uuid): Promise<void> {
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({ opportunity_generated: true })
+      .eq("id", id);
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
   async create(input: PainClusterInsert): Promise<PainClusterRow> {
     const { data, error } = await this.client
       .from(ENTITY)

@@ -113,6 +113,37 @@ export class PainPointsRepository {
     return data;
   }
 
+  async listUnclustered(limit = 50): Promise<PainPointRow[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .eq("clustered", false)
+      .order("created_at", { ascending: true })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
+  async markClustered(id: Uuid): Promise<void> {
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({ clustered: true })
+      .eq("id", id);
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
+  async markClusteredMany(ids: Uuid[]): Promise<void> {
+    if (ids.length === 0) return;
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({ clustered: true })
+      .in("id", ids);
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
   async delete(id: Uuid): Promise<void> {
     const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 

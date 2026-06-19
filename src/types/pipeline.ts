@@ -1,12 +1,15 @@
 /**
  * Pipeline types for AI-powered data extraction and generation.
- * These interfaces define the data flow from raw posts to startup ideas.
- * 
- * NOTE: These are transient DTOs used between pipeline stages.
- * They do NOT map directly to database columns.
+ *
+ * IMPORTANT:
+ * - These are AI DOMAIN models only. Pure business data.
+ * - NO database UUIDs. NO foreign keys.
+ * - NO id, raw_post_id, cluster_id, opportunity_id fields.
+ * - AI providers return these. Services map to real DB rows.
+ *
+ * Database is the only component that generates UUIDs.
  */
 
-/** Raw post input from external sources (Reddit, Twitter, etc.) */
 export interface RawPostInput {
   source: string;
   title: string;
@@ -16,7 +19,7 @@ export interface RawPostInput {
   created_at: string;
 }
 
-/** Pain point extracted from a raw post */
+/** Pain point from AI - no IDs */
 export interface PainPointInput {
   pain: string;
   category: string;
@@ -24,26 +27,25 @@ export interface PainPointInput {
   buying_intent: number;
 }
 
-/** Cluster of similar pain points */
+/** Cluster from AI - no IDs, includes pain point indexes for linkage */
 export interface PainClusterInput {
   cluster_name: string;
   description: string;
+  pain_point_indexes: number[];
 }
 
-/** Business opportunity derived from a pain cluster */
+/** Opportunity from AI - no IDs, has optional cluster context for title/description */
 export interface OpportunityInput {
-  cluster_id: string;
-  title: string;
-  description: string;
   score: number;
   frequency: number;
   severity: number;
   buying_intent: number;
+  cluster_name?: string;
+  cluster_description?: string;
 }
 
-/** Startup idea generated from an opportunity */
+/** Startup idea from AI - no IDs */
 export interface StartupIdeaInput {
-  opportunity_id: string;
   problem: string;
   solution: string;
   mvp: string;

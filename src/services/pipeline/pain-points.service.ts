@@ -1,117 +1,78 @@
-/**
- * Pain points service - extracts pain points from raw posts.
- * Delegates to AIProvider for intelligent extraction.
- */
-
-import type { AIProvider } from "@/types/ai";
-import type { RawPostInput, PainPointInput } from "@/types/pipeline";
-import type { RawPostRow, PainPointInsert } from "@/types";
-import { RawPostsRepository, PainPointsRepository } from "@/lib/db/repositories";
+import { RawPostsRepository } from "@/lib/db/repositories/raw-posts.repository";
+import { PainPointsRepository } from "@/lib/db/repositories/pain-points.repository";
 import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
+import type { RawPostInput, PainPointInput } from "@/types/pipeline";
 
 /**
- * Convert RawPostRow to RawPostInput for AI provider
+ * Extract pain points from unprocessed raw posts
+ * Uses incremental processing: only processes posts where processed = false
  */
-function toRawPostInput(row: RawPostRow): RawPostInput {
-  return {
-    source: row.source,
-    title: row.title,
-    content: row.content,
-    url: row.url,
-    score: row.score,
-    created_at: row.created_at,
-  };
-}
-
-/**
- * Convert PainPointInput to PainPointInsert for database
- */
-function toPainPointInsert(input: PainPointInput): PainPointInsert {
-  return {
-    description: input.pain,
-    severity: input.severity.toString(),
-    buying_intent: input.buying_intent.toString(),
-  };
-}
-
-/**
- * Extract pain points from raw posts using AI/NLP.
- * 
- * @param posts - Raw posts to analyze
- * @param provider - AI provider to use for extraction
- * @returns Array of extracted pain points
- */
-export async function extractPainPoints(
-  posts: RawPostInput[],
-  provider: AIProvider,
-): Promise<PainPointInput[]> {
-  return provider.extractPainPoints(posts);
-}
-
-/**
- * Extract pain points from raw_posts in database and insert into pain_points.
- * Uses AI provider from environment (default: MockProvider).
- * Skips duplicates by checking description content.
- * 
- * @param limit - Maximum number of raw posts to process (default: 50)
- * @returns Object with counts: processed, extracted, skipped, inserted
- */
-export async function extractPainPointsFromPosts(
-  limit: number = 50,
-): Promise<{
+export async function extractPainPointsFromPosts(limit = 50): Promise<{
   processed: number;
   extracted: number;
-  skipped: number;
   inserted: number;
 }> {
-  // Get repositories
   const rawPostsRepo = await RawPostsRepository.create();
   const painPointsRepo = await PainPointsRepository.create();
-  
-  // Load raw posts from database
-  const rawPosts = await rawPostsRepo.list({ limit });
-  
-  if (rawPosts.length === 0) {
-    return { processed: 0, extracted: 0, skipped: 0, inserted: 0 };
+
+  // Fetch only unprocessed posts
+  const unprocessedPosts = await rawPostsRepo.listUnprocessed(limit);
+
+  if (unprocessedPosts.length === 0) {
+    return { processed: 0, extracted: 0, inserted: 0 };
   }
-  
-  // Convert to RawPostInput for AI provider
-  const postsInput = rawPosts.map(toRawPostInput);
-  
-  // Get AI provider from environment (default: MockProvider)
+
   const provider = getAIProviderFromEnv();
-  
-  // Extract pain points using AI
-  const extractedPoints = await provider.extractPainPoints(postsInput);
-  
-  if (extractedPoints.length === 0) {
-    return { processed: rawPosts.length, extracted: 0, skipped: 0, inserted: 0 };
+  const processedPostIds: string[] = [];
+  let totalExtracted = 0;
+  let totalInserted = 0;
+
+  // Process each post individually
+  for (const post of unprocessedPosts) {
+    try {
+      // Convert to pipeline input
+      const input: RawPostInput = {
+        source: post.source,
+        title: post.title,
+        content: post.content,
+        url: post.url,
+        score: post.score,
+        created_at: post.created_at,
+      };
+
+      // Extract pain points using AI
+      const painPoints: PainPointInput[] = await provider.extractPainPoints([input]);
+      totalExtracted += painPoints.length;
+
+      // Insert pain points
+      if (painPoints.length > 0) {
+        for (const painPoint of painPoints) {
+          try {
+            await painPointsRepo.create({
+              raw_post_id: post.id,
+              description: painPoint.pain,
+              category: painPoint.category,
+              severity: painPoint.severity.toFixed(3),
+              buying_intent: painPoint.buying_intent.toFixed(3),
+            });
+            totalInserted++;
+          } catch (error) {
+            console.error(`Failed to insert pain point for post ${post.id}:`, error);
+          }
+        }
+      }
+
+      // Mark post as processed
+      await rawPostsRepo.markProcessed(post.id);
+      processedPostIds.push(post.id);
+    } catch (error) {
+      console.error(`Failed to process post ${post.id}:`, error);
+    }
   }
-  
-  // Load existing pain points to detect duplicates
-  const existingPoints = await painPointsRepo.list({ limit: 1000 });
-  const existingKeys = new Set(
-    existingPoints.map(p => p.description.toLowerCase())
-  );
-  
-  // Filter out duplicates and convert to insert format
-  const newPoints = extractedPoints
-    .filter(point => !existingKeys.has(point.pain.toLowerCase()))
-    .map(toPainPointInsert);
-  
-  const skipped = extractedPoints.length - newPoints.length;
-  
-  // Insert new pain points
-  let inserted = 0;
-  if (newPoints.length > 0) {
-    const result = await painPointsRepo.createMany(newPoints);
-    inserted = result.length;
-  }
-  
+
   return {
-    processed: rawPosts.length,
-    extracted: extractedPoints.length,
-    skipped,
-    inserted,
+    processed: processedPostIds.length,
+    extracted: totalExtracted,
+    inserted: totalInserted,
   };
 }

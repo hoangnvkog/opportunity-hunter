@@ -177,6 +177,27 @@ export class OpportunitiesRepository {
     return counts;
   }
 
+  async listUnprocessedForIdeas(limit = 50): Promise<OpportunityRow[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .eq("idea_generated", false)
+      .order("created_at", { ascending: true })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
+  async markIdeaGenerated(id: Uuid): Promise<void> {
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({ idea_generated: true })
+      .eq("id", id);
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
   async create(input: OpportunityInsert): Promise<OpportunityRow> {
     const { data, error } = await this.client
       .from(ENTITY)

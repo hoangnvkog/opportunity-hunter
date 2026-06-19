@@ -3,8 +3,8 @@
  */
 
 export { fetchRawPosts } from "./reddit.service";
-export { extractPainPoints, extractPainPointsFromPosts } from "./pain-points.service";
-export { clusterPainPoints, clusterPainPointsFromDatabase } from "./clusters.service";
-export { generateOpportunities, generateOpportunitiesFromDatabase } from "./opportunities.service";
+export { extractPainPointsFromPosts } from "./pain-points.service";
+export { clusterPainPointsFromDatabase } from "./clusters.service";
+export { generateOpportunitiesFromDatabase } from "./opportunities.service";
 export { generateStartupIdeas, generateStartupIdeasFromDatabase } from "./startup-ideas.service";
 export { runPipeline, type PipelineRunResult } from "./runner.service";

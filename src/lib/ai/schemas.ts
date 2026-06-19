@@ -31,11 +31,8 @@ export type ClusterResponse = z.infer<typeof ClusterSchema>;
 
 /**
  * Schema for opportunity generation response
- * Used when generating business opportunities from clusters
  */
 export const OpportunitySchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
   score: z.number(),
   frequency: z.number(),
   severity: z.number(),

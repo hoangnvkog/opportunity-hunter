@@ -1,119 +1,80 @@
-/**
- * Clusters service - groups similar pain points into clusters.
- * Delegates to AIProvider for intelligent clustering.
- */
-
-import type { AIProvider } from "@/types/ai";
-import type { PainPointInput, PainClusterInput } from "@/types/pipeline";
-import type { PainPointRow, PainClusterInsert } from "@/types";
-import { PainPointsRepository, PainClustersRepository } from "@/lib/db/repositories";
+import { PainPointsRepository } from "@/lib/db/repositories/pain-points.repository";
+import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repository";
 import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
+import type { PainPointInput, PainClusterInput } from "@/types/pipeline";
 
 /**
- * Convert PainPointRow to PainPointInput for AI provider
+ * Cluster unclustered pain points
+ * Uses incremental processing: only processes pain points where clustered = false
  */
-function toPainPointInput(row: PainPointRow): PainPointInput {
-  return {
-    pain: row.description,
-    category: 'general', // Default category for legacy data
-    severity: parseFloat(row.severity),
-    buying_intent: parseFloat(row.buying_intent),
-  };
-}
-
-/**
- * Convert PainClusterInput to PainClusterInsert for database
- */
-function toPainClusterInsert(input: PainClusterInput): PainClusterInsert {
-  return {
-    name: input.cluster_name,
-    description: input.description,
-  };
-}
-
-/**
- * Cluster similar pain points using AI/NLP.
- * 
- * @param painPoints - Pain points to cluster
- * @param provider - AI provider to use for clustering
- * @returns Array of pain point clusters
- */
-export async function clusterPainPoints(
-  painPoints: PainPointInput[],
-  provider: AIProvider,
-): Promise<PainClusterInput[]> {
-  return provider.clusterPainPoints(painPoints);
-}
-
-/**
- * Cluster pain points from database and insert into pain_clusters.
- * Uses AI provider from environment (default: MockProvider).
- * Skips duplicate clusters by name.
- * 
- * @param limit - Maximum number of pain points to process (default: 100)
- * @returns Object with counts: processed, clustered, skipped, inserted
- */
-export async function clusterPainPointsFromDatabase(
-  limit: number = 100,
-): Promise<{
+export async function clusterPainPointsFromDatabase(limit = 100): Promise<{
   processed: number;
   clustered: number;
-  skipped: number;
   inserted: number;
 }> {
-  // Get repositories
   const painPointsRepo = await PainPointsRepository.create();
   const clustersRepo = await PainClustersRepository.create();
-  
-  // Load pain points from database
-  const painPoints = await painPointsRepo.list({ limit });
-  
-  if (painPoints.length === 0) {
-    return { processed: 0, clustered: 0, skipped: 0, inserted: 0 };
+
+  // Fetch only unclustered pain points
+  const unclusteredPoints = await painPointsRepo.listUnclustered(limit);
+
+  if (unclusteredPoints.length === 0) {
+    return { processed: 0, clustered: 0, inserted: 0 };
   }
-  
-  // Convert to PainPointInput for AI provider
-  const pointsInput = painPoints.map(toPainPointInput);
-  
-  // Get AI provider from environment (default: MockProvider)
+
   const provider = getAIProviderFromEnv();
   
-  // Cluster pain points using AI
-  const clusters = await provider.clusterPainPoints(pointsInput);
-  
+  // Convert to pipeline input
+  const inputs: PainPointInput[] = unclusteredPoints.map((p) => ({
+    pain: p.description,
+    category: p.category,
+    severity: parseFloat(p.severity),
+    buying_intent: parseFloat(p.buying_intent),
+  }));
+
+  // Cluster using AI
+  const clusters: PainClusterInput[] = await provider.clusterPainPoints(inputs);
+
   if (clusters.length === 0) {
-    return { processed: painPoints.length, clustered: 0, skipped: 0, inserted: 0 };
+    return { processed: 0, clustered: 0, inserted: 0 };
   }
-  
-  // Load existing clusters to detect duplicates
-  const existingClusters = await clustersRepo.listAll();
-  const existingNames = new Set(
-    existingClusters.map(c => c.name.toLowerCase())
-  );
-  
-  // Filter out duplicates and convert to insert format
-  const newClusters = clusters
-    .filter(cluster => !existingNames.has(cluster.cluster_name.toLowerCase()))
-    .map(toPainClusterInsert);
-  
-  const skipped = clusters.length - newClusters.length;
-  
-  // Insert new clusters one by one (no createMany method available)
+
   let inserted = 0;
-  for (const cluster of newClusters) {
+  const processedPointIds: string[] = [];
+
+  // Insert clusters and mark pain points as clustered
+  for (const cluster of clusters) {
     try {
-      await clustersRepo.create(cluster);
-      inserted++;
+      // Check if cluster already exists
+      const existing = await clustersRepo.findByName(cluster.cluster_name);
+      
+      if (!existing) {
+        // Create new cluster
+        await clustersRepo.create({
+          name: cluster.cluster_name,
+          description: cluster.description,
+        });
+        inserted++;
+      }
+
+      // Mark all pain points in this cluster as clustered
+      if (cluster.pain_point_indexes && cluster.pain_point_indexes.length > 0) {
+        for (const index of cluster.pain_point_indexes) {
+          if (index < unclusteredPoints.length) {
+            const point = unclusteredPoints[index];
+            await painPointsRepo.markClustered(point.id);
+            processedPointIds.push(point.id);
+          }
+        }
+      }
     } catch (error) {
-      // Skip duplicates that were inserted between check and insert
-      console.error(`Failed to insert cluster ${cluster.name}:`, error);
+      console.error(`Failed to insert cluster ${cluster.cluster_name}:`, error);
     }
   }
-  
+
   return {
-    processed: painPoints.length,
+    processed: processedPointIds.length,
     clustered: clusters.length,
-    skipped,
     inserted,
   };
 }

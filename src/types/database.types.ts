@@ -64,15 +64,19 @@ export type RawPostRow = {
   content: string;
   url: string;
   score: number;
+  processed: boolean;
   created_at: string;
 };
 
 export type PainPointRow = {
   id: Uuid;
+  raw_post_id: Uuid;
   description: string;
+  category: string;
   severity: Decimal3;
   frequency: number;
   buying_intent: Decimal3;
+  clustered: boolean;
   created_at: string;
 };
 
@@ -80,6 +84,7 @@ export type PainClusterRow = {
   id: Uuid;
   name: string;
   description: string;
+  opportunity_generated: boolean;
 };
 
 export type OpportunityRow = {
@@ -92,6 +97,7 @@ export type OpportunityRow = {
   frequency: number;
   severity: Decimal3;
   buying_intent: Decimal3;
+  idea_generated: boolean;
   created_at: string;
 };
 
@@ -123,15 +129,19 @@ export type RawPostInsert = {
   content: string;
   url: string;
   score?: number;
+  processed?: boolean;
   created_at?: string;
 };
 
 export type PainPointInsert = {
   id?: Uuid;
+  raw_post_id: Uuid;
   description: string;
+  category: string;
   severity: Decimal3;
   frequency?: number;
   buying_intent: Decimal3;
+  clustered?: boolean;
   created_at?: string;
 };
 
@@ -139,6 +149,7 @@ export type PainClusterInsert = {
   id?: Uuid;
   name: string;
   description: string;
+  opportunity_generated?: boolean;
 };
 
 export type OpportunityInsert = {
@@ -150,6 +161,7 @@ export type OpportunityInsert = {
   frequency?: number;
   severity: Decimal3;
   buying_intent: Decimal3;
+  idea_generated?: boolean;
   created_at?: string;
 };
 

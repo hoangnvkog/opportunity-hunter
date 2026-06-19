@@ -1,125 +1,76 @@
-/**
- * Opportunities service - generates business opportunities from pain clusters.
- * Delegates to AIProvider for intelligent opportunity generation.
- */
-
-import type { AIProvider } from "@/types/ai";
-import type { PainClusterInput, OpportunityInput } from "@/types/pipeline";
-import type { PainClusterRow, OpportunityInsert } from "@/types";
-import { PainClustersRepository, OpportunitiesRepository } from "@/lib/db/repositories";
+import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repository";
+import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
+import type { PainClusterInput, OpportunityInput } from "@/types/pipeline";
 
 /**
- * Convert PainClusterRow to PainClusterInput for AI provider
+ * Generate opportunities from clusters that don't have opportunities yet
+ * Uses incremental processing: only processes clusters where opportunity_generated = false
  */
-function toPainClusterInput(row: PainClusterRow): PainClusterInput {
-  return {
-    cluster_name: row.name,
-    description: row.description,
-  };
-}
-
-/**
- * Convert OpportunityInput to OpportunityInsert for database
- */
-function toOpportunityInsert(input: OpportunityInput): OpportunityInsert {
-  return {
-    cluster_id: input.cluster_id,
-    title: input.title || `Opportunity for cluster ${input.cluster_id}`,
-    description: input.description || `AI-generated opportunity based on pain cluster analysis`,
-    score: input.score.toString(),
-    frequency: input.frequency,
-    severity: input.severity.toString(),
-    buying_intent: input.buying_intent.toString(),
-  };
-}
-
-/**
- * Generate business opportunities from pain clusters using AI.
- * 
- * @param clusters - Pain clusters to analyze
- * @param provider - AI provider to use for generation
- * @returns Array of generated opportunities
- */
-export async function generateOpportunities(
-  clusters: PainClusterInput[],
-  provider: AIProvider,
-): Promise<OpportunityInput[]> {
-  return provider.generateOpportunities(clusters);
-}
-
-/**
- * Generate opportunities from pain_clusters in database and insert into opportunities.
- * Uses AI provider from environment (default: MockProvider).
- * Skips duplicate opportunities by cluster_id.
- * 
- * @param limit - Maximum number of clusters to process (default: 50)
- * @returns Object with counts: processed, generated, skipped, inserted
- */
-export async function generateOpportunitiesFromDatabase(
-  limit: number = 50,
-): Promise<{
+export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
   processed: number;
   generated: number;
-  skipped: number;
   inserted: number;
 }> {
-  // Get repositories
   const clustersRepo = await PainClustersRepository.create();
   const opportunitiesRepo = await OpportunitiesRepository.create();
-  
-  // Load pain clusters from database
-  const clusters = await clustersRepo.listAll();
-  
-  // Limit clusters to process
-  const clustersToProcess = clusters.slice(0, limit);
-  
-  if (clustersToProcess.length === 0) {
-    return { processed: 0, generated: 0, skipped: 0, inserted: 0 };
+
+  // Fetch only clusters that haven't generated opportunities
+  const unprocessedClusters = await clustersRepo.listUnprocessedForOpportunities(limit);
+
+  if (unprocessedClusters.length === 0) {
+    return { processed: 0, generated: 0, inserted: 0 };
   }
-  
-  // Convert to PainClusterInput for AI provider
-  const clustersInput = clustersToProcess.map(toPainClusterInput);
-  
-  // Get AI provider from environment (default: MockProvider)
+
   const provider = getAIProviderFromEnv();
-  
+
+  // Convert to pipeline input
+  const inputs: PainClusterInput[] = unprocessedClusters.map((c) => ({
+    cluster_name: c.name,
+    description: c.description,
+    pain_point_indexes: [],
+  }));
+
   // Generate opportunities using AI
-  const opportunities = await provider.generateOpportunities(clustersInput);
-  
+  const opportunities: OpportunityInput[] = await provider.generateOpportunities(inputs);
+
   if (opportunities.length === 0) {
-    return { processed: clustersToProcess.length, generated: 0, skipped: 0, inserted: 0 };
+    return { processed: 0, generated: 0, inserted: 0 };
   }
-  
-  // Load existing opportunities to detect duplicates by cluster_id
-  const existingOpportunities = await opportunitiesRepo.list({ limit: 1000 });
-  const existingClusterIds = new Set(
-    existingOpportunities.map(opp => opp.cluster_id)
-  );
-  
-  // Filter out duplicates and convert to insert format
-  const newOpportunities = opportunities
-    .filter(opp => !existingClusterIds.has(opp.cluster_id))
-    .map(toOpportunityInsert);
-  
-  const skipped = opportunities.length - newOpportunities.length;
-  
-  // Insert new opportunities one by one
+
   let inserted = 0;
-  for (const opportunity of newOpportunities) {
+  const processedClusterIds: string[] = [];
+
+  // Insert opportunities and mark clusters as processed
+  for (let i = 0; i < opportunities.length; i++) {
+    const cluster = unprocessedClusters[i];
+    const opportunity = opportunities[i];
+
+    if (!cluster || !opportunity) continue;
+
     try {
-      await opportunitiesRepo.create(opportunity);
+      await opportunitiesRepo.create({
+        cluster_id: cluster.id,
+        title: opportunity.cluster_name || cluster.name,
+        description: opportunity.cluster_description || cluster.description,
+        score: opportunity.score.toFixed(3),
+        frequency: opportunity.frequency,
+        severity: opportunity.severity.toFixed(3),
+        buying_intent: opportunity.buying_intent.toFixed(3),
+      });
       inserted++;
+
+      // Mark cluster as processed
+      await clustersRepo.markOpportunityGenerated(cluster.id);
+      processedClusterIds.push(cluster.id);
     } catch (error) {
-      // Skip duplicates that were inserted between check and insert
-      console.error(`Failed to insert opportunity for cluster ${opportunity.cluster_id}:`, error);
+      console.error(`Failed to insert opportunity for cluster ${cluster.id}:`, error);
     }
   }
-  
+
   return {
-    processed: clustersToProcess.length,
+    processed: processedClusterIds.length,
     generated: opportunities.length,
-    skipped,
     inserted,
   };
 }
