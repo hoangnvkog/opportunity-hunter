@@ -60,6 +60,26 @@ export class PainClustersRepository {
     return data ?? [];
   }
 
+  async count(): Promise<number> {
+    const { count, error } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw translateError(ENTITY, error);
+    return count ?? 0;
+  }
+
+  async listTop(limit = 10): Promise<PainClusterRow[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .order("id", { ascending: false })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
   async listUnprocessedForOpportunities(limit = 50): Promise<PainClusterRow[]> {
     const { data, error } = await this.client
       .from(ENTITY)

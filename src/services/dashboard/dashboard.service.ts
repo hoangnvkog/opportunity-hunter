@@ -1,0 +1,80 @@
+/**
+ * Dashboard service — aggregates data from multiple repositories
+ * for the dashboard view.
+ *
+ * Architecture:
+ *   app/dashboard/page.tsx (async, load data)
+ *     → services/dashboard/dashboard.service.ts (aggregate)
+ *       → repositories/* (DB access)
+ *         → Supabase
+ *
+ * No component should access repositories directly.
+ */
+
+import { RawPostsRepository } from "@/lib/db/repositories/raw-posts.repository";
+import { PainPointsRepository } from "@/lib/db/repositories/pain-points.repository";
+import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repository";
+import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
+import { StartupIdeasRepository } from "@/lib/db/repositories/startup-ideas.repository";
+import type {
+  DashboardStats,
+  OpportunityCardData,
+  StartupIdeaCardData,
+} from "@/types/dashboard";
+
+/**
+ * Get dashboard stats from the database.
+ *
+ * @returns Counts for all pipeline stages
+ */
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo] = await Promise.all([
+    RawPostsRepository.create(),
+    PainPointsRepository.create(),
+    PainClustersRepository.create(),
+    OpportunitiesRepository.create(),
+    StartupIdeasRepository.create(),
+  ]);
+
+  const [rawPosts, painPoints, clusters, opportunities, ideas] = await Promise.all([
+    rawPostsRepo.count(),
+    painPointsRepo.count(),
+    painClustersRepo.count(),
+    opportunitiesRepo.count(),
+    startupIdeasRepo.count(),
+  ]);
+
+  return {
+    rawPosts,
+    painPoints,
+    clusters,
+    opportunities,
+    ideas,
+  };
+}
+
+/**
+ * Get top opportunities for the dashboard.
+ *
+ * @param limit - Maximum number of opportunities to return (default: 10).
+ * @returns Array of OpportunityCardData, ordered by score descending.
+ */
+export async function getTopOpportunities(
+  limit = 10
+): Promise<OpportunityCardData[]> {
+  const opportunitiesRepo = await OpportunitiesRepository.create();
+  return opportunitiesRepo.listTop(limit);
+}
+
+/**
+ * Get latest startup ideas for the dashboard.
+ *
+ * @param limit - Maximum number of ideas to return (default: 10).
+ * @returns Array of StartupIdeaCardData, ordered by created_at descending.
+ */
+export async function getLatestStartupIdeas(
+  limit = 10
+): Promise<StartupIdeaCardData[]> {
+  const startupIdeasRepo = await StartupIdeasRepository.create();
+  return startupIdeasRepo.listLatest(limit);
+}

@@ -125,6 +125,15 @@ export class PainPointsRepository {
     return data ?? [];
   }
 
+  async count(): Promise<number> {
+    const { count, error } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw translateError(ENTITY, error);
+    return count ?? 0;
+  }
+
   async markClustered(id: Uuid): Promise<void> {
     const { error } = await this.client
       .from(ENTITY)

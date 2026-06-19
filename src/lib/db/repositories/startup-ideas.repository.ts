@@ -4,6 +4,7 @@
  * Spec note: no `created_at` and no `target_customer` columns.
  */
 
+import type { StartupIdeaCardData } from "@/types/dashboard";
 import type {
   StartupIdeaInsert,
   StartupIdeaRow,
@@ -88,6 +89,68 @@ export class StartupIdeasRepository {
     }
     if (!data) throw new RepositoryError(`${ENTITY} update returned no row`);
     return data;
+  }
+
+  async count(): Promise<number> {
+    const { count, error } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw translateError(ENTITY, error);
+    return count ?? 0;
+  }
+
+  async listLatest(limit = 10): Promise<StartupIdeaCardData[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select(`
+        id,
+        problem,
+        solution,
+        mvp,
+        pricing,
+        created_at,
+        opportunities!inner(
+          score,
+          pain_clusters!inner(
+            name,
+            description
+          )
+        )
+      `)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+
+    return (data ?? []).map((row: unknown) => {
+      const r = row as {
+        id: string;
+        problem: string;
+        solution: string;
+        mvp: string;
+        pricing: string;
+        created_at: string;
+        opportunities: {
+          score: number;
+          pain_clusters: {
+            name: string;
+            description: string;
+          };
+        };
+      };
+      return {
+        id: r.id,
+        problem: r.problem,
+        solution: r.solution,
+        mvp: r.mvp,
+        pricing: r.pricing,
+        score: r.opportunities.score,
+        cluster_name: r.opportunities.pain_clusters.name,
+        cluster_description: r.opportunities.pain_clusters.description,
+        created_at: r.created_at,
+      };
+    });
   }
 
   async delete(id: Uuid): Promise<void> {

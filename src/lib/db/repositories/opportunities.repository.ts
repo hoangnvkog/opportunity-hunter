@@ -5,6 +5,7 @@
  * there is no `created_at` column.
  */
 
+import type { OpportunityCardData } from "@/types/dashboard";
 import type {
   OpportunityInsert,
   OpportunityRow,
@@ -101,8 +102,43 @@ export class OpportunitiesRepository {
     return data ?? [];
   }
 
-  async listTop(limit = 10): Promise<OpportunityRow[]> {
-    return this.list({ limit });
+  async listTop(limit = 10): Promise<OpportunityCardData[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("id, score, frequency, severity, buying_intent, pain_clusters!inner(name, description)")
+      .order("score", { ascending: false })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+
+    return (data ?? []).map((row: unknown) => {
+      const r = row as {
+        id: string;
+        score: number;
+        frequency: number;
+        severity: number;
+        buying_intent: number;
+        pain_clusters: { name: string; description: string };
+      };
+      return {
+        id: r.id,
+        score: r.score,
+        frequency: r.frequency,
+        severity: r.severity,
+        buying_intent: r.buying_intent,
+        cluster_name: r.pain_clusters.name,
+        cluster_description: r.pain_clusters.description,
+      };
+    });
+  }
+
+  async count(): Promise<number> {
+    const { count, error } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw translateError(ENTITY, error);
+    return count ?? 0;
   }
 
   async listTopWithCluster(
