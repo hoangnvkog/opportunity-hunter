@@ -97,6 +97,12 @@ export type OpportunityRow = {
   frequency: number;
   severity: Decimal3;
   buying_intent: Decimal3;
+  /** Number of pain points in the cluster (null for legacy rows). */
+  cluster_size: number | null;
+  /** Recency score 0–1 (null for legacy rows). */
+  recency_score: Decimal3 | null;
+  /** Source diversity score 0–1 (null for legacy rows). */
+  source_diversity: Decimal3 | null;
   idea_generated: boolean;
   created_at: string;
 };
@@ -188,6 +194,9 @@ export type OpportunityInsert = {
   frequency?: number;
   severity: Decimal3;
   buying_intent: Decimal3;
+  cluster_size?: number;
+  recency_score?: Decimal3;
+  source_diversity?: Decimal3;
   idea_generated?: boolean;
   created_at?: string;
 };

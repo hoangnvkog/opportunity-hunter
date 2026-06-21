@@ -24,8 +24,14 @@ export function OpportunityListItem({ opportunity }: OpportunityListItemProps) {
           </p>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
             <span>Frequency: {opportunity.frequency}</span>
-            <span>Severity: {opportunity.severity}</span>
-            <span>Buying Intent: {opportunity.buyingIntent}</span>
+            <span>Severity: {opportunity.severity.toFixed(2)}</span>
+            <span>Buying Intent: {opportunity.buyingIntent.toFixed(2)}</span>
+            {opportunity.sourceDiversity != null && (
+              <span>Sources: {opportunity.sourceDiversity.toFixed(2)}</span>
+            )}
+            {opportunity.recencyScore != null && (
+              <span>Recency: {opportunity.recencyScore.toFixed(2)}</span>
+            )}
           </div>
         </div>
         <div className="text-right flex-shrink-0">

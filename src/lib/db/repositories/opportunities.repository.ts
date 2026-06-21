@@ -30,6 +30,9 @@ export interface OpportunityWithCluster {
   frequency: number;
   severity: number;
   buying_intent: number;
+  cluster_size: number | null;
+  recency_score: string | null;
+  source_diversity: string | null;
   created_at: string;
   pain_clusters: {
     id: Uuid;
@@ -105,7 +108,7 @@ export class OpportunitiesRepository {
   async listTop(limit = 10): Promise<OpportunityCardData[]> {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select("id, score, frequency, severity, buying_intent, pain_clusters!inner(name, description)")
+      .select("id, score, frequency, severity, buying_intent, source_diversity, recency_score, pain_clusters!inner(name, description)")
       .order("score", { ascending: false })
       .limit(limit);
 
@@ -118,6 +121,8 @@ export class OpportunitiesRepository {
         frequency: number;
         severity: number;
         buying_intent: number;
+        source_diversity: string | null;
+        recency_score: string | null;
         pain_clusters: { name: string; description: string };
       };
       return {
@@ -126,6 +131,8 @@ export class OpportunitiesRepository {
         frequency: r.frequency,
         severity: r.severity,
         buying_intent: r.buying_intent,
+        source_diversity: r.source_diversity ? parseFloat(r.source_diversity) : 0,
+        recency_score: r.recency_score ? parseFloat(r.recency_score) : 0,
         cluster_name: r.pain_clusters.name,
         cluster_description: r.pain_clusters.description,
       };
@@ -298,7 +305,7 @@ export class OpportunitiesRepository {
 
     let query = this.client
       .from(ENTITY)
-      .select("id, score, frequency, severity, buying_intent, pain_clusters!inner(name, description)")
+      .select("id, score, frequency, severity, buying_intent, source_diversity, recency_score, pain_clusters!inner(name, description)")
       .order("score", { ascending: false });
 
     // Text search on cluster name or description
@@ -324,6 +331,8 @@ export class OpportunitiesRepository {
         frequency: number;
         severity: number;
         buying_intent: number;
+        source_diversity: string | null;
+        recency_score: string | null;
         pain_clusters: { name: string; description: string };
       };
       return {
@@ -332,6 +341,8 @@ export class OpportunitiesRepository {
         frequency: r.frequency,
         severity: r.severity,
         buying_intent: r.buying_intent,
+        source_diversity: r.source_diversity ? parseFloat(r.source_diversity) : 0,
+        recency_score: r.recency_score ? parseFloat(r.recency_score) : 0,
         cluster_name: r.pain_clusters.name,
         cluster_description: r.pain_clusters.description,
       };

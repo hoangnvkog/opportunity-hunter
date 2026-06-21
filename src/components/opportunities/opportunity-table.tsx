@@ -42,6 +42,12 @@ export default function OpportunityTable({ opportunities }: OpportunityTableProp
                 <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
                   Buying Intent
                 </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Sources
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Recency
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -57,8 +63,18 @@ export default function OpportunityTable({ opportunities }: OpportunityTableProp
                   </td>
                   <td className="py-3 px-4 text-sm">{opportunity.score}</td>
                   <td className="py-3 px-4 text-sm">{opportunity.frequency}</td>
-                  <td className="py-3 px-4 text-sm">{opportunity.severity}</td>
-                  <td className="py-3 px-4 text-sm">{opportunity.buyingIntent}</td>
+                  <td className="py-3 px-4 text-sm">{opportunity.severity.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-sm">{opportunity.buyingIntent.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-sm">
+                    {opportunity.sourceDiversity != null
+                      ? opportunity.sourceDiversity.toFixed(2)
+                      : "—"}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {opportunity.recencyScore != null
+                      ? opportunity.recencyScore.toFixed(2)
+                      : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>

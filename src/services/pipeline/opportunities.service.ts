@@ -1,16 +1,91 @@
 import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
+import { PainPointsRepository } from "@/lib/db/repositories/pain-points.repository";
+import { RawPostsRepository } from "@/lib/db/repositories/raw-posts.repository";
 import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
+import {
+  calculateOpportunityScore,
+  calculateRecencyScore,
+  calculateSourceDiversityScore,
+  calculateClusterSizeScore,
+} from "@/lib/scoring/opportunity-score";
 import type { PainClusterInput, OpportunityInput } from "@/types/pipeline";
 
+/** Score statistics for pipeline logging. */
+export interface OpportunityScoreStats {
+  average_score: number;
+  highest_score: number;
+  lowest_score: number;
+}
+
 /**
- * Generate opportunities from clusters that don't have opportunities yet
- * Uses incremental processing: only processes clusters where opportunity_generated = false
+ * Enrichment data gathered from the database to feed the scoring engine.
+ */
+interface EnrichmentData {
+  clusterSize: number;
+  recencyScore: number;
+  sourceDiversityScore: number;
+}
+
+/**
+ * Gather enrichment data from the database for scoring.
+ *
+ * Queries pain_points and raw_posts to derive:
+ * - cluster_size: approximate count of clustered pain points
+ * - recency_score: how recent the source posts are
+ * - source_diversity: number of distinct sources
+ */
+async function gatherEnrichmentData(): Promise<EnrichmentData> {
+  const [painPointsRepo, rawPostsRepo] = await Promise.all([
+    PainPointsRepository.create(),
+    RawPostsRepository.create(),
+  ]);
+
+  // Get recent raw posts to calculate recency and source diversity
+  const recentPosts = await rawPostsRepo.list({ limit: 200 });
+
+  // Source diversity: count distinct sources
+  const distinctSources = new Set(recentPosts.map((p) => p.source));
+  const sourceDiversityScore = calculateSourceDiversityScore(distinctSources.size);
+
+  // Recency: days since the most recent post
+  let recencyScore = 0.5; // default if no posts
+  if (recentPosts.length > 0) {
+    const mostRecentDate = new Date(
+      Math.max(...recentPosts.map((p) => new Date(p.created_at).getTime()))
+    );
+    const daysAgo = Math.floor(
+      (Date.now() - mostRecentDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    recencyScore = calculateRecencyScore(daysAgo);
+  }
+
+  // Cluster size: count of clustered pain points as approximation
+  const allPainPoints = await painPointsRepo.list({ limit: 500 });
+  const clusteredCount = allPainPoints.filter((p) => p.clustered).length;
+  const clusterSize = clusteredCount;
+  // We don't normalize here — the scoring engine normalizes internally
+  void clusterSize;
+
+  return {
+    clusterSize: clusteredCount,
+    recencyScore,
+    sourceDiversityScore,
+  };
+}
+
+/**
+ * Generate opportunities from clusters that don't have opportunities yet.
+ * Uses incremental processing: only processes clusters where opportunity_generated = false.
+ *
+ * Scoring Engine v2: scores are now calculated using a weighted combination of
+ * frequency, severity, buying_intent, cluster_size, recency, and source_diversity.
  */
 export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
   processed: number;
   generated: number;
   inserted: number;
+  scoreStats: OpportunityScoreStats;
 }> {
   const clustersRepo = await PainClustersRepository.create();
   const opportunitiesRepo = await OpportunitiesRepository.create();
@@ -19,7 +94,12 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
   const unprocessedClusters = await clustersRepo.listUnprocessedForOpportunities(limit);
 
   if (unprocessedClusters.length === 0) {
-    return { processed: 0, generated: 0, inserted: 0 };
+    return {
+      processed: 0,
+      generated: 0,
+      inserted: 0,
+      scoreStats: { average_score: 0, highest_score: 0, lowest_score: 0 },
+    };
   }
 
   const provider = getAIProviderFromEnv();
@@ -35,11 +115,20 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
   const opportunities: OpportunityInput[] = await provider.generateOpportunities(inputs);
 
   if (opportunities.length === 0) {
-    return { processed: 0, generated: 0, inserted: 0 };
+    return {
+      processed: 0,
+      generated: 0,
+      inserted: 0,
+      scoreStats: { average_score: 0, highest_score: 0, lowest_score: 0 },
+    };
   }
+
+  // Gather enrichment data from the database
+  const enrichment = await gatherEnrichmentData();
 
   let inserted = 0;
   const processedClusterIds: string[] = [];
+  const scores: number[] = [];
 
   // Insert opportunities and mark clusters as processed
   for (let i = 0; i < opportunities.length; i++) {
@@ -49,14 +138,34 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
     if (!cluster || !opportunity) continue;
 
     try {
+      // Use AI-provided values or enrichment defaults
+      const clusterSize = opportunity.cluster_size ?? enrichment.clusterSize;
+      const recencyScore = opportunity.recency_score ?? enrichment.recencyScore;
+      const sourceDiversity = opportunity.source_diversity ?? enrichment.sourceDiversityScore;
+
+      // Calculate score using the v2 weighted scoring engine
+      const score = calculateOpportunityScore({
+        frequency: opportunity.frequency,
+        severity: opportunity.severity,
+        buying_intent: opportunity.buying_intent,
+        cluster_size: calculateClusterSizeScore(clusterSize),
+        recency_score: recencyScore,
+        source_diversity: sourceDiversity,
+      });
+
+      scores.push(score);
+
       await opportunitiesRepo.create({
         cluster_id: cluster.id,
         title: opportunity.cluster_name || cluster.name,
         description: opportunity.cluster_description || cluster.description,
-        score: opportunity.score.toFixed(3),
+        score: score.toFixed(3),
         frequency: opportunity.frequency,
         severity: opportunity.severity.toFixed(3),
         buying_intent: opportunity.buying_intent.toFixed(3),
+        cluster_size: clusterSize,
+        recency_score: recencyScore.toFixed(3),
+        source_diversity: sourceDiversity.toFixed(3),
       });
       inserted++;
 
@@ -68,9 +177,30 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
     }
   }
 
+  // Calculate score statistics
+  const scoreStats: OpportunityScoreStats =
+    scores.length > 0
+      ? {
+          average_score: Math.round(
+            scores.reduce((sum, s) => sum + s, 0) / scores.length
+          ),
+          highest_score: Math.max(...scores),
+          lowest_score: Math.min(...scores),
+        }
+      : { average_score: 0, highest_score: 0, lowest_score: 0 };
+
+  // Log score statistics
+  if (scores.length > 0) {
+    console.log(`   Generated ${inserted} opportunities`);
+    console.log(`   Average score: ${scoreStats.average_score}`);
+    console.log(`   Highest score: ${scoreStats.highest_score}`);
+    console.log(`   Lowest score: ${scoreStats.lowest_score}`);
+  }
+
   return {
     processed: processedClusterIds.length,
     generated: opportunities.length,
     inserted,
+    scoreStats,
   };
 }

@@ -13,6 +13,8 @@ export interface OpportunityCardData {
   frequency: number;
   severity: number;
   buying_intent: number;
+  source_diversity: number;
+  recency_score: number;
   cluster_name: string;
   cluster_description: string;
 }

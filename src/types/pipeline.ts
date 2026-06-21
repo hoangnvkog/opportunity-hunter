@@ -40,6 +40,9 @@ export interface OpportunityInput {
   frequency: number;
   severity: number;
   buying_intent: number;
+  cluster_size?: number;
+  recency_score?: number;
+  source_diversity?: number;
   cluster_name?: string;
   cluster_description?: string;
 }

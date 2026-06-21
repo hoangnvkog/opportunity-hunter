@@ -54,6 +54,10 @@ export default function RecentOpportunitiesSection({ opportunities }: RecentOppo
                   <span>Severity: {opportunity.severity.toFixed(2)}</span>
                   <span>Buying Intent: {opportunity.buying_intent.toFixed(2)}</span>
                 </div>
+                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                  <span>Sources: {(opportunity.source_diversity * 5).toFixed(0)}</span>
+                  <span>Recency: {(opportunity.recency_score * 100).toFixed(0)}%</span>
+                </div>
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-2xl font-bold text-primary">

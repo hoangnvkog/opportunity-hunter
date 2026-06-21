@@ -47,6 +47,12 @@ export interface OpportunityView {
   /** camelCase alias for `buying_intent`. */
   buyingIntent: number;
   score: number;
+  /** Number of pain points in the cluster (null for legacy rows). */
+  clusterSize: number | null;
+  /** Recency score 0–1 (null for legacy rows). */
+  recencyScore: number | null;
+  /** Source diversity score 0–1 (null for legacy rows). */
+  sourceDiversity: number | null;
   /** Sourced from `pain_clusters.name` (one category per cluster). */
   category: string;
   /** Schema does not store a platform-level source per opportunity. */
@@ -71,6 +77,9 @@ function toView(row: OpportunityWithCluster): OpportunityView {
     severity: row.severity,
     buyingIntent: row.buying_intent,
     score: row.score,
+    clusterSize: row.cluster_size ?? null,
+    recencyScore: row.recency_score != null ? parseFloat(row.recency_score) : null,
+    sourceDiversity: row.source_diversity != null ? parseFloat(row.source_diversity) : null,
     category: row.pain_clusters.name,
     source: "Cluster",
     createdAt: undefined,
