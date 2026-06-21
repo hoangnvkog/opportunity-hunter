@@ -21,3 +21,4 @@ export {
   StartupIdeasRepository,
   type ListStartupIdeasOptions,
 } from "./startup-ideas.repository";
+export { PipelineRunsRepository } from "./pipeline-runs.repository";

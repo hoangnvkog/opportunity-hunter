@@ -16,11 +16,13 @@ import { PainPointsRepository } from "@/lib/db/repositories/pain-points.reposito
 import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { StartupIdeasRepository } from "@/lib/db/repositories/startup-ideas.repository";
+import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
   StartupIdeaCardData,
 } from "@/types/dashboard";
+import type { PipelineRunHistory } from "@/types/pipeline-run-history";
 import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
 
 /**
@@ -98,4 +100,14 @@ export async function getFilteredStartupIdeas(
 ): Promise<StartupIdeaCardData[]> {
   const startupIdeasRepo = await StartupIdeasRepository.create();
   return startupIdeasRepo.search(filters);
+}
+
+/**
+ * Get latest pipeline runs.
+ */
+export async function getLatestPipelineRuns(
+  limit = 10
+): Promise<PipelineRunHistory[]> {
+  const pipelineRunsRepo = await PipelineRunsRepository.create();
+  return pipelineRunsRepo.listLatest(limit);
 }

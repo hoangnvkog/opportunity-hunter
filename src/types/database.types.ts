@@ -114,6 +114,20 @@ export type StartupIdeaRow = {
   created_at: string;
 };
 
+export type PipelineRunRow = {
+  id: Uuid;
+  started_at: string;
+  finished_at: string;
+  duration_ms: number;
+  raw_posts: number;
+  pain_points: number;
+  clusters: number;
+  opportunities: number;
+  startup_ideas: number;
+  status: string;
+  created_at: string;
+};
+
 // ---------------------------------------------------------------------------
 // Insert types (server-managed fields are optional)
 // ---------------------------------------------------------------------------
@@ -179,6 +193,20 @@ export type StartupIdeaInsert = {
   customer?: string | null;
   distribution?: string | null;
   competitors?: string | null;
+  created_at?: string;
+};
+
+export type PipelineRunInsert = {
+  id?: Uuid;
+  started_at: string;
+  finished_at: string;
+  duration_ms: number;
+  raw_posts: number;
+  pain_points: number;
+  clusters: number;
+  opportunities: number;
+  startup_ideas: number;
+  status: string;
   created_at?: string;
 };
 
@@ -261,6 +289,12 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      pipeline_runs: {
+        Row: PipelineRunRow;
+        Insert: PipelineRunInsert;
+        Update: Partial<PipelineRunInsert>;
+        Relationships: NoRelationships;
       };
     };
     Views: Record<string, never>;

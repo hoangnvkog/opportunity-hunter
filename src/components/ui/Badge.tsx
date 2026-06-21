@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: "default" | "secondary" | "outline";
+  variant?: "default" | "secondary" | "outline" | "destructive";
   className?: string;
 }
 
@@ -11,6 +11,7 @@ export function Badge({ children, variant = "default", className }: BadgeProps) 
     default: "bg-primary text-primary-foreground hover:bg-primary/80",
     secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
     outline: "text-foreground border",
+    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/80",
   };
 
   return (
