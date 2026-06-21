@@ -7,10 +7,11 @@
 import type { SourceProvider } from "@/types/source-provider";
 import { redditProvider } from "./reddit.provider";
 import { hackerNewsProvider } from "./hackernews.provider";
+import { productHuntProvider } from "./producthunt.provider";
 
 /**
  * Get all available source providers
  */
 export function getSourceProviders(): SourceProvider[] {
-  return [redditProvider, hackerNewsProvider];
+  return [redditProvider, hackerNewsProvider, productHuntProvider];
 }

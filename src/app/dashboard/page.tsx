@@ -5,6 +5,7 @@ import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-se
 import DashboardFiltersClient from "@/components/dashboard/dashboard-filters-client";
 import { RunPipelineClient } from "@/components/dashboard/RunPipelineClient";
 import { PipelineHistoryClient } from "@/components/dashboard/pipeline-history-client";
+import { SourcesList } from "@/components/dashboard/SourcesList";
 import {
   getFilteredOpportunitiesAction,
   getFilteredStartupIdeasAction,
@@ -43,10 +44,15 @@ export default async function DashboardPage() {
         initialIdeas={ideas}
       />
 
-      <div className="mt-8 space-y-8">
-        <RecentOpportunitiesSection opportunities={opportunities} />
-        <StartupIdeasSection ideas={ideas} />
-        <PipelineHistoryClient />
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <RecentOpportunitiesSection opportunities={opportunities} />
+          <StartupIdeasSection ideas={ideas} />
+          <PipelineHistoryClient />
+        </div>
+        <div>
+          <SourcesList />
+        </div>
       </div>
     </AppLayout>
   );

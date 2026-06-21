@@ -33,6 +33,10 @@ const ServerEnvSchema = z.object({
     .string()
     .min(1, "GEMINI_API_KEY is required when AI_PROVIDER=gemini")
     .optional(),
+  PRODUCT_HUNT_TOKEN: z
+    .string()
+    .min(1, "PRODUCT_HUNT_TOKEN is required for Product Hunt integration")
+    .optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
@@ -48,6 +52,7 @@ export function getServerEnv(): ServerEnv {
     AI_PROVIDER: process.env.AI_PROVIDER || "mock",
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    PRODUCT_HUNT_TOKEN: process.env.PRODUCT_HUNT_TOKEN,
   });
 
   if (!parsed.success) {
