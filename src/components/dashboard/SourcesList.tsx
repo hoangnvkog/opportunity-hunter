@@ -8,6 +8,7 @@ export function SourcesList() {
     hackernews: "Hacker News",
     producthunt: "Product Hunt",
     twitter: "Twitter",
+    indiehackers: "IndieHackers",
   };
 
   return (

@@ -41,6 +41,10 @@ const ServerEnvSchema = z.object({
     .string()
     .min(1, "TWITTER_BEARER_TOKEN is required for Twitter integration")
     .optional(),
+  INDIEHACKERS_API_KEY: z
+    .string()
+    .min(1, "INDIEHACKERS_API_KEY is required for IndieHackers integration")
+    .optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
@@ -58,6 +62,7 @@ export function getServerEnv(): ServerEnv {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     PRODUCT_HUNT_TOKEN: process.env.PRODUCT_HUNT_TOKEN,
     TWITTER_BEARER_TOKEN: process.env.TWITTER_BEARER_TOKEN,
+    INDIEHACKERS_API_KEY: process.env.INDIEHACKERS_API_KEY,
   });
 
   if (!parsed.success) {
