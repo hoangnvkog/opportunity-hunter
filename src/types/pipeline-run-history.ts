@@ -7,6 +7,7 @@ export interface PipelineRunHistory {
   started_at: string;
   finished_at: string;
   duration_ms: number;
+  sources: number;
   raw_posts: number;
   pain_points: number;
   clusters: number;
@@ -19,6 +20,7 @@ export interface PipelineRunInsert {
   started_at: string;
   finished_at: string;
   duration_ms: number;
+  sources: number;
   raw_posts: number;
   pain_points: number;
   clusters: number;

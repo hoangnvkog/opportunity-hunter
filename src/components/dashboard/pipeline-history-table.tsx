@@ -31,6 +31,7 @@ export function PipelineHistoryTable({ runs }: PipelineHistoryTableProps) {
             <tr>
               <th className="text-left p-3 font-medium">Started At</th>
               <th className="text-left p-3 font-medium">Duration</th>
+              <th className="text-center p-3 font-medium">Sources</th>
               <th className="text-center p-3 font-medium">Raw Posts</th>
               <th className="text-center p-3 font-medium">Pain Points</th>
               <th className="text-center p-3 font-medium">Clusters</th>
@@ -44,6 +45,7 @@ export function PipelineHistoryTable({ runs }: PipelineHistoryTableProps) {
               <tr key={run.id} className="border-t hover:bg-muted/30">
                 <td className="p-3">{formatDate(run.started_at)}</td>
                 <td className="p-3">{formatDuration(run.duration_ms)}</td>
+                <td className="p-3 text-center">{run.sources}</td>
                 <td className="p-3 text-center">{run.raw_posts}</td>
                 <td className="p-3 text-center">{run.pain_points}</td>
                 <td className="p-3 text-center">{run.clusters}</td>

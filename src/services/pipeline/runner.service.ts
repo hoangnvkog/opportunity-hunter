@@ -1,12 +1,11 @@
 /**
  * Pipeline Runner - orchestrates the entire Opportunity Hunter pipeline
- * 
+ *
  * Flow:
- * Reddit → raw_posts → pain_points → pain_clusters → opportunities → startup_ideas
+ * Multi-source ingestion → raw_posts → pain_points → pain_clusters → opportunities → startup_ideas
  */
 
-import { ingestSubreddit } from "@/services/reddit";
-import { fetchRawPosts } from "./reddit.service";
+import { fetchAllSources } from "@/services/sources/ingestion.service";
 import { RawPostsRepository } from "@/lib/db/repositories";
 import { extractPainPointsFromPosts } from "./pain-points.service";
 import { clusterPainPointsFromDatabase } from "./clusters.service";
@@ -17,6 +16,7 @@ import { generateStartupIdeasFromDatabase } from "./startup-ideas.service";
  * Result of a complete pipeline run
  */
 export interface PipelineRunResult {
+  sources: number;
   rawPosts: number;
   painPoints: number;
   clusters: number;
@@ -26,23 +26,24 @@ export interface PipelineRunResult {
 
 /**
  * Run the complete Opportunity Hunter pipeline
- * 
+ *
  * Stages:
- * 1. Ingest posts from Reddit (default: r/Entrepreneur)
+ * 1. Ingest posts from multiple sources (Reddit, Hacker News)
  * 2. Extract pain points from raw posts
  * 3. Cluster similar pain points
  * 4. Generate opportunities from clusters
  * 5. Generate startup ideas from opportunities
- * 
+ *
  * @returns Pipeline execution results with counts for each stage
- * 
+ *
  * @throws Error if any pipeline stage fails
- * 
+ *
  * @example
  * ```typescript
  * const result = await runPipeline();
  * console.log(result);
  * // {
+ * //   sources: 2,
  * //   rawPosts: 22,
  * //   painPoints: 45,
  * //   clusters: 8,
@@ -53,66 +54,67 @@ export interface PipelineRunResult {
  */
 export async function runPipeline(): Promise<PipelineRunResult> {
   try {
-    // Stage 1: Ingest Reddit posts
-    let rawPosts = await ingestSubreddit("Entrepreneur", 25);
-    
-    if (rawPosts.inserted === 0) {
-      console.warn("Reddit unavailable or all duplicates. Falling back to mock posts.");
-      
-      // Fetch mock posts and insert them
-      const mockPosts = await fetchRawPosts();
-      const repository = await RawPostsRepository.create();
-      
-      // Check for existing URLs to prevent duplicates
-      const existingPosts = await repository.list({ limit: 1000 });
-      const existingUrls = new Set(existingPosts.map(post => post.url));
-      
-      // Filter out duplicates
-      const newMockPosts = mockPosts.filter(post => !existingUrls.has(post.url));
-      
-      if (newMockPosts.length > 0) {
-        const result = await repository.createMany(newMockPosts);
-        rawPosts = {
-          fetched: mockPosts.length,
-          skipped: mockPosts.length - result.length,
-          inserted: result.length,
-        };
-        console.log(`Inserted ${result.length} mock posts`);
-      } else {
-        console.log("No new mock posts to insert (all duplicates)");
-      }
+    // Stage 1: Ingest posts from all sources
+    const rawPosts = await fetchAllSources(25);
+    const sourcesCount = new Set(rawPosts.map((post) => post.source)).size;
+
+    if (rawPosts.length === 0) {
+      console.warn("No posts fetched from any source. Pipeline cannot continue.");
+      throw new Error("No posts fetched from any source");
+    }
+
+    console.log(`Fetched ${rawPosts.length} posts from ${sourcesCount} sources`);
+
+    // Insert posts into database
+    const repository = await RawPostsRepository.create();
+
+    // Check for existing URLs to prevent duplicates
+    const existingPosts = await repository.list({ limit: 1000 });
+    const existingUrls = new Set(existingPosts.map((post) => post.url));
+
+    // Filter out duplicates
+    const newPosts = rawPosts.filter((post) => !existingUrls.has(post.url));
+
+    let insertedCount = 0;
+    if (newPosts.length > 0) {
+      const result = await repository.createMany(newPosts);
+      insertedCount = result.length;
+      console.log(`Inserted ${insertedCount} new posts`);
+    } else {
+      console.log("No new posts to insert (all duplicates)");
     }
     
     // Stage 2: Extract pain points
     const painPoints = await extractPainPointsFromPosts(50);
-    
+
     if (painPoints.inserted === 0) {
       console.log("No new pain points extracted (all duplicates or no posts)");
     }
-    
+
     // Stage 3: Cluster pain points
     const clusters = await clusterPainPointsFromDatabase(100);
-    
+
     if (clusters.inserted === 0) {
       console.log("No new clusters created (all duplicates or no pain points)");
     }
-    
+
     // Stage 4: Generate opportunities
     const opportunities = await generateOpportunitiesFromDatabase(50);
-    
+
     if (opportunities.inserted === 0) {
       console.log("No new opportunities generated (all duplicates or no clusters)");
     }
-    
+
     // Stage 5: Generate startup ideas
     const ideas = await generateStartupIdeasFromDatabase(50);
-    
+
     if (ideas.inserted === 0) {
       console.log("No new startup ideas generated (all duplicates or no opportunities)");
     }
-    
+
     return {
-      rawPosts: rawPosts.inserted,
+      sources: sourcesCount,
+      rawPosts: insertedCount,
       painPoints: painPoints.inserted,
       clusters: clusters.inserted,
       opportunities: opportunities.inserted,

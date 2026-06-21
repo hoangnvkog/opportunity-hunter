@@ -3,6 +3,7 @@
  */
 
 export interface PipelineRunResult {
+  sources: number;
   rawPosts: number;
   painPoints: number;
   clusters: number;

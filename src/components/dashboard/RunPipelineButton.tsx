@@ -72,6 +72,7 @@ export function RunPipelineButton() {
             <div className="flex-1 text-sm text-green-800">
               <p className="font-medium">Pipeline completed</p>
               <ul className="mt-2 space-y-1 text-xs">
+                <li>Sources: {result.sources}</li>
                 <li>Raw posts: {result.rawPosts}</li>
                 <li>Pain points: {result.painPoints}</li>
                 <li>Clusters: {result.clusters}</li>

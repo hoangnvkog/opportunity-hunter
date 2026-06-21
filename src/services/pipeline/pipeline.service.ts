@@ -13,6 +13,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
 
   let status: "success" | "failed" = "success";
   let result: OriginalPipelineRunResult = {
+    sources: 0,
     rawPosts: 0,
     painPoints: 0,
     clusters: 0,
@@ -38,6 +39,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
         started_at: startedAt,
         finished_at: finishedAt,
         duration_ms: durationMs,
+        sources: result.sources,
         raw_posts: result.rawPosts,
         pain_points: result.painPoints,
         clusters: result.clusters,
@@ -50,6 +52,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     }
 
     return {
+      sources: result.sources,
       rawPosts: result.rawPosts,
       painPoints: result.painPoints,
       clusters: result.clusters,
