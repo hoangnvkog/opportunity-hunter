@@ -1,22 +1,31 @@
 "use client";
 
-export default function Error({
+import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+
+export default function OpportunityDetailError({
   error,
   reset,
 }: {
-  error: Error;
+  error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <div className="p-6">
-      <h2>Something went wrong</h2>
-      <p>{error.message}</p>
-      <button
-        onClick={() => reset()}
-        className="border px-4 py-2"
-      >
-        Retry
-      </button>
+    <div className="flex items-center justify-center min-h-[400px] p-6">
+      <Card className="max-w-md w-full">
+        <CardContent className="p-6 text-center space-y-4">
+          <h2 className="text-xl font-semibold">Something went wrong</h2>
+          <p className="text-muted-foreground">
+            We couldn&apos;t load this opportunity. Please try again.
+          </p>
+          {error.digest && (
+            <p className="text-xs text-muted-foreground">
+              Error: {error.digest}
+            </p>
+          )}
+          <Button onClick={reset}>Try again</Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

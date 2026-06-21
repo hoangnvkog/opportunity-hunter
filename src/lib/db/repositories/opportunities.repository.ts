@@ -192,6 +192,37 @@ export class OpportunitiesRepository {
     return (data ?? null) as unknown as OpportunityWithCluster | null;
   }
 
+  /**
+   * Find a single opportunity joined with its pain cluster, and count
+   * the number of linked startup ideas. Returns the full
+   * `OpportunityDetail` shape or `null` if not found.
+   */
+  async findDetailById(
+    id: Uuid,
+  ): Promise<import("@/types").OpportunityDetail | null> {
+    const row = await this.findByIdWithCluster(id);
+    if (!row) return null;
+
+    // Count startup ideas for this opportunity
+    const { count, error: countError } = await this.client
+      .from("startup_ideas")
+      .select("id", { count: "exact", head: true })
+      .eq("opportunity_id", id);
+
+    if (countError) throw translateError("startup_ideas", countError);
+
+    return {
+      id: row.id,
+      score: row.score,
+      frequency: row.frequency,
+      severity: row.severity,
+      buying_intent: row.buying_intent,
+      cluster_name: row.pain_clusters.name,
+      cluster_description: row.pain_clusters.description,
+      startup_ideas_count: count ?? 0,
+    };
+  }
+
   async countByClusterName(
     categories: readonly string[],
   ): Promise<Map<string, number>> {

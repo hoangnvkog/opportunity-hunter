@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { OpportunitySummaryCard } from "@/components/opportunities/opportunity-summary-card";
+import { OpportunityScoreCard } from "@/components/opportunity/opportunity-score-card";
+import { OpportunityOverviewCard } from "@/components/opportunity/opportunity-overview-card";
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
-import { findOpportunityByIdAction } from "@/actions/opportunities.actions";
+import { getOpportunityDetailAction } from "@/actions/opportunities.actions";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -10,38 +12,66 @@ interface OpportunityPageProps {
   }>;
 }
 
+export async function generateMetadata({
+  params,
+}: OpportunityPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const detail = await getOpportunityDetailAction(id);
+
+  if (!detail) {
+    return {
+      title: "Opportunity Not Found",
+      description: "The requested opportunity could not be found.",
+    };
+  }
+
+  return {
+    title: detail.cluster_name,
+    description: detail.cluster_description,
+  };
+}
+
 export default async function OpportunityDetailPage({
   params,
 }: OpportunityPageProps) {
   const { id } = await params;
 
-  let opportunity;
-  try {
-    opportunity = await findOpportunityByIdAction(id);
-  } catch (error) {
-    if (error instanceof Error && error.message === "Opportunity not found") {
-      notFound();
-    }
-    throw error;
+  const detail = await getOpportunityDetailAction(id);
+
+  if (!detail) {
+    notFound();
   }
 
   return (
     <AppLayout>
-      <div>
-        <h1 className="text-3xl font-bold">{opportunity.title}</h1>
-        <p className="text-muted-foreground mt-2">{opportunity.description}</p>
-      </div>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {detail.cluster_name}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            {detail.cluster_description}
+          </p>
+        </div>
 
-      <OpportunitySummaryCard
-        score={opportunity.score}
-        frequency={opportunity.frequency}
-        severity={opportunity.severity}
-        buyingIntent={opportunity.buyingIntent}
-      />
+        <OpportunityOverviewCard
+          cluster_name={detail.cluster_name}
+          cluster_description={detail.cluster_description}
+          created_at={detail.created_at}
+          startup_ideas_count={detail.startup_ideas_count}
+        />
 
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>
-        <StartupIdeasSection ideas={[]} />
+        <OpportunityScoreCard
+          score={detail.score}
+          frequency={detail.frequency}
+          severity={detail.severity}
+          buying_intent={detail.buying_intent}
+        />
+
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>
+          <StartupIdeasSection ideas={[]} />
+        </div>
       </div>
     </AppLayout>
   );
