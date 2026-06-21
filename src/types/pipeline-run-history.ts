@@ -17,6 +17,7 @@ export interface PipelineRunHistory {
   average_cluster_size: number | null;
   largest_cluster_size: number | null;
   status: string;
+  error_message: string | null;
 }
 
 export interface PipelineRunInsert {
@@ -33,4 +34,5 @@ export interface PipelineRunInsert {
   average_cluster_size?: number | null;
   largest_cluster_size?: number | null;
   status: "success" | "failed";
+  error_message?: string | null;
 }

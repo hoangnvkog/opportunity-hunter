@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
 import { ClusterMetrics } from "@/components/dashboard/cluster-metrics";
+import { SchedulerStatusCard } from "@/components/dashboard/scheduler-status-card";
 import RecentOpportunitiesSection from "@/components/dashboard/recent-opportunities-section";
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
 import DashboardFiltersClient from "@/components/dashboard/dashboard-filters-client";
@@ -57,7 +58,8 @@ export default async function DashboardPage() {
           <StartupIdeasSection ideas={ideas} />
           <PipelineHistoryClient />
         </div>
-        <div>
+        <div className="space-y-8">
+          <SchedulerStatusCard />
           <SourcesList />
         </div>
       </div>

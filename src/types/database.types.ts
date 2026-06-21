@@ -136,6 +136,7 @@ export type PipelineRunRow = {
   average_cluster_size: number | null;
   largest_cluster_size: number | null;
   status: string;
+  error_message: string | null;
   created_at: string;
 };
 
@@ -233,6 +234,7 @@ export type PipelineRunInsert = {
   average_cluster_size?: number | null;
   largest_cluster_size?: number | null;
   status: string;
+  error_message?: string | null;
   created_at?: string;
 };
 

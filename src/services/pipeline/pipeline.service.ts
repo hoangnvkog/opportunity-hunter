@@ -12,6 +12,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
   const startTime = Date.now();
 
   let status: "success" | "failed" = "success";
+  let errorMessage: string | null = null;
   let result: OriginalPipelineRunResult = {
     sources: 0,
     rawPosts: 0,
@@ -30,6 +31,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     status = "success";
   } catch (error) {
     status = "failed";
+    errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Pipeline execution failed:", error);
     throw error;
   } finally {
@@ -52,6 +54,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
         average_cluster_size: result.averageClusterSize,
         largest_cluster_size: result.largestClusterSize,
         status,
+        error_message: errorMessage,
       });
     } catch (historyError) {
       console.error("Failed to save pipeline history:", historyError);
