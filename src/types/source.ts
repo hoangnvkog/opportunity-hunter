@@ -2,4 +2,4 @@
  * Source types for multi-source ingestion
  */
 
-export type SourceType = "reddit" | "hackernews" | "producthunt";
+export type SourceType = "reddit" | "hackernews" | "producthunt" | "twitter";
