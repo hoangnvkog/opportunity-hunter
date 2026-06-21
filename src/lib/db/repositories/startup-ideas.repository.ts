@@ -235,4 +235,68 @@ export class StartupIdeasRepository {
 
     if (error) throw translateError(ENTITY, error);
   }
+
+  async findDetailById(
+    id: Uuid,
+  ): Promise<import("@/types/startup-idea-detail").StartupIdeaDetail | null> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select(`
+        id,
+        problem,
+        solution,
+        mvp,
+        pricing,
+        customer,
+        distribution,
+        competitors,
+        created_at,
+        opportunities!inner(
+          score,
+          pain_clusters!inner(
+            name,
+            description
+          )
+        )
+      `)
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) throw translateError(ENTITY, error);
+    if (!data) return null;
+
+    const row = data as unknown as {
+      id: string;
+      problem: string;
+      solution: string;
+      mvp: string;
+      pricing: string;
+      customer: string | null;
+      distribution: string | null;
+      competitors: string | null;
+      created_at: string;
+      opportunities: {
+        score: import("@/types").Decimal6;
+        pain_clusters: {
+          name: string;
+          description: string;
+        };
+      };
+    };
+
+    return {
+      id: row.id,
+      problem: row.problem,
+      solution: row.solution,
+      mvp: row.mvp,
+      pricing: row.pricing,
+      customer: row.customer,
+      distribution: row.distribution,
+      competitors: row.competitors,
+      created_at: row.created_at,
+      opportunity_score: Number(row.opportunities.score),
+      cluster_name: row.opportunities.pain_clusters.name,
+      cluster_description: row.opportunities.pain_clusters.description,
+    };
+  }
 }

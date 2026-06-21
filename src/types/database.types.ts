@@ -108,6 +108,10 @@ export type StartupIdeaRow = {
   solution: string;
   mvp: string;
   pricing: string;
+  customer: string | null;
+  distribution: string | null;
+  competitors: string | null;
+  created_at: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -172,6 +176,10 @@ export type StartupIdeaInsert = {
   solution: string;
   mvp: string;
   pricing: string;
+  customer?: string | null;
+  distribution?: string | null;
+  competitors?: string | null;
+  created_at?: string;
 };
 
 // ---------------------------------------------------------------------------

@@ -3,6 +3,7 @@
  */
 export * from "./database.types";
 export * from "./opportunity-detail";
+export * from "./startup-idea-detail";
 
 // Decimal types for numeric precision handling
 // Re-export with explicit names to avoid conflicts with any future DB types

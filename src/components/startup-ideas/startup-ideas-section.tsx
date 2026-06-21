@@ -19,6 +19,7 @@ export default function StartupIdeasSection({ ideas }: StartupIdeasSectionProps)
       {ideas.map((idea) => (
         <StartupIdeaCard
           key={idea.id}
+          id={idea.id}
           problem={idea.problem}
           solution={idea.solution}
           mvp={idea.mvp}
