@@ -5,6 +5,8 @@ export interface DashboardStats {
   clusters: number;
   opportunities: number;
   ideas: number;
+  averageClusterSize: number;
+  largestClusterSize: number;
 }
 
 export interface OpportunityCardData {

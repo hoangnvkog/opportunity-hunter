@@ -14,6 +14,8 @@ export interface PipelineRunHistory {
   clusters: number;
   opportunities: number;
   startup_ideas: number;
+  average_cluster_size: number | null;
+  largest_cluster_size: number | null;
   status: string;
 }
 
@@ -28,5 +30,7 @@ export interface PipelineRunInsert {
   clusters: number;
   opportunities: number;
   startup_ideas: number;
+  average_cluster_size?: number | null;
+  largest_cluster_size?: number | null;
   status: "success" | "failed";
 }

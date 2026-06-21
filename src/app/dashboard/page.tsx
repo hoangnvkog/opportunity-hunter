@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
+import { ClusterMetrics } from "@/components/dashboard/cluster-metrics";
 import RecentOpportunitiesSection from "@/components/dashboard/recent-opportunities-section";
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
 import DashboardFiltersClient from "@/components/dashboard/dashboard-filters-client";
@@ -38,6 +39,12 @@ export default async function DashboardPage() {
       </div>
 
       <MetricsGrid metrics={stats} />
+
+      <ClusterMetrics
+        clusterCount={stats.clusters}
+        averageClusterSize={stats.averageClusterSize}
+        largestClusterSize={stats.largestClusterSize}
+      />
 
       <DashboardFiltersClient
         initialOpportunities={opportunities}

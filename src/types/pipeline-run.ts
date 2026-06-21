@@ -10,6 +10,8 @@ export interface PipelineRunResult {
   clusters: number;
   opportunities: number;
   startupIdeas: number;
+  averageClusterSize: number;
+  largestClusterSize: number;
   durationMs: number;
 }
 

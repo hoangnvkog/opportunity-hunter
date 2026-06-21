@@ -24,6 +24,8 @@ export interface PipelineRunResult {
   clusters: number;
   opportunities: number;
   ideas: number;
+  averageClusterSize: number;
+  largestClusterSize: number;
 }
 
 /**
@@ -137,6 +139,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       clusters: clusters.inserted,
       opportunities: opportunities.inserted,
       ideas: ideas.inserted,
+      averageClusterSize: clusters.averageClusterSize,
+      largestClusterSize: clusters.largestClusterSize,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error

@@ -84,6 +84,7 @@ export type PainClusterRow = {
   id: Uuid;
   name: string;
   description: string;
+  cluster_size: number;
   opportunity_generated: boolean;
 };
 
@@ -132,6 +133,8 @@ export type PipelineRunRow = {
   clusters: number;
   opportunities: number;
   startup_ideas: number;
+  average_cluster_size: number | null;
+  largest_cluster_size: number | null;
   status: string;
   created_at: string;
 };
@@ -182,6 +185,7 @@ export type PainClusterInsert = {
   id?: Uuid;
   name: string;
   description: string;
+  cluster_size?: number;
   opportunity_generated?: boolean;
 };
 
@@ -226,6 +230,8 @@ export type PipelineRunInsert = {
   clusters: number;
   opportunities: number;
   startup_ideas: number;
+  average_cluster_size?: number | null;
+  largest_cluster_size?: number | null;
   status: string;
   created_at?: string;
 };

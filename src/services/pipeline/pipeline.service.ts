@@ -20,6 +20,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     clusters: 0,
     opportunities: 0,
     ideas: 0,
+    averageClusterSize: 0,
+    largestClusterSize: 0,
   };
 
   try {
@@ -47,6 +49,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
         clusters: result.clusters,
         opportunities: result.opportunities,
         startup_ideas: result.ideas,
+        average_cluster_size: result.averageClusterSize,
+        largest_cluster_size: result.largestClusterSize,
         status,
       });
     } catch (historyError) {
@@ -61,6 +65,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       clusters: result.clusters,
       opportunities: result.opportunities,
       startupIdeas: result.ideas,
+      averageClusterSize: result.averageClusterSize,
+      largestClusterSize: result.largestClusterSize,
       durationMs,
     };
   }

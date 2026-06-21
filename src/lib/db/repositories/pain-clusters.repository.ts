@@ -69,6 +69,37 @@ export class PainClustersRepository {
     return count ?? 0;
   }
 
+  async getAverageClusterSize(): Promise<number> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("cluster_size");
+
+    if (error) throw translateError(ENTITY, error);
+    if (!data || data.length === 0) return 0;
+
+    const clusterSizes = data.map((cluster: { cluster_size: number }) => 
+      cluster.cluster_size
+    );
+    
+    const total = clusterSizes.reduce((sum: number, size: number) => sum + size, 0);
+    return clusterSizes.length > 0 ? total / clusterSizes.length : 0;
+  }
+
+  async getLargestClusterSize(): Promise<number> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("cluster_size");
+
+    if (error) throw translateError(ENTITY, error);
+    if (!data || data.length === 0) return 0;
+
+    const clusterSizes = data.map((cluster: { cluster_size: number }) => 
+      cluster.cluster_size
+    );
+    
+    return clusterSizes.length > 0 ? Math.max(...clusterSizes) : 0;
+  }
+
   async listTop(limit = 10): Promise<PainClusterRow[]> {
     const { data, error } = await this.client
       .from(ENTITY)

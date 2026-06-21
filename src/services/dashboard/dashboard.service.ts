@@ -29,7 +29,7 @@ import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
 /**
  * Get dashboard stats from the database.
  *
- * @returns Counts for all pipeline stages
+ * @returns Counts for all pipeline stages plus cluster metrics
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo] = await Promise.all([
@@ -41,13 +41,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     EmbeddingsRepository.create(),
   ]);
 
-  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings] = await Promise.all([
+  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings, averageClusterSize, largestClusterSize] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
     painClustersRepo.count(),
     opportunitiesRepo.count(),
     startupIdeasRepo.count(),
     embeddingsRepo.count(),
+    painClustersRepo.getAverageClusterSize(),
+    painClustersRepo.getLargestClusterSize(),
   ]);
 
   return {
@@ -57,6 +59,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     clusters,
     opportunities,
     ideas,
+    averageClusterSize,
+    largestClusterSize,
   };
 }
 
