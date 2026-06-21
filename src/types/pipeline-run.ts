@@ -1,25 +1,40 @@
 /**
- * Pipeline run statistics and response types
+ * Pipeline run result type for manual execution
  */
 
-export interface StageStats {
+export interface PipelineRunResult {
+  rawPosts: number;
+  painPoints: number;
+  clusters: number;
+  opportunities: number;
+  startupIdeas: number;
+  durationMs: number;
+}
+
+/**
+ * Detailed stats per pipeline stage (used by run-full-pipeline service)
+ */
+export interface PipelineStageStats {
   processed: number;
   extracted?: number;
-  clustered?: number;
   generated?: number;
+  clustered?: number;
   skipped: number;
   inserted: number;
 }
 
 export interface PipelineRunStats {
   postsFetched: number;
-  painPoints: StageStats;
-  clusters: StageStats;
-  opportunities: StageStats;
-  ideas: StageStats;
+  painPoints: PipelineStageStats;
+  clusters: PipelineStageStats;
+  opportunities: PipelineStageStats;
+  ideas: PipelineStageStats;
   durationMs: number;
 }
 
+/**
+ * API response shape for /api/pipeline/run
+ */
 export interface PipelineRunResponse {
   success: boolean;
   stats?: PipelineRunStats;

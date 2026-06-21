@@ -3,7 +3,7 @@ import { MetricsGrid } from "@/components/dashboard/metrics-grid";
 import RecentOpportunitiesSection from "@/components/dashboard/recent-opportunities-section";
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
 import DashboardFiltersClient from "@/components/dashboard/dashboard-filters-client";
-import { RunPipelineButton } from "@/components/dashboard/RunPipelineButton";
+import { RunPipelineClient } from "@/components/dashboard/RunPipelineClient";
 import {
   getFilteredOpportunitiesAction,
   getFilteredStartupIdeasAction,
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <RunPipelineButton />
+          <RunPipelineClient />
         </div>
       </div>
 
