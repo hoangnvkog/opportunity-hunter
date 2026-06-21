@@ -1,5 +1,5 @@
 import { MetricCard } from "./metric-card";
-import { TrendingUp, AlertCircle, Target } from "lucide-react";
+import { TrendingUp, AlertCircle, Target, Brain } from "lucide-react";
 import type { DashboardStats } from "@/types/dashboard";
 
 interface MetricsGridProps {
@@ -18,6 +18,11 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
         title="Pain Points"
         value={metrics.painPoints}
         icon={<AlertCircle className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Embeddings"
+        value={metrics.embeddings}
+        icon={<Brain className="h-4 w-4" />}
       />
       <MetricCard
         title="Startup Ideas"

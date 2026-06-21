@@ -363,4 +363,20 @@ Do NOT include markdown formatting or code blocks.`,
       return [];
     }
   }
+
+  async generateEmbeddings(texts: string[]): Promise<number[][]> {
+    if (texts.length === 0) return [];
+
+    try {
+      const response = await this.client.embeddings.create({
+        model: "text-embedding-3-small",
+        input: texts,
+      });
+
+      return response.data.map((item) => item.embedding);
+    } catch (error) {
+      console.error("generateEmbeddings failed:", error);
+      throw error;
+    }
+  }
 }

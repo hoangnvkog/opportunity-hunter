@@ -34,6 +34,7 @@ export function PipelineHistoryTable({ runs }: PipelineHistoryTableProps) {
               <th className="text-center p-3 font-medium">Sources</th>
               <th className="text-center p-3 font-medium">Raw Posts</th>
               <th className="text-center p-3 font-medium">Pain Points</th>
+              <th className="text-center p-3 font-medium">Embeddings</th>
               <th className="text-center p-3 font-medium">Clusters</th>
               <th className="text-center p-3 font-medium">Opportunities</th>
               <th className="text-center p-3 font-medium">Startup Ideas</th>
@@ -48,6 +49,7 @@ export function PipelineHistoryTable({ runs }: PipelineHistoryTableProps) {
                 <td className="p-3 text-center">{run.sources}</td>
                 <td className="p-3 text-center">{run.raw_posts}</td>
                 <td className="p-3 text-center">{run.pain_points}</td>
+                <td className="p-3 text-center">{run.embeddings}</td>
                 <td className="p-3 text-center">{run.clusters}</td>
                 <td className="p-3 text-center">{run.opportunities}</td>
                 <td className="p-3 text-center">{run.startup_ideas}</td>

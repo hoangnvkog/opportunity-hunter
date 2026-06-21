@@ -38,4 +38,9 @@ export interface AIProvider {
   generateStartupIdeas(
     opportunities: OpportunityInput[],
   ): Promise<StartupIdeaInput[]>;
+
+  /**
+   * Generate embeddings for text using OpenAI embedding model
+   */
+  generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

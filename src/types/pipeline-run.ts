@@ -6,6 +6,7 @@ export interface PipelineRunResult {
   sources: number;
   rawPosts: number;
   painPoints: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   startupIdeas: number;

@@ -122,10 +122,18 @@ export type PipelineRunRow = {
   sources: number;
   raw_posts: number;
   pain_points: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   startup_ideas: number;
   status: string;
+  created_at: string;
+};
+
+export type PainPointEmbeddingRow = {
+  id: Uuid;
+  pain_point_id: Uuid;
+  embedding: number[];
   created_at: string;
 };
 
@@ -205,10 +213,18 @@ export type PipelineRunInsert = {
   sources: number;
   raw_posts: number;
   pain_points: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   startup_ideas: number;
   status: string;
+  created_at?: string;
+};
+
+export type PainPointEmbeddingInsert = {
+  id?: Uuid;
+  pain_point_id: Uuid;
+  embedding: number[];
   created_at?: string;
 };
 
@@ -298,9 +314,39 @@ export interface Database {
         Update: Partial<PipelineRunInsert>;
         Relationships: NoRelationships;
       };
+      pain_point_embeddings: {
+        Row: PainPointEmbeddingRow;
+        Insert: PainPointEmbeddingInsert;
+        Update: Partial<PainPointEmbeddingInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "pain_point_embeddings_pain_point_id_fkey";
+            columns: ["pain_point_id"];
+            isOneToOne: false;
+            referencedRelation: "pain_points";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      find_similar_pain_points: {
+        Args: {
+          query_embedding: number[];
+          match_limit: number;
+          match_threshold: number;
+        };
+        Returns: {
+          pain_point_id: Uuid;
+          similarity: number;
+          description: string;
+          category: string;
+          severity: Decimal3;
+          buying_intent: Decimal3;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

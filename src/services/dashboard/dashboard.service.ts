@@ -17,6 +17,7 @@ import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repo
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { StartupIdeasRepository } from "@/lib/db/repositories/startup-ideas.repository";
 import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
+import { EmbeddingsRepository } from "@/lib/db/repositories/embeddings.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -31,25 +32,28 @@ import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
  * @returns Counts for all pipeline stages
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo] = await Promise.all([
+  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
     PainClustersRepository.create(),
     OpportunitiesRepository.create(),
     StartupIdeasRepository.create(),
+    EmbeddingsRepository.create(),
   ]);
 
-  const [rawPosts, painPoints, clusters, opportunities, ideas] = await Promise.all([
+  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
     painClustersRepo.count(),
     opportunitiesRepo.count(),
     startupIdeasRepo.count(),
+    embeddingsRepo.count(),
   ]);
 
   return {
     rawPosts,
     painPoints,
+    embeddings,
     clusters,
     opportunities,
     ideas,

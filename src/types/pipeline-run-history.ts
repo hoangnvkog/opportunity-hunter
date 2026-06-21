@@ -10,6 +10,7 @@ export interface PipelineRunHistory {
   sources: number;
   raw_posts: number;
   pain_points: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   startup_ideas: number;
@@ -23,6 +24,7 @@ export interface PipelineRunInsert {
   sources: number;
   raw_posts: number;
   pain_points: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   startup_ideas: number;

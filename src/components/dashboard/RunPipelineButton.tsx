@@ -75,6 +75,7 @@ export function RunPipelineButton() {
                 <li>Sources: {result.sources}</li>
                 <li>Raw posts: {result.rawPosts}</li>
                 <li>Pain points: {result.painPoints}</li>
+                <li>Embeddings: {result.embeddings}</li>
                 <li>Clusters: {result.clusters}</li>
                 <li>Opportunities: {result.opportunities}</li>
                 <li>Startup ideas: {result.startupIdeas}</li>

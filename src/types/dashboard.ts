@@ -1,6 +1,7 @@
 export interface DashboardStats {
   rawPosts: number;
   painPoints: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   ideas: number;

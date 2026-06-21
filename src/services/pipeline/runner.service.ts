@@ -2,12 +2,13 @@
  * Pipeline Runner - orchestrates the entire Opportunity Hunter pipeline
  *
  * Flow:
- * Multi-source ingestion → raw_posts → pain_points → pain_clusters → opportunities → startup_ideas
+ * Multi-source ingestion → raw_posts → pain_points → embeddings → pain_clusters → opportunities → startup_ideas
  */
 
 import { fetchAllSources } from "@/services/sources/ingestion.service";
 import { RawPostsRepository } from "@/lib/db/repositories";
 import { extractPainPointsFromPosts } from "./pain-points.service";
+import { generateEmbeddingsFromDatabase } from "./embeddings.service";
 import { clusterPainPointsFromDatabase } from "./clusters.service";
 import { generateOpportunitiesFromDatabase } from "./opportunities.service";
 import { generateStartupIdeasFromDatabase } from "./startup-ideas.service";
@@ -19,6 +20,7 @@ export interface PipelineRunResult {
   sources: number;
   rawPosts: number;
   painPoints: number;
+  embeddings: number;
   clusters: number;
   opportunities: number;
   ideas: number;
@@ -91,21 +93,36 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       console.log("No new pain points extracted (all duplicates or no posts)");
     }
 
-    // Stage 3: Cluster pain points
+    // Stage 3: Generate embeddings for pain points (optional - requires OpenAI provider)
+    let embeddingsResult = { processed: 0, skipped: 0, inserted: 0 };
+    try {
+      embeddingsResult = await generateEmbeddingsFromDatabase(1000);
+      
+      if (embeddingsResult.inserted === 0) {
+        console.log("No new embeddings generated (all pain points already have embeddings or provider not supported)");
+      } else {
+        console.log(`Generated ${embeddingsResult.inserted} embeddings (${embeddingsResult.skipped} skipped)`);
+      }
+    } catch (error) {
+      // Embeddings are optional - log error but don't fail pipeline
+      console.warn("Embeddings generation failed (optional stage):", error);
+    }
+
+    // Stage 4: Cluster pain points
     const clusters = await clusterPainPointsFromDatabase(100);
 
     if (clusters.inserted === 0) {
       console.log("No new clusters created (all duplicates or no pain points)");
     }
 
-    // Stage 4: Generate opportunities
+    // Stage 5: Generate opportunities
     const opportunities = await generateOpportunitiesFromDatabase(50);
 
     if (opportunities.inserted === 0) {
       console.log("No new opportunities generated (all duplicates or no clusters)");
     }
 
-    // Stage 5: Generate startup ideas
+    // Stage 6: Generate startup ideas
     const ideas = await generateStartupIdeasFromDatabase(50);
 
     if (ideas.inserted === 0) {
@@ -116,6 +133,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       sources: sourcesCount,
       rawPosts: insertedCount,
       painPoints: painPoints.inserted,
+      embeddings: embeddingsResult.inserted,
       clusters: clusters.inserted,
       opportunities: opportunities.inserted,
       ideas: ideas.inserted,
@@ -128,12 +146,14 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 1 (Reddit ingestion): ${message}`);
     } else if (message.includes("pain_point") || message.includes("pain point")) {
       throw new Error(`Pipeline failed at stage 2 (pain point extraction): ${message}`);
+    } else if (message.includes("embedding")) {
+      throw new Error(`Pipeline failed at stage 3 (embeddings generation): ${message}`);
     } else if (message.includes("cluster")) {
-      throw new Error(`Pipeline failed at stage 3 (clustering): ${message}`);
+      throw new Error(`Pipeline failed at stage 4 (clustering): ${message}`);
     } else if (message.includes("opportunit")) {
-      throw new Error(`Pipeline failed at stage 4 (opportunity generation): ${message}`);
+      throw new Error(`Pipeline failed at stage 5 (opportunity generation): ${message}`);
     } else if (message.includes("idea") || message.includes("startup")) {
-      throw new Error(`Pipeline failed at stage 5 (startup idea generation): ${message}`);
+      throw new Error(`Pipeline failed at stage 6 (startup idea generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }
