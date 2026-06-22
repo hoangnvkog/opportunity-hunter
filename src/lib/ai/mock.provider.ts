@@ -13,6 +13,7 @@ import type {
   OpportunityInput,
   StartupIdeaInput,
 } from "@/types/pipeline";
+import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -93,5 +94,30 @@ export class MockProvider implements AIProvider {
         distribution: "SEO + Content Marketing + Reddit + Product Hunt",
         competitors: "Existing SaaS tools and manual workflows",
       }));
+  }
+
+  async generateInsights(
+    opportunities: OpportunityInput[],
+  ): Promise<OpportunityInsightInput[]> {
+    // Synthetic insights that scale with the opportunity's score so tests
+    // can observe the signal deterministically without burning API quota.
+    return opportunities.map((opp) => {
+      const intensity = opp.score / 100;
+      const competition =
+        intensity > 0.75 ? "High" : intensity > 0.4 ? "Medium" : "Low";
+      const urgency =
+        opp.buying_intent > 0.7 ? "High" : opp.buying_intent > 0.4 ? "Medium" : "Low";
+      const market =
+        intensity > 0.7 ? "$1.2B TAM (US)" : intensity > 0.4 ? "$300M TAM" : "Niche (~5k buyers)";
+      return {
+        summary: `Pain around ${opp.cluster_name ?? "this cluster"} suggests a SaaS opportunity to streamline manual workflows.`,
+        market_size: market,
+        competition_level: competition as OpportunityInsightInput["competition_level"],
+        urgency: urgency as OpportunityInsightInput["urgency"],
+        recommended_mvp: "Web dashboard with templated workflows and one-click integrations.",
+        recommended_channels: "Reddit, Product Hunt, SEO",
+        confidence_score: Math.round(Math.min(0.95, 0.5 + intensity / 2) * 100) / 100,
+      };
+    });
   }
 }

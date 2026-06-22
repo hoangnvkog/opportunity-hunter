@@ -9,6 +9,7 @@ import type {
   OpportunityInput,
   StartupIdeaInput,
 } from "./pipeline";
+import type { OpportunityInsightInput } from "./opportunity-insight";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -31,6 +32,15 @@ export interface AIProvider {
   generateOpportunities(
     clusters: PainClusterInput[],
   ): Promise<OpportunityInput[]>;
+
+  /**
+   * Generate business insights for opportunities using AI (Sprint 46).
+   * Returns one insight per input opportunity. AI returns business
+   * data only — no UUIDs, no foreign keys.
+   */
+  generateInsights(
+    opportunities: OpportunityInput[],
+  ): Promise<OpportunityInsightInput[]>;
 
   /**
    * Generate startup ideas from opportunities using AI

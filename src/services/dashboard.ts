@@ -199,6 +199,7 @@ export async function getOpportunitiesWithFilters(
     category: row.pain_clusters.name,
     source: "Cluster",
     createdAt: undefined,
+    insight: null,
   }));
 
   return {

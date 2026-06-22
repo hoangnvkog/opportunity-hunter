@@ -52,6 +52,15 @@ export default function OpportunityTable({ opportunities }: OpportunityTableProp
                 <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
                   Recency
                 </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  AI: Competition
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  AI: Urgency
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  AI: Confidence
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -80,6 +89,17 @@ export default function OpportunityTable({ opportunities }: OpportunityTableProp
                   <td className="py-3 px-4 text-sm">
                     {opportunity.recencyScore != null
                       ? opportunity.recencyScore.toFixed(2)
+                      : "—"}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {opportunity.insight?.competition_level ?? "—"}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {opportunity.insight?.urgency ?? "—"}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {opportunity.insight?.confidence_score != null
+                      ? `${Math.round(opportunity.insight.confidence_score * 100)}%`
                       : "—"}
                   </td>
                 </tr>

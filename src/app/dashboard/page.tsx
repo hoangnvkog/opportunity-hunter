@@ -8,6 +8,7 @@ import DashboardFiltersClient from "@/components/dashboard/dashboard-filters-cli
 import { RunPipelineClient } from "@/components/dashboard/RunPipelineClient";
 import { PipelineHistoryClient } from "@/components/dashboard/pipeline-history-client";
 import { SourcesList } from "@/components/dashboard/SourcesList";
+import LatestInsightsSection from "@/components/insights/LatestInsightsSection";
 import {
   getFilteredOpportunitiesAction,
   getFilteredStartupIdeasAction,
@@ -15,6 +16,7 @@ import {
 import { getDashboardStats } from "@/services/dashboard/dashboard.service";
 import { getUser } from "@/lib/auth/server";
 import { getProfile } from "@/actions/profile.actions";
+import { listRecentInsightsAction } from "@/actions/insights.actions";
 
 export default async function DashboardPage() {
   const [, opportunitiesResult, ideasResult, user, profile] = await Promise.all([
@@ -29,6 +31,7 @@ export default async function DashboardPage() {
 
   const opportunities = opportunitiesResult.success ? opportunitiesResult.data || [] : [];
   const ideas = ideasResult.success ? ideasResult.data || [] : [];
+  const recentInsights = await listRecentInsightsAction(5);
 
   return (
     <AppLayout>
@@ -61,6 +64,7 @@ export default async function DashboardPage() {
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <RecentOpportunitiesSection opportunities={opportunities} />
+          <LatestInsightsSection insights={recentInsights} />
           <StartupIdeasSection ideas={ideas} />
           <PipelineHistoryClient />
         </div>

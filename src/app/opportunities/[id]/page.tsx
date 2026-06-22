@@ -4,7 +4,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { OpportunityScoreCard } from "@/components/opportunity/opportunity-score-card";
 import { OpportunityOverviewCard } from "@/components/opportunity/opportunity-overview-card";
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
+import { AIAnalysisCard } from "@/components/insights/AIAnalysisCard";
 import { getOpportunityDetailAction } from "@/actions/opportunities.actions";
+import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -36,7 +38,10 @@ export default async function OpportunityDetailPage({
 }: OpportunityPageProps) {
   const { id } = await params;
 
-  const detail = await getOpportunityDetailAction(id);
+  const [detail, insight] = await Promise.all([
+    getOpportunityDetailAction(id),
+    findInsightByOpportunityIdAction(id),
+  ]);
 
   if (!detail) {
     notFound();
@@ -67,6 +72,8 @@ export default async function OpportunityDetailPage({
           severity={detail.severity}
           buying_intent={detail.buying_intent}
         />
+
+        <AIAnalysisCard insight={insight} />
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>

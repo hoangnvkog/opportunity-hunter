@@ -11,6 +11,7 @@ import {
   Eye,
   Bell,
   CalendarDays,
+  Brain,
 } from "lucide-react";
 
 const navigation = [
@@ -34,6 +35,11 @@ const navigation = [
     name: "Alerts",
     href: "/alerts",
     icon: Bell,
+  },
+  {
+    name: "Insights",
+    href: "/insights",
+    icon: Brain,
   },
   {
     name: "Weekly Digests",

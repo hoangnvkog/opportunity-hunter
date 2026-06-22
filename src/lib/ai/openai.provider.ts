@@ -15,6 +15,7 @@ import {
   PainPointSchema,
   ClusterSchema,
   OpportunitySchema,
+  OpportunityInsightSchema,
   StartupIdeaSchema,
 } from "./schemas";
 import type {
@@ -24,6 +25,7 @@ import type {
   OpportunityInput,
   StartupIdeaInput,
 } from "@/types/pipeline";
+import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -283,6 +285,87 @@ Do NOT include markdown formatting or code blocks.`,
         .filter((item): item is OpportunityInput => item !== null);
     } catch (error) {
       console.error("generateOpportunities failed:", error);
+      return [];
+    }
+  }
+
+  async generateInsights(
+    opportunities: OpportunityInput[],
+  ): Promise<OpportunityInsightInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a startup strategist. For each opportunity below, produce ONE concise business insight in JSON.
+
+Return ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "summary": string,
+      "market_size": string,
+      "competition_level": "Low" | "Medium" | "High",
+      "urgency": "Low" | "Medium" | "High",
+      "recommended_mvp": string,
+      "recommended_channels": string,
+      "confidence_score": number
+    }
+  ]
+}
+
+Rules:
+- summary: 1-3 sentences describing the core opportunity in human terms
+- market_size: short qualifier such as "$1.2B TAM" or "Niche (~5k buyers)"
+- competition_level and urgency: pick the most plausible of "Low"/"Medium"/"High"
+- recommended_mvp: 1-2 sentence minimum-viable product description
+- recommended_channels: comma-separated acquisition channels (e.g. "Reddit, Product Hunt, SEO")
+- confidence_score: float between 0 and 1 (1-pip precision)
+Return exactly ${opportunities.length} objects in the same order as the input.
+Do NOT include markdown formatting or code blocks.`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp) => ({
+                score: Math.round(opp.score),
+                frequency: opp.frequency,
+                severity: Number(opp.severity.toFixed(3)),
+                buying_intent: Number(opp.buying_intent.toFixed(3)),
+                cluster_name: opp.cluster_name ?? "(unknown cluster)",
+                cluster_description:
+                  opp.cluster_description ?? "(no description)",
+              })),
+            ),
+          },
+        ],
+      });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed: unknown = JSON.parse(content);
+      const results = (parsed as { results?: unknown }).results;
+      if (!Array.isArray(results)) {
+        console.error("generateInsights: response.results is not an array");
+        return [];
+      }
+
+      return results
+        .map((item): OpportunityInsightInput | null => {
+          try {
+            const validated = OpportunityInsightSchema.parse(item);
+            return validated;
+          } catch {
+            return null;
+          }
+        })
+        .filter((item): item is OpportunityInsightInput => item !== null);
+    } catch (error) {
+      console.error("generateInsights failed:", error);
       return [];
     }
   }

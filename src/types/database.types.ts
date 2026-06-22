@@ -35,6 +35,10 @@ import type {
   WeeklyDigestInsert,
   WeeklyDigestUpdate,
 } from "./weekly-digest";
+import type {
+  OpportunityInsightRow,
+  OpportunityInsightInsert,
+} from "./opportunity-insight";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -589,6 +593,20 @@ export interface Database {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      opportunity_insights: {
+        Row: OpportunityInsightRow;
+        Insert: OpportunityInsightInsert;
+        Update: Partial<OpportunityInsightInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_insights_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: true;
+            referencedRelation: "opportunities";
             referencedColumns: ["id"];
           },
         ];

@@ -41,6 +41,9 @@ function buildService() {
     listTopWithCluster: vi.fn(),
     count: vi.fn(),
   };
+  const insightsRepo = {
+    listRecentCards: vi.fn().mockResolvedValue([]),
+  };
   const settingsRepo = { getOrCreate: vi.fn() };
 
   const service = new WeeklyDigestService(
@@ -48,6 +51,7 @@ function buildService() {
     alertsRepo as never,
     watchlistsRepo as never,
     opportunitiesRepo as never,
+    insightsRepo as never,
     settingsRepo as never,
   );
 
@@ -92,6 +96,8 @@ const baseStats = (): WeeklyDigestStats => ({
       url: "http://localhost:3000/opportunities/opp-1",
     },
   ],
+  ai_summary: null,
+  top_recommendation: null,
 });
 
 describe("WeeklyDigestService", () => {
@@ -343,7 +349,10 @@ describe("WeeklyDigestService", () => {
       set.digestsRepo.listByUser.mockResolvedValue(rows as never);
 
       const list = await set.service.listDigestsForUser(USER_ID);
-      expect(list).toBe(rows);
+      // result shape now includes `stats`
+      expect(list).toHaveLength(1);
+      expect(list[0]?.id).toBe("d-1");
+      expect(list[0]?.stats).toBe(null);
       expect(set.digestsRepo.listByUser).toHaveBeenCalledWith(USER_ID);
     });
   });

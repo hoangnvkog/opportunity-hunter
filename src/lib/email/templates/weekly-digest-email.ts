@@ -97,6 +97,24 @@ export function renderWeeklyDigestHtml(context: WeeklyDigestEmailContext): strin
   }
   parts.push("</table></td></tr></table></td></tr>");
 
+  // AI insight summary (Sprint 46)
+  if (stats.ai_summary) {
+    parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #ddd6fe;border-radius:6px;background-color:#f5f3ff;\"><tr><td style=\"padding:20px;\">");
+    parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#6d28d9;\">AI insight summary</h2>");
+    parts.push(`<p style=\"margin:0;font-size:13px;line-height:1.6;color:#1f2937;\">${escapeHtml(stats.ai_summary)}</p>`);
+    parts.push("</td></tr></table></td></tr>");
+  }
+
+  if (stats.top_recommendation) {
+    const rec = stats.top_recommendation;
+    parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #ddd6fe;border-radius:6px;background-color:#f5f3ff;\"><tr><td style=\"padding:20px;\">");
+    parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#6d28d9;\">Top AI recommendation</h2>");
+    parts.push(`<a href=\"${escapeAttr(rec.url)}\" style=\"color:#6d28d9;font-weight:600;font-size:14px;text-decoration:none;\">${escapeHtml(rec.title)}</a>`);
+    parts.push(`<div style=\"font-size:12px;color:#6b7280;margin-top:2px;\">Confidence ${Math.round(rec.confidence_score * 100)}%</div>`);
+    parts.push(`<p style=\"margin:8px 0 0 0;font-size:13px;line-height:1.6;color:#1f2937;\">${escapeHtml(rec.summary)}</p>`);
+    parts.push("</td></tr></table></td></tr>");
+  }
+
   // Top clusters
   if (stats.top_clusters.length > 0) {
     parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #e5e7eb;border-radius:6px;\"><tr><td style=\"padding:20px;\">");
@@ -157,6 +175,22 @@ export function renderWeeklyDigestText(context: WeeklyDigestEmailContext): strin
   lines.push(`  Average score:      ${formatNumber(stats.average_score)}`);
   lines.push(`  Highest score:      ${formatNumber(stats.highest_score)}`);
   lines.push(`  Peak buying intent: ${formatNumber(stats.highest_buying_intent)}`);
+
+  if (stats.ai_summary) {
+    lines.push("");
+    lines.push("AI INSIGHT SUMMARY");
+    lines.push(`  ${stats.ai_summary}`);
+  }
+
+  if (stats.top_recommendation) {
+    const rec = stats.top_recommendation;
+    lines.push("");
+    lines.push("TOP AI RECOMMENDATION");
+    lines.push(`  ${rec.title}`);
+    lines.push(`    Confidence ${Math.round(rec.confidence_score * 100)}%`);
+    lines.push(`    ${rec.summary}`);
+    lines.push(`    ${rec.url}`);
+  }
 
   if (stats.top_clusters.length > 0) {
     lines.push("");

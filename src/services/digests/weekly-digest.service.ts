@@ -19,6 +19,7 @@ import { WeeklyDigestsRepository } from "@/lib/db/repositories/weekly-digests.re
 import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
+import { OpportunityInsightsRepository } from "@/lib/db/repositories/opportunity-insights.repository";
 import { NotificationSettingsRepository } from "@/lib/db/repositories/email-notifications.repository";
 import { sendEmail } from "@/lib/email/resend.provider";
 import {
@@ -28,6 +29,7 @@ import {
 import type {
   WeeklyDigestEmailContext,
   WeeklyDigestStats,
+  WeeklyDigestView,
 } from "@/types/weekly-digest";
 import type { Uuid } from "@/types";
 
@@ -87,23 +89,32 @@ export class WeeklyDigestService {
     private alertsRepo: AlertsRepository,
     private watchlistsRepo: WatchlistsRepository,
     private opportunitiesRepo: OpportunitiesRepository,
+    private insightsRepo: OpportunityInsightsRepository,
     private settingsRepo: NotificationSettingsRepository,
   ) {}
 
   static async create(): Promise<WeeklyDigestService> {
-    const [digestsRepo, alertsRepo, watchlistsRepo, opportunitiesRepo, settingsRepo] =
-      await Promise.all([
-        WeeklyDigestsRepository.create(),
-        AlertsRepository.create(),
-        WatchlistsRepository.create(),
-        OpportunitiesRepository.create(),
-        NotificationSettingsRepository.create(),
-      ]);
+    const [
+      digestsRepo,
+      alertsRepo,
+      watchlistsRepo,
+      opportunitiesRepo,
+      insightsRepo,
+      settingsRepo,
+    ] = await Promise.all([
+      WeeklyDigestsRepository.create(),
+      AlertsRepository.create(),
+      WatchlistsRepository.create(),
+      OpportunitiesRepository.create(),
+      OpportunityInsightsRepository.create(),
+      NotificationSettingsRepository.create(),
+    ]);
     return new WeeklyDigestService(
       digestsRepo,
       alertsRepo,
       watchlistsRepo,
       opportunitiesRepo,
+      insightsRepo,
       settingsRepo,
     );
   }
@@ -124,7 +135,7 @@ export class WeeklyDigestService {
     const weekEndStr = toDateInput(weekEnd);
 
     const activity = await this.collectUserActivity(userId);
-    const stats = this.summarize(activity);
+    const stats = await this.applyAiInsightEnrichment(this.summarize(activity));
 
     const enrichedStats: WeeklyDigestStats = {
       ...stats,
@@ -233,8 +244,15 @@ export class WeeklyDigestService {
   /**
    * List every digest for a user — powers `/digests`.
    */
-  async listDigestsForUser(userId: Uuid) {
-    return this.digestsRepo.listByUser(userId);
+  async listDigestsForUser(userId: Uuid): Promise<WeeklyDigestView[]> {
+    const rows = await this.digestsRepo.listByUser(userId);
+    return rows.map((row) => {
+      const parsed = row.content ? parseStoredContent(row.content) : null;
+      return {
+        ...row,
+        stats: parsed?.stats ?? null,
+      };
+    });
   }
 
   // -------------------------------------------------------------------
@@ -252,7 +270,7 @@ export class WeeklyDigestService {
     const opportunities = topOpps.map((opp) => ({
       id: opp.id,
       title: opp.title,
-      score: typeof opp.score === "string" ? parseFloat(opp.score) : opp.score,
+      score: typeof opp.score === "number" ? opp.score : Number(opp.score) || 0,
       cluster_name: opp.pain_clusters?.name ?? "Unknown",
     }));
 
@@ -310,6 +328,40 @@ export class WeeklyDigestService {
           url,
         };
       }),
+      ai_summary: null,
+      top_recommendation: null,
+    };
+  }
+
+  /**
+   * Enrich the synchronous summary with the latest AI insights.
+   * Called once per digest generation; collapses to `null` when no
+   * insights are available so the email can decide what to render.
+   */
+  private async applyAiInsightEnrichment(
+    stats: WeeklyDigestStats,
+  ): Promise<WeeklyDigestStats> {
+    const insights = await this.insightsRepo.listRecentCards(TOP_OPPORTUNITIES_LIMIT);
+    if (insights.length === 0) return stats;
+
+    const top = insights[0];
+    if (!top) return stats;
+
+    const summaryParts = insights
+      .slice(0, 3)
+      .map((i) => `${i.opportunity_title}: ${i.summary}`)
+      .join(" | ");
+
+    return {
+      ...stats,
+      ai_summary: summaryParts,
+      top_recommendation: {
+        opportunity_id: top.opportunity_id,
+        title: top.opportunity_title,
+        url: `${getBaseUrl()}/opportunities/${top.opportunity_id}`,
+        confidence_score: top.confidence_score,
+        summary: top.summary,
+      },
     };
   }
 

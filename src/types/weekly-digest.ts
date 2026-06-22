@@ -38,6 +38,15 @@ export type WeeklyDigestUpdate = {
 };
 
 /**
+ * View row for the digests history page; like `WeeklyDigestRow` but
+ * with the parsed `WeeklyDigestStats` payload attached (or null when
+ * the stored content cannot be parsed).
+ */
+export type WeeklyDigestView = WeeklyDigestRow & {
+  stats: WeeklyDigestStats | null;
+};
+
+/**
  * Aggregated metrics used to compose a digest.
  * Numbers are pre-rounded; the digest content is rendered from this shape.
  */
@@ -62,6 +71,19 @@ export type WeeklyDigestStats = {
     cluster_name: string;
     url: string;
   }>;
+  /**
+   * Sprint 46: AI summary line + top recommendation synthesized from
+   * the latest `opportunity_insights`. Null when no insights exist yet
+   * (digest still renders; sections degrade gracefully).
+   */
+  ai_summary: string | null;
+  top_recommendation: {
+    opportunity_id: Uuid;
+    title: string;
+    url: string;
+    confidence_score: number;
+    summary: string;
+  } | null;
 };
 
 /**

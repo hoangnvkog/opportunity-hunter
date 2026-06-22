@@ -42,6 +42,22 @@ export const OpportunitySchema = z.object({
 export type OpportunityResponse = z.infer<typeof OpportunitySchema>;
 
 /**
+ * Schema for opportunity insight response (Sprint 46).
+ * Used when AI provider generates business insights for opportunities.
+ */
+export const OpportunityInsightSchema = z.object({
+  summary: z.string(),
+  market_size: z.string(),
+  competition_level: z.enum(["Low", "Medium", "High"]),
+  urgency: z.enum(["Low", "Medium", "High"]),
+  recommended_mvp: z.string(),
+  recommended_channels: z.string(),
+  confidence_score: z.number(),
+});
+
+export type OpportunityInsightResponseItem = z.infer<typeof OpportunityInsightSchema>;
+
+/**
  * Schema for startup idea generation response
  * Used when generating startup ideas from opportunities
  */

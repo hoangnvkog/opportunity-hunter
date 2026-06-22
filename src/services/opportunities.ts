@@ -34,6 +34,7 @@ import {
   OpportunitiesRepository,
   type OpportunityWithCluster,
 } from "@/lib/db/repositories";
+import { OpportunityInsightsRepository } from "@/lib/db/repositories/opportunity-insights.repository";
 
 /** View shape consumed by the dashboard / opportunities pages. */
 export interface OpportunityView {
@@ -59,6 +60,15 @@ export interface OpportunityView {
   source: string;
   /** Schema does not store a per-opportunity creation timestamp. */
   createdAt: Date | undefined;
+  /** AI-generated insight fields, populated when one exists. */
+  insight: OpportunityInsightSummary | null;
+}
+
+export interface OpportunityInsightSummary {
+  competition_level: "Low" | "Medium" | "High";
+  urgency: "Low" | "Medium" | "High";
+  confidence_score: number;
+  summary: string;
 }
 
 export interface FindOpportunitiesFilters {
@@ -66,6 +76,10 @@ export interface FindOpportunitiesFilters {
   offset?: number;
   category?: string;
   minScore?: number;
+  /** Filter to opportunities whose AI insight satisfies these criteria. */
+  insightCompetition?: "Low" | "Medium" | "High";
+  insightUrgency?: "Low" | "Medium" | "High";
+  insightMinConfidence?: number;
 }
 
 function toView(row: OpportunityWithCluster): OpportunityView {
@@ -83,6 +97,7 @@ function toView(row: OpportunityWithCluster): OpportunityView {
     category: row.pain_clusters.name,
     source: "Cluster",
     createdAt: undefined,
+    insight: null,
   };
 }
 
@@ -90,12 +105,44 @@ function toView(row: OpportunityWithCluster): OpportunityView {
  * List opportunities joined with their cluster, projected into the
  * dashboard view shape. Ordered by score descending (delegated to the
  * repository).
+ *
+ * Sprint 46: when insight-based filters are present we first resolve
+ * the matching opportunity ids via `opportunity_insights` and feed
+ * them back into the repo as an `id IN (...)` constraint. Inserts are
+ * a single batch — no per-row joins.
  */
 export async function findOpportunities(
   filters: FindOpportunitiesFilters = {},
 ): Promise<OpportunityView[]> {
   const repo = await OpportunitiesRepository.create();
-  const rows = await repo.findMany(filters);
+  const {
+    insightCompetition,
+    insightUrgency,
+    insightMinConfidence,
+    ...repoFilters
+  } = filters;
+
+  if (
+    insightCompetition ||
+    insightUrgency ||
+    insightMinConfidence !== undefined
+  ) {
+    const insightsRepo = await OpportunityInsightsRepository.create();
+    const matchingInsights = await insightsRepo.listLatest({
+      competition_level: insightCompetition,
+      urgency: insightUrgency,
+      minConfidence: insightMinConfidence,
+      limit: 500,
+    });
+    const ids = new Set(matchingInsights.map((row) => row.opportunity_id));
+    if (ids.size === 0) return [];
+
+    // Re-run repository query with manual id list (rare path, ok perf-wise).
+    const rows = await repo.findMany(repoFilters);
+    return rows.filter((row) => ids.has(row.id)).map(toView);
+  }
+
+  const rows = await repo.findMany(repoFilters);
   return rows.map(toView);
 }
 

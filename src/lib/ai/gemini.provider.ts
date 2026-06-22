@@ -17,6 +17,7 @@ import type {
   OpportunityInput,
   StartupIdeaInput,
 } from "@/types/pipeline";
+import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 
 export class GeminiProvider implements AIProvider {
   constructor(
@@ -55,6 +56,17 @@ export class GeminiProvider implements AIProvider {
   ): Promise<OpportunityInput[]> {
     throw new Error(
       "GeminiProvider.generateOpportunities() not implemented yet. Install @google/generative-ai SDK and implement.",
+    );
+  }
+
+  /**
+   * Generate business insights using Gemini (Sprint 46 — stub).
+   */
+  async generateInsights(
+    _opportunities: OpportunityInput[],
+  ): Promise<OpportunityInsightInput[]> {
+    throw new Error(
+      "GeminiProvider.generateInsights() not implemented yet. Install @google/generative-ai SDK and implement.",
     );
   }
 
