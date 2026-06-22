@@ -1,27 +1,47 @@
-import { Bell, Search } from "lucide-react";
+"use client";
+
+import { Bell } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getUnreadAlertCountAction } from "@/actions/alerts.actions";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UserMenu } from "@/components/auth/UserMenu";
 
 export function Header() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        const count = await getUnreadAlertCountAction();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error("Failed to fetch unread alert count:", error);
+      }
+    }
+
+    fetchUnreadCount();
+  }, []);
+
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-6">
       <div className="flex items-center gap-4 flex-1">
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search opportunities..."
-            className="w-full rounded-md border bg-secondary px-10 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          />
-        </div>
+        <h1 className="text-xl font-semibold">Opportunity Hunter</h1>
       </div>
 
       <div className="flex items-center gap-4">
         <ThemeToggle />
-        <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
+        <Link
+          href="/alerts"
+          className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
           <Bell className="h-5 w-5" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
         <UserMenu />
       </div>
     </header>

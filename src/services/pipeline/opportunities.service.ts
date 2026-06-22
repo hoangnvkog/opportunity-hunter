@@ -2,6 +2,8 @@ import { PainClustersRepository } from "@/lib/db/repositories/pain-clusters.repo
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { PainPointsRepository } from "@/lib/db/repositories/pain-points.repository";
 import { RawPostsRepository } from "@/lib/db/repositories/raw-posts.repository";
+import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
+import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
 import { getAIProviderFromEnv } from "@/lib/ai/base.provider";
 import {
   calculateOpportunityScore,
@@ -155,7 +157,7 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
 
       scores.push(score);
 
-      await opportunitiesRepo.create({
+      const newOpportunity = await opportunitiesRepo.create({
         cluster_id: cluster.id,
         title: opportunity.cluster_name || cluster.name,
         description: opportunity.cluster_description || cluster.description,
@@ -172,6 +174,21 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
       // Mark cluster as processed
       await clustersRepo.markOpportunityGenerated(cluster.id);
       processedClusterIds.push(cluster.id);
+
+      // Match opportunity to watchlists and create alerts
+      try {
+        await matchOpportunityToWatchlists({
+          id: newOpportunity.id,
+          title: opportunity.cluster_name || cluster.name,
+          description: opportunity.cluster_description || cluster.description,
+          score: score,
+          frequency: opportunity.frequency,
+          severity: opportunity.severity,
+          buying_intent: opportunity.buying_intent,
+        });
+      } catch (alertError) {
+        console.warn(`Failed to create alerts for opportunity ${newOpportunity.id}:`, alertError);
+      }
     } catch (error) {
       console.error(`Failed to insert opportunity for cluster ${cluster.id}:`, error);
     }
@@ -203,4 +220,106 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
     inserted,
     scoreStats,
   };
+}
+
+/**
+ * Match an opportunity against all watchlists and create alerts for matches.
+ */
+async function matchOpportunityToWatchlists(opportunity: {
+  id: string;
+  title: string;
+  description: string;
+  score: number;
+  frequency: number;
+  severity: number;
+  buying_intent: number;
+}): Promise<number> {
+  const watchlistsRepo = await WatchlistsRepository.create();
+  const alertsRepo = await AlertsRepository.create();
+
+  // Get all watchlists
+  const watchlists = await watchlistsRepo.getAllWatchlists();
+
+  if (!watchlists || watchlists.length === 0) {
+    return 0;
+  }
+
+  let alertsCreated = 0;
+
+  for (const watchlist of watchlists) {
+    const matches = checkWatchlistMatch(watchlist, opportunity);
+
+    if (matches) {
+      try {
+        await alertsRepo.create({
+          user_id: watchlist.user_id,
+          watchlist_id: watchlist.id,
+          opportunity_id: opportunity.id,
+        });
+        alertsCreated++;
+      } catch (error) {
+        console.warn(`Failed to create alert for watchlist ${watchlist.id}:`, error);
+      }
+    }
+  }
+
+  if (alertsCreated > 0) {
+    console.log(`Created ${alertsCreated} alerts for opportunity ${opportunity.id}`);
+  }
+
+  return alertsCreated;
+}
+
+/**
+ * Check if an opportunity matches a watchlist's criteria.
+ */
+function checkWatchlistMatch(
+  watchlist: {
+    search: string | null;
+    min_score: number | null;
+    min_frequency: number | null;
+    min_severity: number | null;
+    min_buying_intent: number | null;
+  },
+  opportunity: {
+    title: string;
+    description: string;
+    score: number;
+    frequency: number;
+    severity: number;
+    buying_intent: number;
+  }
+): boolean {
+  // Check search term (case-insensitive)
+  if (watchlist.search) {
+    const searchTerm = watchlist.search.toLowerCase();
+    const title = opportunity.title.toLowerCase();
+    const description = opportunity.description.toLowerCase();
+
+    if (!title.includes(searchTerm) && !description.includes(searchTerm)) {
+      return false;
+    }
+  }
+
+  // Check minimum score
+  if (watchlist.min_score !== null && opportunity.score < watchlist.min_score) {
+    return false;
+  }
+
+  // Check minimum frequency
+  if (watchlist.min_frequency !== null && opportunity.frequency < watchlist.min_frequency) {
+    return false;
+  }
+
+  // Check minimum severity
+  if (watchlist.min_severity !== null && opportunity.severity < watchlist.min_severity) {
+    return false;
+  }
+
+  // Check minimum buying intent
+  if (watchlist.min_buying_intent !== null && opportunity.buying_intent < watchlist.min_buying_intent) {
+    return false;
+  }
+
+  return true;
 }

@@ -161,6 +161,45 @@ export type SavedOpportunityInsert = {
   created_at?: string;
 };
 
+export type WatchlistRow = {
+  id: Uuid;
+  user_id: Uuid;
+  name: string;
+  search: string | null;
+  min_score: number | null;
+  min_frequency: number | null;
+  min_severity: number | null;
+  min_buying_intent: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WatchlistInsert = {
+  user_id: Uuid;
+  name: string;
+  search?: string | null;
+  min_score?: number | null;
+  min_frequency?: number | null;
+  min_severity?: number | null;
+  min_buying_intent?: number | null;
+};
+
+export type AlertRow = {
+  id: Uuid;
+  user_id: Uuid;
+  watchlist_id: Uuid;
+  opportunity_id: Uuid;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type AlertInsert = {
+  user_id: Uuid;
+  watchlist_id: Uuid;
+  opportunity_id: Uuid;
+  is_read?: boolean;
+};
+
 export type ProfileRow = {
   id: Uuid;
   email: string;
@@ -406,6 +445,48 @@ export interface Database {
           },
           {
             foreignKeyName: "saved_opportunities_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      watchlists: {
+        Row: WatchlistRow;
+        Insert: WatchlistInsert;
+        Update: Partial<Omit<WatchlistInsert, "user_id">>;
+        Relationships: [
+          {
+            foreignKeyName: "watchlists_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      alerts: {
+        Row: AlertRow;
+        Insert: AlertInsert;
+        Update: Partial<Omit<AlertInsert, "user_id" | "watchlist_id" | "opportunity_id">>;
+        Relationships: [
+          {
+            foreignKeyName: "alerts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alerts_watchlist_id_fkey";
+            columns: ["watchlist_id"];
+            isOneToOne: false;
+            referencedRelation: "watchlists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alerts_opportunity_id_fkey";
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";

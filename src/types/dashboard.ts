@@ -6,6 +6,8 @@ export interface DashboardStats {
   opportunities: number;
   ideas: number;
   savedCount: number;
+  watchlistsCount: number;
+  unreadAlertsCount: number;
   averageClusterSize: number;
   largestClusterSize: number;
 }

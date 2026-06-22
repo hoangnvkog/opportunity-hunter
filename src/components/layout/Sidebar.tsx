@@ -8,6 +8,8 @@ import {
   Briefcase,
   Sparkles,
   Star,
+  Eye,
+  Bell,
 } from "lucide-react";
 
 const navigation = [
@@ -21,6 +23,16 @@ const navigation = [
     name: "Saved",
     href: "/saved",
     icon: Star,
+  },
+  {
+    name: "Watchlists",
+    href: "/watchlists",
+    icon: Eye,
+  },
+  {
+    name: "Alerts",
+    href: "/alerts",
+    icon: Bell,
   },
 ];
 

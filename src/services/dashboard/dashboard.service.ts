@@ -19,6 +19,8 @@ import { StartupIdeasRepository } from "@/lib/db/repositories/startup-ideas.repo
 import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
 import { EmbeddingsRepository } from "@/lib/db/repositories/embeddings.repository";
 import { SavedOpportunitiesRepository } from "@/lib/db/repositories/saved-opportunities.repository";
+import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
+import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -34,7 +36,7 @@ import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
  * @returns Counts for all pipeline stages plus cluster metrics
  */
 export async function getDashboardStats(userId?: string): Promise<DashboardStats> {
-  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo, savedOpportunitiesRepo] = await Promise.all([
+  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo, savedOpportunitiesRepo, watchlistsRepo, alertsRepo] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
     PainClustersRepository.create(),
@@ -42,9 +44,11 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     StartupIdeasRepository.create(),
     EmbeddingsRepository.create(),
     SavedOpportunitiesRepository.create(),
+    WatchlistsRepository.create(),
+    AlertsRepository.create(),
   ]);
 
-  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings, savedCount, averageClusterSize, largestClusterSize] = await Promise.all([
+  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings, savedCount, watchlistsCount, unreadAlertsCount, averageClusterSize, largestClusterSize] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
     painClustersRepo.count(),
@@ -52,6 +56,8 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     startupIdeasRepo.count(),
     embeddingsRepo.count(),
     userId ? savedOpportunitiesRepo.countSaved(userId) : Promise.resolve(0),
+    userId ? watchlistsRepo.countByUser(userId) : Promise.resolve(0),
+    userId ? alertsRepo.countUnread(userId) : Promise.resolve(0),
     painClustersRepo.getAverageClusterSize(),
     painClustersRepo.getLargestClusterSize(),
   ]);
@@ -64,6 +70,8 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     opportunities,
     ideas,
     savedCount,
+    watchlistsCount,
+    unreadAlertsCount,
     averageClusterSize,
     largestClusterSize,
   };
