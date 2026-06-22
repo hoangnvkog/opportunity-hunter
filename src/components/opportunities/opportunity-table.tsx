@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { SaveButton } from "@/components/saved/save-button";
 import type { OpportunityView } from "@/services/opportunities";
 
 interface OpportunityTableProps {
@@ -27,6 +28,9 @@ export default function OpportunityTable({ opportunities }: OpportunityTableProp
           <table className="w-full">
             <thead>
               <tr className="border-b">
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground w-12">
+                  Save
+                </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
                   Name
                 </th>
@@ -53,6 +57,9 @@ export default function OpportunityTable({ opportunities }: OpportunityTableProp
             <tbody>
               {opportunities.map((opportunity) => (
                 <tr key={opportunity.id} className="border-b hover:bg-secondary/50">
+                  <td className="py-3 px-4">
+                    <SaveButton opportunityId={opportunity.id} isSaved={false} />
+                  </td>
                   <td className="py-3 px-4">
                     <Link
                       href={`/opportunities/${opportunity.id}`}

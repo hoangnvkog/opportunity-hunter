@@ -18,6 +18,7 @@ import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.rep
 import { StartupIdeasRepository } from "@/lib/db/repositories/startup-ideas.repository";
 import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
 import { EmbeddingsRepository } from "@/lib/db/repositories/embeddings.repository";
+import { SavedOpportunitiesRepository } from "@/lib/db/repositories/saved-opportunities.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -29,25 +30,28 @@ import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
 /**
  * Get dashboard stats from the database.
  *
+ * @param userId - Optional user ID to get user-specific stats like saved opportunities count
  * @returns Counts for all pipeline stages plus cluster metrics
  */
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo] = await Promise.all([
+export async function getDashboardStats(userId?: string): Promise<DashboardStats> {
+  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo, savedOpportunitiesRepo] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
     PainClustersRepository.create(),
     OpportunitiesRepository.create(),
     StartupIdeasRepository.create(),
     EmbeddingsRepository.create(),
+    SavedOpportunitiesRepository.create(),
   ]);
 
-  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings, averageClusterSize, largestClusterSize] = await Promise.all([
+  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings, savedCount, averageClusterSize, largestClusterSize] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
     painClustersRepo.count(),
     opportunitiesRepo.count(),
     startupIdeasRepo.count(),
     embeddingsRepo.count(),
+    userId ? savedOpportunitiesRepo.countSaved(userId) : Promise.resolve(0),
     painClustersRepo.getAverageClusterSize(),
     painClustersRepo.getLargestClusterSize(),
   ]);
@@ -59,6 +63,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     clusters,
     opportunities,
     ideas,
+    savedCount,
     averageClusterSize,
     largestClusterSize,
   };

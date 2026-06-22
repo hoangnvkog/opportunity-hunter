@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Briefcase,
   Sparkles,
+  Star,
 } from "lucide-react";
 
 const navigation = [
@@ -15,6 +16,11 @@ const navigation = [
     name: "Opportunities",
     href: "/opportunities",
     icon: Briefcase,
+  },
+  {
+    name: "Saved",
+    href: "/saved",
+    icon: Star,
   },
 ];
 

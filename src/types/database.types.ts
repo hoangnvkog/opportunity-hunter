@@ -147,6 +147,20 @@ export type PainPointEmbeddingRow = {
   created_at: string;
 };
 
+export type SavedOpportunityRow = {
+  id: Uuid;
+  user_id: Uuid;
+  opportunity_id: Uuid;
+  created_at: string;
+};
+
+export type SavedOpportunityInsert = {
+  id?: Uuid;
+  user_id: Uuid;
+  opportunity_id: Uuid;
+  created_at?: string;
+};
+
 export type ProfileRow = {
   id: Uuid;
   email: string;
@@ -374,6 +388,27 @@ export interface Database {
             columns: ["id"];
             isOneToOne: true;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      saved_opportunities: {
+        Row: SavedOpportunityRow;
+        Insert: SavedOpportunityInsert;
+        Update: Partial<SavedOpportunityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "saved_opportunities_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "saved_opportunities_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
             referencedColumns: ["id"];
           },
         ];

@@ -17,13 +17,15 @@ import { getUser } from "@/lib/auth/server";
 import { getProfile } from "@/actions/profile.actions";
 
 export default async function DashboardPage() {
-  const [stats, opportunitiesResult, ideasResult, , profile] = await Promise.all([
-    getDashboardStats(),
+  const [, opportunitiesResult, ideasResult, user, profile] = await Promise.all([
+    undefined,
     getFilteredOpportunitiesAction({ limit: 10 }),
     getFilteredStartupIdeasAction({ limit: 10 }),
     getUser(),
     getProfile(),
   ]);
+
+  const stats = await getDashboardStats(user?.id);
 
   const opportunities = opportunitiesResult.success ? opportunitiesResult.data || [] : [];
   const ideas = ideasResult.success ? ideasResult.data || [] : [];
