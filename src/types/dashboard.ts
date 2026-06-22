@@ -10,6 +10,10 @@ export interface DashboardStats {
   unreadAlertsCount: number;
   averageClusterSize: number;
   largestClusterSize: number;
+  /** Opportunities created in the last 7 days. */
+  weeklyOpportunities: number;
+  /** Total weekly digests marked as `sent` across all users. */
+  weeklyEmailsSent: number;
 }
 
 export interface OpportunityCardData {

@@ -30,6 +30,12 @@
 
 export type Uuid = string;
 
+import type {
+  WeeklyDigestRow,
+  WeeklyDigestInsert,
+  WeeklyDigestUpdate,
+} from "./weekly-digest";
+
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
 
@@ -225,6 +231,7 @@ export type EmailNotificationInsert = {
 export type NotificationSettingsRow = {
   user_id: Uuid;
   email_enabled: boolean;
+  weekly_digest_enabled: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -232,10 +239,15 @@ export type NotificationSettingsRow = {
 export type NotificationSettingsInsert = {
   user_id: Uuid;
   email_enabled?: boolean;
+  weekly_digest_enabled?: boolean;
+  updated_at?: string;
 };
 
 export type NotificationSettingsUpdate = {
+  user_enabled?: boolean;
   email_enabled?: boolean;
+  weekly_digest_enabled?: boolean;
+  updated_at?: string;
 };
 
 export type ProfileRow = {
@@ -562,6 +574,20 @@ export interface Database {
             foreignKeyName: "notification_settings_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_digests: {
+        Row: WeeklyDigestRow;
+        Insert: WeeklyDigestInsert;
+        Update: WeeklyDigestUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "weekly_digests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },

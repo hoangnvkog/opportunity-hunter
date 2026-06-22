@@ -6,16 +6,16 @@ function formatNumber(value: number): string {
 
 function escapeHtml(value: string): string {
   const amp = String.fromCharCode(38) + "amp;";
-  const lt = String.fromCharCode(60);
-  const gt = String.fromCharCode(62);
-  const quot = String.fromCharCode(34);
-  const apos = String.fromCharCode(39);
+  const entlt = String.fromCharCode(38) + "lt;";
+  const entgt = String.fromCharCode(38) + "gt;";
+  const entquot = String.fromCharCode(38) + "quot;";
+  const entapos = String.fromCharCode(38) + "#39;";
   return value
-    .replace(/&(?!#|amp;)/g, amp)
-    .replace(/</g, lt)
-    .replace(/>/g, gt)
-    .replace(/"/g, quot + ";")
-    .replace(/'/g, apos + ";");
+    .replace(/&(?!#|amp;|lt;|gt;|quot;|#39;)/g, amp)
+    .replace(/</g, entlt)
+    .replace(/>/g, entgt)
+    .replace(/"/g, entquot)
+    .replace(/'/g, entapos);
 }
 
 function escapeAttr(value: string): string {

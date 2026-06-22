@@ -6,6 +6,7 @@
 
 export { startScheduler, stopScheduler, getSchedulerStatus, isSchedulerRunning, triggerPipelineNow } from "./scheduler";
 export { runPipelineJob, isPipelineRunning } from "./pipeline-job";
+export { runWeeklyDigestJob, isWeeklyDigestRunning } from "./weekly-digest-job";
 export { 
   createJobHandler, 
   getJobConfigFromEnv, 

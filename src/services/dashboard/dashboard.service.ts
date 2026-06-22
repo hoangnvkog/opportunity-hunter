@@ -21,6 +21,7 @@ import { EmbeddingsRepository } from "@/lib/db/repositories/embeddings.repositor
 import { SavedOpportunitiesRepository } from "@/lib/db/repositories/saved-opportunities.repository";
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
 import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
+import { WeeklyDigestsRepository } from "@/lib/db/repositories/weekly-digests.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -36,7 +37,18 @@ import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
  * @returns Counts for all pipeline stages plus cluster metrics
  */
 export async function getDashboardStats(userId?: string): Promise<DashboardStats> {
-  const [rawPostsRepo, painPointsRepo, painClustersRepo, opportunitiesRepo, startupIdeasRepo, embeddingsRepo, savedOpportunitiesRepo, watchlistsRepo, alertsRepo] = await Promise.all([
+  const [
+    rawPostsRepo,
+    painPointsRepo,
+    painClustersRepo,
+    opportunitiesRepo,
+    startupIdeasRepo,
+    embeddingsRepo,
+    savedOpportunitiesRepo,
+    watchlistsRepo,
+    alertsRepo,
+    weeklyDigestsRepo,
+  ] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
     PainClustersRepository.create(),
@@ -46,9 +58,24 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     SavedOpportunitiesRepository.create(),
     WatchlistsRepository.create(),
     AlertsRepository.create(),
+    WeeklyDigestsRepository.create(),
   ]);
 
-  const [rawPosts, painPoints, clusters, opportunities, ideas, embeddings, savedCount, watchlistsCount, unreadAlertsCount, averageClusterSize, largestClusterSize] = await Promise.all([
+  const [
+    rawPosts,
+    painPoints,
+    clusters,
+    opportunities,
+    ideas,
+    embeddings,
+    savedCount,
+    watchlistsCount,
+    unreadAlertsCount,
+    averageClusterSize,
+    largestClusterSize,
+    weeklyOpportunities,
+    weeklyEmailsSent,
+  ] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
     painClustersRepo.count(),
@@ -60,6 +87,8 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     userId ? alertsRepo.countUnread(userId) : Promise.resolve(0),
     painClustersRepo.getAverageClusterSize(),
     painClustersRepo.getLargestClusterSize(),
+    weeklyDigestsRepo.countOpportunitiesSince(7),
+    weeklyDigestsRepo.countSent(),
   ]);
 
   return {
@@ -74,6 +103,8 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     unreadAlertsCount,
     averageClusterSize,
     largestClusterSize,
+    weeklyOpportunities,
+    weeklyEmailsSent,
   };
 }
 

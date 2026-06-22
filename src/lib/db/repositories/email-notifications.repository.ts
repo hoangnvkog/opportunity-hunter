@@ -205,7 +205,11 @@ export class NotificationSettingsRepository {
 
     const inserted = await this.client
       .from("notification_settings")
-      .insert({ user_id: userId, email_enabled: true })
+      .insert({
+        user_id: userId,
+        email_enabled: true,
+        weekly_digest_enabled: true,
+      })
       .select()
       .single();
 
@@ -216,7 +220,10 @@ export class NotificationSettingsRepository {
   /**
    * Update notification settings for a user.
    */
-  async update(userId: Uuid, update: { email_enabled?: boolean }) {
+  async update(
+    userId: Uuid,
+    update: { email_enabled?: boolean; weekly_digest_enabled?: boolean },
+  ) {
     const { data, error } = await this.client
       .from("notification_settings")
       .update(update)

@@ -3,10 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getUser } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/actions/profile.actions";
+import { getNotificationSettingsAction } from "@/actions/weekly-digest.actions";
+import { NotificationSettingsForm } from "@/components/profile/NotificationSettingsForm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default async function ProfilePage() {
-  const [user, profile] = await Promise.all([getUser(), getProfile()]);
+  const [user, profile, settings] = await Promise.all([
+    getUser(),
+    getProfile(),
+    getNotificationSettingsAction(),
+  ]);
 
   if (!user) {
     redirect("/login");
@@ -73,6 +79,31 @@ export default async function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        <div id="weekly-digest">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification preferences</CardTitle>
+              <CardDescription>
+                Choose how Opportunity Hunter keeps you in the loop.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {settings ? (
+                <NotificationSettingsForm
+                  initial={{
+                    email_enabled: settings.email_enabled,
+                    weekly_digest_enabled: settings.weekly_digest_enabled,
+                  }}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Sign in to manage your notification preferences.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );

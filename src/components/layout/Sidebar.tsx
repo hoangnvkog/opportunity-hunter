@@ -10,6 +10,7 @@ import {
   Star,
   Eye,
   Bell,
+  CalendarDays,
 } from "lucide-react";
 
 const navigation = [
@@ -33,6 +34,11 @@ const navigation = [
     name: "Alerts",
     href: "/alerts",
     icon: Bell,
+  },
+  {
+    name: "Weekly Digests",
+    href: "/digests",
+    icon: CalendarDays,
   },
 ];
 
