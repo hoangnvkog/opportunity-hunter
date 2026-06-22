@@ -1,5 +1,6 @@
 import { Bell, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 export function Header() {
   return (
@@ -21,10 +22,7 @@ export function Header() {
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
         </button>
-        
-        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-          U
-        </div>
+        <UserMenu />
       </div>
     </header>
   );

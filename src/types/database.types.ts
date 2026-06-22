@@ -147,6 +147,15 @@ export type PainPointEmbeddingRow = {
   created_at: string;
 };
 
+export type ProfileRow = {
+  id: Uuid;
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // ---------------------------------------------------------------------------
 // Insert types (server-managed fields are optional)
 // ---------------------------------------------------------------------------
@@ -245,6 +254,15 @@ export type PainPointEmbeddingInsert = {
   created_at?: string;
 };
 
+export type ProfileInsert = {
+  id: Uuid;
+  email: string;
+  name?: string | null;
+  avatar_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 // ---------------------------------------------------------------------------
 // Update types (every field optional, primary key is locked)
 // ---------------------------------------------------------------------------
@@ -255,6 +273,7 @@ export type PainPointUpdate = Partial<Omit<PainPointInsert, "id">>;
 export type PainClusterUpdate = Partial<Omit<PainClusterInsert, "id">>;
 export type OpportunityUpdate = Partial<Omit<OpportunityInsert, "id" | "cluster_id">>;
 export type StartupIdeaUpdate = Partial<Omit<StartupIdeaInsert, "id" | "opportunity_id">>;
+export type ProfileUpdate = Partial<Omit<ProfileInsert, "id">>;
 
 // ---------------------------------------------------------------------------
 // Database container type
@@ -341,6 +360,20 @@ export interface Database {
             columns: ["pain_point_id"];
             isOneToOne: false;
             referencedRelation: "pain_points";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: ProfileRow;
+        Insert: ProfileInsert;
+        Update: ProfileUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey";
+            columns: ["id"];
+            isOneToOne: true;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];

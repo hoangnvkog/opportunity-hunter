@@ -61,7 +61,6 @@ export function startScheduler(config?: JobConfig): void {
     jobConfig.schedule,
     () => { handler(); },
     {
-      scheduled: true,
       timezone: jobConfig.timezone || "UTC",
     }
   );

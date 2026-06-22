@@ -13,12 +13,16 @@ import {
   getFilteredStartupIdeasAction,
 } from "@/actions/dashboard.actions";
 import { getDashboardStats } from "@/services/dashboard/dashboard.service";
+import { getUser } from "@/lib/auth/server";
+import { getProfile } from "@/actions/profile.actions";
 
 export default async function DashboardPage() {
-  const [stats, opportunitiesResult, ideasResult] = await Promise.all([
+  const [stats, opportunitiesResult, ideasResult, , profile] = await Promise.all([
     getDashboardStats(),
     getFilteredOpportunitiesAction({ limit: 10 }),
     getFilteredStartupIdeasAction({ limit: 10 }),
+    getUser(),
+    getProfile(),
   ]);
 
   const opportunities = opportunitiesResult.success ? opportunitiesResult.data || [] : [];
@@ -30,7 +34,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            Welcome back! Here&apos;s what&apos;s happening with your
+            Welcome back{profile?.name ? `, ${profile.name}` : ""}! Here&apos;s what&apos;s happening with your
             opportunities.
           </p>
         </div>
