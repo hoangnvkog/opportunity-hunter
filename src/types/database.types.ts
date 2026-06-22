@@ -200,6 +200,44 @@ export type AlertInsert = {
   is_read?: boolean;
 };
 
+export type EmailNotificationRow = {
+  id: Uuid;
+  user_id: Uuid;
+  alert_id: Uuid;
+  status: string;
+  attempts: number;
+  error_message: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
+
+export type EmailNotificationInsert = {
+  id?: Uuid;
+  user_id: Uuid;
+  alert_id: Uuid;
+  status?: string;
+  attempts?: number;
+  error_message?: string | null;
+  sent_at?: string | null;
+  created_at?: string;
+};
+
+export type NotificationSettingsRow = {
+  user_id: Uuid;
+  email_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationSettingsInsert = {
+  user_id: Uuid;
+  email_enabled?: boolean;
+};
+
+export type NotificationSettingsUpdate = {
+  email_enabled?: boolean;
+};
+
 export type ProfileRow = {
   id: Uuid;
   email: string;
@@ -490,6 +528,41 @@ export interface Database {
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      email_notifications: {
+        Row: EmailNotificationRow;
+        Insert: EmailNotificationInsert;
+        Update: Partial<Omit<EmailNotificationInsert, "user_id" | "alert_id">>;
+        Relationships: [
+          {
+            foreignKeyName: "email_notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_notifications_alert_id_fkey";
+            columns: ["alert_id"];
+            isOneToOne: false;
+            referencedRelation: "alerts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notification_settings: {
+        Row: NotificationSettingsRow;
+        Insert: NotificationSettingsInsert;
+        Update: Partial<NotificationSettingsUpdate>;
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "users";
             referencedColumns: ["id"];
           },
         ];
