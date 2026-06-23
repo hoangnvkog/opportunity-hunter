@@ -33,6 +33,6 @@ export interface PipelineRunInsert {
   startup_ideas: number;
   average_cluster_size?: number | null;
   largest_cluster_size?: number | null;
-  status: "success" | "failed";
+  status: "success" | "failed" | "running";
   error_message?: string | null;
 }

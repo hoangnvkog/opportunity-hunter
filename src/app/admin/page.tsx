@@ -1,7 +1,9 @@
 import { AnalyticsService } from "@/services/admin/analytics.service";
 import { RevenueService } from "@/services/admin/revenue.service";
 import { MonitoringService } from "@/services/admin/monitoring.service";
+import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
 import { MetricCard } from "@/components/admin/MetricCard";
+import { PipelineControl } from "@/components/admin/PipelineControl";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import { UsageChart } from "@/components/admin/UsageChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -17,18 +19,33 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [analyticsService, revenueService, monitoringService] = await Promise.all([
+  const [analyticsService, revenueService, monitoringService, pipelineRunsRepo] = await Promise.all([
     AnalyticsService.create(),
     RevenueService.create(),
     MonitoringService.create(),
+    PipelineRunsRepository.create(),
   ]);
 
-  const [summary, revenueTrends, featureUsage, health] = await Promise.all([
+  const [summary, revenueTrends, featureUsage, health, latestRun] = await Promise.all([
     analyticsService.getDashboardSummary(),
     revenueService.getTrends(6),
     analyticsService.getFeatureUsage(),
     monitoringService.getSystemHealth(),
+    pipelineRunsRepo.latest(),
   ]);
+
+  const pipelineInitialData = latestRun
+    ? {
+        lastRun: latestRun.finished_at || latestRun.started_at,
+        lastStatus: latestRun.status,
+        lastDurationMs: latestRun.duration_ms,
+        rawPosts: latestRun.raw_posts,
+        painPoints: latestRun.pain_points,
+        clusters: latestRun.clusters,
+        opportunities: latestRun.opportunities,
+        ideas: latestRun.startup_ideas,
+      }
+    : null;
 
   return (
     <div className="space-y-6">
@@ -85,6 +102,7 @@ export default async function AdminPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <RevenueChart data={revenueTrends} />
         <UsageChart data={featureUsage.map(f => ({ label: f.feature, value: f.count, users: f.users }))} />
+        <PipelineControl initialRun={pipelineInitialData} />
 
         <Card>
           <CardHeader>

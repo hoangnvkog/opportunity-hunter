@@ -1,94 +1,60 @@
 /**
- * Pipeline server actions
- * Next.js server actions for pipeline execution
+ * Pipeline Server Actions
+ *
+ * Server-side API for triggering pipeline execution and viewing run history.
  */
-
 "use server";
 
-import { runPipeline } from "@/services/pipeline/pipeline.service";
-import { triggerPipelineNow, getSchedulerStatus } from "@/lib/scheduler";
-import { getHealthStatus } from "@/services/system/health.service";
-import type { PipelineRunResult } from "@/types/pipeline-run";
+import { revalidatePath } from "next/cache";
+import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
+import { runPipelineWithTracking, getLatestExecution } from "@/services/pipeline/orchestrator.service";
+import type { PipelineRunHistory } from "@/types/pipeline-run-history";
 
-export interface PipelineActionResult {
-  success: boolean;
-  data?: PipelineRunResult;
-  error?: string;
-}
-
-/**
- * Execute the complete Opportunity Hunter pipeline
- * Server action wrapper for runPipeline()
- */
-export async function runPipelineAction(): Promise<PipelineActionResult> {
+export async function runPipelineAction() {
   try {
-    const result = await runPipeline();
+    const result = await runPipelineWithTracking();
+    revalidatePath("/admin");
+    revalidatePath("/admin/pipeline-runs");
     return {
       success: true,
-      data: result,
+      result: {
+        startedAt: result.startedAt,
+        finishedAt: result.finishedAt,
+        durationMs: result.durationMs,
+        rawPosts: result.rawPosts,
+        painPoints: result.painPoints,
+        clusters: result.clusters,
+        opportunities: result.opportunities,
+        ideas: result.ideas,
+        success: result.success,
+        errorMessage: result.errorMessage,
+        runId: result.runId,
+      },
     };
-  } catch (error) {
-    console.error("Pipeline failed:", error);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Pipeline failed",
+      error: message,
     };
   }
 }
 
-/**
- * Manually trigger pipeline execution via scheduler
- * Prevents overlapping runs
- */
-export async function triggerPipelineAction(): Promise<PipelineActionResult> {
-  try {
-    const result = await triggerPipelineNow();
-    if (!result) {
-      return {
-        success: false,
-        error: "Pipeline is already running",
-      };
-    }
-    return {
-      success: true,
-      data: result,
-    };
-  } catch (error) {
-    console.error("Pipeline trigger failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Pipeline trigger failed",
-    };
-  }
+export async function getLatestPipelineRunAction() {
+  return getLatestExecution();
 }
 
-/**
- * Get current scheduler status
- */
-export async function getSchedulerStatusAction(): Promise<{
-  isRunning: boolean;
-  lastRun: string | null;
-  nextRun: string | null;
-  isExecuting: boolean;
-}> {
-  const status = getSchedulerStatus();
+export async function getPipelineRunsAction(
+  page = 1,
+  limit = 20,
+): Promise<{ runs: PipelineRunHistory[]; total: number; page: number; totalPages: number }> {
+  const repo = await PipelineRunsRepository.create();
+  const offset = (page - 1) * limit;
+  const { runs, total } = await repo.list({ limit, offset });
   return {
-    isRunning: status.isRunning,
-    lastRun: null, // Will be fetched from database
-    nextRun: status.nextExecution,
-    isExecuting: false, // Will check from pipeline-job
+    runs,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
   };
-}
-
-/**
- * Get system health status
- */
-export async function getHealthStatusAction(): Promise<{
-  database: "healthy" | "unhealthy";
-  scheduler: "running" | "stopped";
-  pipeline: "idle" | "executing" | "failed";
-  lastCheck: string;
-  details?: Record<string, unknown>;
-}> {
-  return getHealthStatus();
 }

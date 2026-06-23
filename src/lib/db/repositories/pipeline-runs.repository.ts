@@ -76,12 +76,62 @@ export class PipelineRunsRepository {
 
   async findRecent(limit = 10): Promise<PipelineRunHistory[]> {
     const { data, error } = await this.client
-      .from("pipeline_runs")
+      .from(ENTITY)
       .select("*")
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) throw translateError(ENTITY, error);
     return data ?? [];
+  }
+
+  async update(id: string, patch: {
+    finished_at?: string;
+    status?: string;
+    error_message?: string | null;
+  }): Promise<PipelineRunHistory | null> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .update(patch)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw translateError(ENTITY, error);
+    return data;
+  }
+
+  async latest(): Promise<PipelineRunHistory | null> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw translateError(ENTITY, error);
+    }
+    return data;
+  }
+
+  async list(options?: { limit?: number; offset?: number }): Promise<{ runs: PipelineRunHistory[]; total: number }> {
+    const limit = options?.limit ?? 20;
+    const offset = options?.offset ?? 0;
+
+    const { count, error: countError } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true });
+    if (countError) throw translateError(ENTITY, countError);
+
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .order("started_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (error) throw translateError(ENTITY, error);
+
+    return { runs: data ?? [], total: count ?? 0 };
   }
 }
