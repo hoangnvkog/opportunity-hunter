@@ -20,12 +20,12 @@ export default async function AdminLogsPage({
   const offset = (page - 1) * limit;
 
   const [logsRepo, monitoringService] = await Promise.all([
-    SystemLogsRepository.create()
+    SystemLogsRepository.create(),
     MonitoringService.create()
   ]);
 
   const [{ logs, total }, health] = await Promise.all([
-    logsRepo.findAll({ level, search, limit, offset })
+    logsRepo.findAll({ level, search, limit, offset }),
     monitoringService.getSystemHealth()
   ]);
 

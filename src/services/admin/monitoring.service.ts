@@ -2,6 +2,7 @@ import { SystemLogsRepository } from "@/lib/db/repositories/system-logs.reposito
 import { AiUsageRepository } from "@/lib/db/repositories/ai-usage.repository";
 import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
 import type { SystemHealth } from "@/types/analytics";
+import type { LogLevel } from "@/types/admin";
 
 export class MonitoringService {
   private systemLogsRepo: SystemLogsRepository;
