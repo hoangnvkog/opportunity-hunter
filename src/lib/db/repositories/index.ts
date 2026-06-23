@@ -28,3 +28,5 @@ export { WeeklyDigestsRepository } from "./weekly-digests.repository";
 export { NotificationSettingsRepository } from "./email-notifications.repository";
 export { SubscriptionsRepository } from "./subscriptions.repository";
 export { UsageLimitsRepository } from "./usage-limits.repository";
+export { AiUsageRepository } from "./ai-usage.repository";
+export { SystemLogsRepository } from "./system-logs.repository";

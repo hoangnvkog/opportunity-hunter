@@ -26,6 +26,7 @@ import type {
   StartupIdeaInput,
 } from "@/types/pipeline";
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
+import { logAiUsageFromResponse } from "./ai-usage";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -41,6 +42,23 @@ export class OpenAIProvider implements AIProvider {
     this.client = new OpenAI({
       apiKey,
     });
+  }
+
+  private getUserId(): string | null {
+    // Attempt to read from a request-scoped context if available.
+    // In production this would be injected via OpenAIProvider constructor
+    // or a request-scoped singleton.
+    return null;
+  }
+
+  private async trackUsage(model: string, usage: { prompt_tokens: number; completion_tokens: number }) {
+    const opts = {
+      provider: "openai" as const,
+      model,
+      usage,
+      userId: this.getUserId(),
+    };
+    await logAiUsageFromResponse(opts);
   }
 
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -81,6 +99,7 @@ Do NOT include markdown formatting or code blocks.`,
           },
         ],
       });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
 
       const content = response.choices[0]?.message?.content?.trim() ?? "";
       const parsed = JSON.parse(content);
@@ -150,6 +169,7 @@ Do NOT include markdown formatting or code blocks.`,
           },
         ],
       });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
 
       const content = response.choices[0]?.message?.content?.trim() ?? "";
       const parsed = JSON.parse(content);
@@ -253,6 +273,7 @@ Do NOT include markdown formatting or code blocks.`,
           },
         ],
       });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
 
       const content = response.choices[0]?.message?.content?.trim() ?? "";
       const parsed = JSON.parse(content);
@@ -345,6 +366,7 @@ Do NOT include markdown formatting or code blocks.`,
           },
         ],
       });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
 
       const content = response.choices[0]?.message?.content?.trim() ?? "";
       const parsed: unknown = JSON.parse(content);
@@ -413,7 +435,7 @@ Do NOT include markdown formatting or code blocks.`,
           },
         ],
       });
-
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
       const content = response.choices[0]?.message?.content?.trim() ?? "";
       const parsed = JSON.parse(content);
       const results = parsed.results ?? [];

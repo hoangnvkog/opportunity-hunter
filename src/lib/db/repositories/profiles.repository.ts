@@ -72,6 +72,12 @@ export class ProfilesRepository {
     return data;
   }
 
+  async findAll(): Promise<ProfileRow[]> {
+    const { data, error } = await this.client.from(ENTITY).select("*");
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
   async delete(id: Uuid): Promise<void> {
     const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 

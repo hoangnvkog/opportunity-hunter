@@ -1,6 +1,9 @@
 import type { PipelineRunHistory, PipelineRunInsert } from "@/types/pipeline-run-history";
 import { getSupabaseServerClient } from "@/lib/supabase/client";
 import type { AnySupabaseClient } from "./_base";
+import { translateError } from "@/lib/db/errors";
+
+const ENTITY = "pipeline_runs";
 
 export class PipelineRunsRepository {
   private client: AnySupabaseClient;
@@ -69,5 +72,16 @@ export class PipelineRunsRepository {
     }
 
     return data;
+  }
+
+  async findRecent(limit = 10): Promise<PipelineRunHistory[]> {
+    const { data, error } = await this.client
+      .from("pipeline_runs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
   }
 }

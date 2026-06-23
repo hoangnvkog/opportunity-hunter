@@ -129,4 +129,13 @@ export class WatchlistsRepository {
     if (error) throw error;
     return count || 0;
   }
+
+  async countAll(): Promise<number> {
+    const { count, error } = await this.client
+      .from("watchlists")
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw error;
+    return count || 0;
+  }
 }

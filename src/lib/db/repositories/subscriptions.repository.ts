@@ -87,6 +87,12 @@ export class SubscriptionsRepository {
     return data;
   }
 
+  async findAll(): Promise<SubscriptionRow[]> {
+    const { data, error } = await this.client.from(ENTITY).select("*");
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
   async delete(id: string): Promise<void> {
     const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 

@@ -139,6 +139,16 @@ export class RawPostsRepository {
     return count ?? 0;
   }
 
+  async countSince(since: string): Promise<number> {
+    const { count, error } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", since);
+
+    if (error) throw translateError(ENTITY, error);
+    return count ?? 0;
+  }
+
   async markProcessed(id: Uuid): Promise<void> {
     const { error } = await this.client
       .from(ENTITY)

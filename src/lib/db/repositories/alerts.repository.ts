@@ -96,4 +96,13 @@ export class AlertsRepository {
     if (error) throw error;
     return count || 0;
   }
+
+  async countAll(): Promise<number> {
+    const { count, error } = await this.client
+      .from("alerts")
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw error;
+    return count || 0;
+  }
 }

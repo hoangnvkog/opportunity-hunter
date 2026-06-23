@@ -37,10 +37,31 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected routes
-  const protectedPaths = ["/dashboard", "/opportunities", "/startup-ideas", "/profile"];
+  const protectedPaths = ["/dashboard", "/opportunities", "/startup-ideas", "/profile", "/saved", "/watchlists", "/digests", "/insights", "/alerts", "/settings"];
   const isProtectedRoute = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
+
+  // Admin routes — require authenticated + role = admin
+  const adminPaths = ["/admin"];
+  const isAdminRoute = adminPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  if (isAdminRoute && user) {
+    // Fetch user role from profiles table
+    const profileRes = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileRes.data?.role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Redirect unauthenticated users to login
   if (isProtectedRoute && !user) {

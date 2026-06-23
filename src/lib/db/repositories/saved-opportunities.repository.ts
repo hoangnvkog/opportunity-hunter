@@ -82,4 +82,13 @@ export class SavedOpportunitiesRepository {
     if (error) throw translateError(ENTITY, error);
     return count ?? 0;
   }
+
+  async countAll(): Promise<number> {
+    const { count, error } = await this.client
+      .from(ENTITY)
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw translateError(ENTITY, error);
+    return count ?? 0;
+  }
 }

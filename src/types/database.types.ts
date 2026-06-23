@@ -39,6 +39,12 @@ import type {
   OpportunityInsightRow,
   OpportunityInsightInsert,
 } from "./opportunity-insight";
+import type {
+  AiUsageLogRow,
+  AiUsageLogInsert,
+  SystemLogRow,
+  SystemLogInsert,
+} from "./admin";
 import type { SubscriptionRow, SubscriptionInsert, UsageLimitRow, UsageLimitInsert, UsageLimitUpdate } from "./subscription";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
@@ -260,6 +266,7 @@ export type ProfileRow = {
   email: string;
   name: string | null;
   avatar_url: string | null;
+  role: string;
   created_at: string;
   updated_at: string;
 };
@@ -639,6 +646,18 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      ai_usage_logs: {
+        Row: AiUsageLogRow;
+        Insert: AiUsageLogInsert;
+        Update: Partial<AiUsageLogInsert>;
+        Relationships: [];
+      };
+      system_logs: {
+        Row: SystemLogRow;
+        Insert: SystemLogInsert;
+        Update: Partial<SystemLogInsert>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
