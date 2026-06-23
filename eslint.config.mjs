@@ -27,6 +27,14 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // Relax rules for test files
+  {
+    files: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**/*"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
