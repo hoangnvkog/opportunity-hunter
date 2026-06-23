@@ -39,6 +39,7 @@ import type {
   OpportunityInsightRow,
   OpportunityInsightInsert,
 } from "./opportunity-insight";
+import type { SubscriptionRow, SubscriptionInsert, UsageLimitRow, UsageLimitInsert, UsageLimitUpdate } from "./subscription";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -578,6 +579,34 @@ export interface Database {
             foreignKeyName: "notification_settings_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subscriptions: {
+        Row: SubscriptionRow;
+        Insert: SubscriptionInsert;
+        Update: Partial<SubscriptionInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      usage_limits: {
+        Row: UsageLimitRow;
+        Insert: UsageLimitInsert;
+        Update: UsageLimitUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "usage_limits_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },

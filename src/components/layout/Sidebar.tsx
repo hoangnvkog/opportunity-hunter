@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Briefcase,
-  Sparkles,
   Star,
   Eye,
   Bell,
   CalendarDays,
   Brain,
+  Settings,
+  Zap,
 } from "lucide-react";
 
 const navigation = [
@@ -46,6 +47,11 @@ const navigation = [
     href: "/digests",
     icon: CalendarDays,
   },
+  {
+    name: "Settings",
+    href: "/settings/billing",
+    icon: Settings,
+  },
 ];
 
 export function Sidebar() {
@@ -55,7 +61,7 @@ export function Sidebar() {
     <div className="flex h-full w-64 flex-col bg-secondary border-r">
       <div className="flex h-16 items-center px-6 border-b">
         <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
-          <Sparkles className="h-6 w-6" />
+          <Zap className="h-6 w-6" />
           <span>Opportunity Hunter</span>
         </Link>
       </div>
