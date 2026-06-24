@@ -9,6 +9,7 @@ export interface PipelineRunResult {
   embeddings: number;
   clusters: number;
   opportunities: number;
+  validated: number;
   startupIdeas: number;
   averageClusterSize: number;
   largestClusterSize: number;

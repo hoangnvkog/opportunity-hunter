@@ -22,6 +22,7 @@ import { SavedOpportunitiesRepository } from "@/lib/db/repositories/saved-opport
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
 import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
 import { WeeklyDigestsRepository } from "@/lib/db/repositories/weekly-digests.repository";
+import { OpportunityValidationsRepository } from "@/lib/db/repositories/opportunity-validations.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -48,6 +49,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     watchlistsRepo,
     alertsRepo,
     weeklyDigestsRepo,
+    validationsRepo,
   ] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
@@ -59,6 +61,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     WatchlistsRepository.create(),
     AlertsRepository.create(),
     WeeklyDigestsRepository.create(),
+    OpportunityValidationsRepository.create(),
   ]);
 
   const [
@@ -75,6 +78,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     largestClusterSize,
     weeklyOpportunities,
     weeklyEmailsSent,
+    validated,
   ] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
@@ -89,6 +93,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     painClustersRepo.getLargestClusterSize(),
     weeklyDigestsRepo.countOpportunitiesSince(7),
     weeklyDigestsRepo.countSent(),
+    validationsRepo.count(),
   ]);
 
   return {
@@ -97,6 +102,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     embeddings,
     clusters,
     opportunities,
+    validated,
     ideas,
     savedCount,
     watchlistsCount,

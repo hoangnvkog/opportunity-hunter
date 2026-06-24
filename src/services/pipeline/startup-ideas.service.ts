@@ -67,8 +67,30 @@ export async function generateStartupIdeasFromDatabase(
     return { processed: 0, generated: 0, skipped: 0, inserted: 0 };
   }
 
+  // Filter to only validated opportunities with score >= 70 (Sprint 51)
+  const {
+    OpportunityValidationsRepository,
+  } = await import(
+    "@/lib/db/repositories/opportunity-validations.repository"
+  );
+  const valRepo = await OpportunityValidationsRepository.create();
+  const validated = await valRepo.list({ limit: 500, minScore: 70 });
+  const validatedOppIds = new Set(validated.map((v) => v.opportunity_id));
+
+  const validOpportunities = opportunities.filter((o) =>
+    validatedOppIds.has(o.id),
+  );
+
+  if (validOpportunities.length === 0) {
+    console.log(
+      "No validated opportunities with score >= 70 found. " +
+      "Run the validation stage first.",
+    );
+    return { processed: 0, generated: 0, skipped: 0, inserted: 0 };
+  }
+
   // Convert to OpportunityInput for AI provider
-  const opportunitiesInput = opportunities.map(toOpportunityInput);
+  const opportunitiesInput = validOpportunities.map(toOpportunityInput);
 
   // Get AI provider from environment (default: MockProvider)
   const provider = getAIProviderFromEnv();
@@ -78,7 +100,7 @@ export async function generateStartupIdeasFromDatabase(
 
   if (ideas.length === 0) {
     return {
-      processed: opportunities.length,
+      processed: validOpportunities.length,
       generated: 0,
       skipped: 0,
       inserted: 0,
@@ -95,7 +117,7 @@ export async function generateStartupIdeasFromDatabase(
   const ideasToInsert: StartupIdeaInsert[] = [];
   for (let i = 0; i < ideas.length; i++) {
     const idea = ideas[i];
-    const opportunity = opportunities[i];
+    const opportunity = validOpportunities[i];
     if (!opportunity) continue;
 
     const insert: StartupIdeaInsert = {
@@ -129,7 +151,7 @@ export async function generateStartupIdeasFromDatabase(
   }
 
   return {
-    processed: opportunities.length,
+    processed: validOpportunities.length,
     generated: ideas.length,
     skipped,
     inserted,

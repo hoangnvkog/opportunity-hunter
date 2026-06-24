@@ -12,6 +12,7 @@ import { generateEmbeddingsFromDatabase } from "./embeddings.service";
 import { clusterPainPointsFromDatabase } from "./clusters.service";
 import { generateOpportunitiesFromDatabase } from "./opportunities.service";
 import { generateStartupIdeasFromDatabase } from "./startup-ideas.service";
+import { validateAllOpportunities } from "../validation/validation.service";
 
 /**
  * Result of a complete pipeline run
@@ -23,6 +24,7 @@ export interface PipelineRunResult {
   embeddings: number;
   clusters: number;
   opportunities: number;
+  validated: number;
   ideas: number;
   averageClusterSize: number;
   largestClusterSize: number;
@@ -124,7 +126,14 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       console.log("No new opportunities generated (all duplicates or no clusters)");
     }
 
-    // Stage 6: Generate startup ideas
+    // Stage 6: Validate opportunities (deterministic scoring)
+    const validationResult = await validateAllOpportunities(100);
+    console.log(
+      `Validated ${validationResult.validated} opportunities ` +
+      `(${validationResult.skipped} skipped)`,
+    );
+
+    // Stage 7: Generate startup ideas (only from validated opportunities with score >= 70)
     const ideas = await generateStartupIdeasFromDatabase(50);
 
     if (ideas.inserted === 0) {
@@ -138,6 +147,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       embeddings: embeddingsResult.inserted,
       clusters: clusters.inserted,
       opportunities: opportunities.inserted,
+      validated: validationResult.validated,
       ideas: ideas.inserted,
       averageClusterSize: clusters.averageClusterSize,
       largestClusterSize: clusters.largestClusterSize,
@@ -156,8 +166,10 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 4 (clustering): ${message}`);
     } else if (message.includes("opportunit")) {
       throw new Error(`Pipeline failed at stage 5 (opportunity generation): ${message}`);
+    } else if (message.includes("validat")) {
+      throw new Error(`Pipeline failed at stage 6 (opportunity validation): ${message}`);
     } else if (message.includes("idea") || message.includes("startup")) {
-      throw new Error(`Pipeline failed at stage 6 (startup idea generation): ${message}`);
+      throw new Error(`Pipeline failed at stage 7 (startup idea generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

@@ -22,6 +22,9 @@ vi.mock("@/services/pipeline/opportunities.service", () => ({
 vi.mock("@/services/pipeline/startup-ideas.service", () => ({
   generateStartupIdeasFromDatabase: vi.fn(),
 }));
+vi.mock("@/services/validation/validation.service", () => ({
+  validateAllOpportunities: vi.fn(),
+}));
 
 import { runPipeline } from "@/services/pipeline/runner.service";
 import { fetchAllSources } from "@/services/sources/ingestion.service";
@@ -31,6 +34,7 @@ import { generateEmbeddingsFromDatabase } from "@/services/pipeline/embeddings.s
 import { clusterPainPointsFromDatabase } from "@/services/pipeline/clusters.service";
 import { generateOpportunitiesFromDatabase } from "@/services/pipeline/opportunities.service";
 import { generateStartupIdeasFromDatabase } from "@/services/pipeline/startup-ideas.service";
+import { validateAllOpportunities } from "@/services/validation/validation.service";
 
 // Helper to create correct-shaped mock returns
 const oppResult = (processed: number, generated: number, inserted: number) => ({
@@ -82,6 +86,7 @@ describe("runPipeline (E2E)", () => {
     });
     vi.mocked(generateOpportunitiesFromDatabase).mockResolvedValue(oppResult(2, 2, 2));
     vi.mocked(generateStartupIdeasFromDatabase).mockResolvedValue(ideasResult(2, 2, 0, 2));
+    vi.mocked(validateAllOpportunities).mockResolvedValue({ total: 2, validated: 2, skipped: 0 });
 
     const result = await runPipeline();
 
@@ -130,6 +135,7 @@ describe("runPipeline (E2E)", () => {
     });
     vi.mocked(generateOpportunitiesFromDatabase).mockResolvedValue(oppResult(0, 0, 0));
     vi.mocked(generateStartupIdeasFromDatabase).mockResolvedValue(ideasResult(0, 0, 0, 0));
+    vi.mocked(validateAllOpportunities).mockResolvedValue({ total: 0, validated: 0, skipped: 0 });
 
     const result = await runPipeline();
 
@@ -153,6 +159,7 @@ describe("runPipeline (E2E)", () => {
     });
     vi.mocked(generateOpportunitiesFromDatabase).mockResolvedValue(oppResult(1, 1, 1));
     vi.mocked(generateStartupIdeasFromDatabase).mockResolvedValue(ideasResult(1, 1, 0, 1));
+    vi.mocked(validateAllOpportunities).mockResolvedValue({ total: 1, validated: 1, skipped: 0 });
 
     const result = await runPipeline();
 
@@ -178,6 +185,7 @@ describe("runPipeline (E2E)", () => {
     });
     vi.mocked(generateOpportunitiesFromDatabase).mockResolvedValue(oppResult(0, 0, 0));
     vi.mocked(generateStartupIdeasFromDatabase).mockResolvedValue(ideasResult(0, 0, 0, 0));
+    vi.mocked(validateAllOpportunities).mockResolvedValue({ total: 0, validated: 0, skipped: 0 });
 
     const result = await runPipeline();
 

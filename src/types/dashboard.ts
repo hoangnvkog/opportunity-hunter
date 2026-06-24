@@ -4,6 +4,8 @@ export interface DashboardStats {
   embeddings: number;
   clusters: number;
   opportunities: number;
+  /** Opportunities with a validation score. */
+  validated: number;
   ideas: number;
   savedCount: number;
   watchlistsCount: number;

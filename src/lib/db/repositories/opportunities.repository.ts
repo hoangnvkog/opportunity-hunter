@@ -70,6 +70,18 @@ export class OpportunitiesRepository {
     return new OpportunitiesRepository(await getSupabaseServerClient());
   }
 
+  async findByIds(ids: Uuid[]): Promise<OpportunityRow[]> {
+    if (ids.length === 0) return [];
+
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .in("id", ids);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
   async findById(id: Uuid): Promise<OpportunityRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)

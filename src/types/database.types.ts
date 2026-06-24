@@ -46,6 +46,11 @@ import type {
   SystemLogInsert,
 } from "./admin";
 import type { SubscriptionRow, SubscriptionInsert, UsageLimitRow, UsageLimitInsert, UsageLimitUpdate } from "./subscription";
+import type {
+  OpportunityValidationRow,
+  OpportunityValidationInsert,
+  OpportunityValidationUpdate,
+} from "./validation";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -658,6 +663,20 @@ export interface Database {
         Insert: SystemLogInsert;
         Update: Partial<SystemLogInsert>;
         Relationships: [];
+      };
+      opportunity_validations: {
+        Row: OpportunityValidationRow;
+        Insert: OpportunityValidationInsert;
+        Update: OpportunityValidationUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_validations_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: true;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;
