@@ -1,10 +1,14 @@
 import { revalidatePath } from "next/cache";
-import { validateAllOpportunities } from "@/services/validation/validation.service";
-import { getValidatedOpportunities as getValidatedOpportunitiesService } from "@/services/validation/validation-dashboard.service";
+import {
+  validateOpportunitiesFromDatabase,
+} from "@/services/validation/validation.service";
+import {
+  getTopValidatedOpportunities,
+} from "@/services/validation/validation-dashboard.service";
 
 export async function runValidationAction() {
   try {
-    const result = await validateAllOpportunities(100);
+    const result = await validateOpportunitiesFromDatabase(100);
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/validated");
     return { success: true, data: result };
@@ -16,7 +20,7 @@ export async function runValidationAction() {
 
 export async function getValidatedOpportunities() {
   try {
-    const opportunities = await getValidatedOpportunitiesService();
+    const opportunities = await getTopValidatedOpportunities(20);
     return { success: true, data: opportunities };
   } catch (error) {
     console.error("Failed to fetch validated opportunities:", error);

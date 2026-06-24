@@ -18,6 +18,7 @@ import type {
   StartupIdeaInput,
 } from "@/types/pipeline";
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
+import type { OpportunityValidationInput } from "@/types/validation";
 
 export class GeminiProvider implements AIProvider {
   constructor(
@@ -78,6 +79,14 @@ export class GeminiProvider implements AIProvider {
   ): Promise<StartupIdeaInput[]> {
     throw new Error(
       "GeminiProvider.generateStartupIdeas() not implemented yet. Install @google/generative-ai SDK and implement.",
+    );
+  }
+
+  async validateOpportunities(
+    _opportunities: OpportunityInput[],
+  ): Promise<OpportunityValidationInput[]> {
+    throw new Error(
+      "GeminiProvider.validateOpportunities() not implemented yet. Install @google/generative-ai SDK and implement.",
     );
   }
 }

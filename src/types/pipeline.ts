@@ -36,6 +36,8 @@ export interface PainClusterInput {
 
 /** Opportunity from AI - no IDs, has optional cluster context for title/description */
 export interface OpportunityInput {
+  /** Optional database ID — populated when loaded from DB, null when from AI. */
+  id?: string;
   score: number;
   frequency: number;
   severity: number;

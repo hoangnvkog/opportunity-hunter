@@ -10,6 +10,7 @@ import type {
   StartupIdeaInput,
 } from "./pipeline";
 import type { OpportunityInsightInput } from "./opportunity-insight";
+import type { OpportunityValidationInput } from "./validation";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -48,6 +49,14 @@ export interface AIProvider {
   generateStartupIdeas(
     opportunities: OpportunityInput[],
   ): Promise<StartupIdeaInput[]>;
+
+  /**
+   * Validate opportunities across 4 dimensions (Sprint 52).
+   * AI returns business data only — no UUIDs, no foreign keys.
+   */
+  validateOpportunities(
+    opportunities: OpportunityInput[],
+  ): Promise<OpportunityValidationInput[]>;
 
   /**
    * Generate embeddings for text using OpenAI embedding model

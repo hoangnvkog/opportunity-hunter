@@ -17,6 +17,7 @@ import {
   OpportunitySchema,
   OpportunityInsightSchema,
   StartupIdeaSchema,
+  ValidationSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -26,6 +27,7 @@ import type {
   StartupIdeaInput,
 } from "@/types/pipeline";
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
+import type { OpportunityValidationInput } from "@/types/validation";
 import { logAiUsageFromResponse } from "./ai-usage";
 
 export class OpenAIProvider implements AIProvider {
@@ -395,6 +397,8 @@ Do NOT include markdown formatting or code blocks.`,
   async generateStartupIdeas(
     opportunities: OpportunityInput[],
   ): Promise<StartupIdeaInput[]> {
+    if (opportunities.length === 0) return [];
+
     try {
       const response = await this.client.chat.completions.create({
         model: this.model,
@@ -465,6 +469,95 @@ Do NOT include markdown formatting or code blocks.`,
         .filter((item): item is StartupIdeaInput => item !== null);
     } catch (error) {
       console.error("generateStartupIdeas failed:", error);
+      return [];
+    }
+  }
+
+  async validateOpportunities(
+    opportunities: OpportunityInput[],
+  ): Promise<OpportunityValidationInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a startup validation expert. Evaluate each opportunity and score it across 4 dimensions.
+
+Return ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "market_demand": number,
+      "competition": number,
+      "monetization": number,
+      "build_difficulty": number,
+      "validation_score": number,
+      "reasoning": string
+    }
+  ]
+}
+
+Rules:
+- market_demand (0-100): How big is the potential market? Higher = more people want this solved.
+- competition (0-100): How crowded is the market? Higher = MORE competition (BAD for validation).
+- monetization (0-100): How easily can this be monetised? Higher = easier to make money.
+- build_difficulty (0-100): How hard is it to build? Higher = harder to build.
+- validation_score (0-100): Weighted score — market_demand(30%) + monetization(35%) + (100-competition)(25%) + (100-build_difficulty)(10%).
+- reasoning: 1-2 sentence explanation of the validation score.
+
+IMPORTANT: validation_score must be your own calculated weighted average.
+Return exactly ${opportunities.length} objects in the results array, one for each opportunity.
+Do NOT include markdown formatting or code blocks.`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp) => ({
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                score: opp.score,
+                severity: Number(opp.severity.toFixed(3)),
+                buying_intent: Number(opp.buying_intent.toFixed(3)),
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed = JSON.parse(content);
+      const results = parsed.results ?? [];
+
+      if (!Array.isArray(results)) {
+        console.error("validateOpportunities: response.results is not an array");
+        return [];
+      }
+
+      return results
+        .map((item) => {
+          try {
+            const validated = ValidationSchema.parse(item);
+            return {
+              market_demand: validated.market_demand,
+              competition: validated.competition,
+              monetization: validated.monetization,
+              build_difficulty: validated.build_difficulty,
+              validation_score: validated.validation_score,
+              reasoning: validated.reasoning,
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter((item): item is OpportunityValidationInput => item !== null);
+    } catch (error) {
+      console.error("validateOpportunities failed:", error);
       return [];
     }
   }

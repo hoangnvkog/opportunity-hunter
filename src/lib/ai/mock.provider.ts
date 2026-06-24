@@ -14,6 +14,7 @@ import type {
   StartupIdeaInput,
 } from "@/types/pipeline";
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
+import type { OpportunityValidationInput } from "@/types/validation";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -117,6 +118,36 @@ export class MockProvider implements AIProvider {
         recommended_mvp: "Web dashboard with templated workflows and one-click integrations.",
         recommended_channels: "Reddit, Product Hunt, SEO",
         confidence_score: Math.round(Math.min(0.95, 0.5 + intensity / 2) * 100) / 100,
+      };
+    });
+  }
+
+  async validateOpportunities(
+    opportunities: OpportunityInput[],
+  ): Promise<OpportunityValidationInput[]> {
+    // Returns deterministic mock validation data for testing.
+    // Uses opportunity score as a signal so tests can verify ordering.
+    return opportunities.map((opp) => {
+      const score = opp.score / 100;
+      const marketDemand = Math.round(60 + score * 30);
+      const competition = Math.round(40 + (1 - score) * 40);
+      const monetization = Math.round(65 + score * 25);
+      const buildDifficulty = Math.round(50 - score * 30);
+      const validationScore = Math.round(
+        marketDemand * 0.30 +
+        monetization * 0.35 +
+        (100 - competition) * 0.25 +
+        (100 - buildDifficulty) * 0.10,
+      );
+      return {
+        market_demand: marketDemand,
+        competition,
+        monetization,
+        build_difficulty: buildDifficulty,
+        validation_score: validationScore,
+        reasoning: `Mock validation for ${opp.cluster_name ?? "opportunity"}: ` +
+          `Market=${marketDemand}, Competition=${competition}, ` +
+          `Monetization=${monetization}, Difficulty=${buildDifficulty}`,
       };
     });
   }

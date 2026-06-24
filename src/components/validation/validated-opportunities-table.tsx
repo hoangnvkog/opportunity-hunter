@@ -49,9 +49,9 @@ export async function ValidatedOpportunitiesTable({
                     <th className="text-left py-2 font-medium">Opportunity</th>
                     <th className="text-right py-2 font-medium">Score</th>
                     <th className="text-right py-2 font-medium">Market Demand</th>
-                    <th className="text-right py-2 font-medium">Pain Severity</th>
-                    <th className="text-right py-2 font-medium">Buying Intent</th>
-                    <th className="text-right py-2 font-medium">Competition Risk</th>
+                    <th className="text-right py-2 font-medium">Competition</th>
+                    <th className="text-right py-2 font-medium">Monetization</th>
+                    <th className="text-right py-2 font-medium">Build Difficulty</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -68,10 +68,9 @@ export async function ValidatedOpportunitiesTable({
                           {opp.validation_score}
                         </span>
                       </td>
-                      <td className="text-right py-3">{opp.market_demand}</td>
-                      <td className="text-right py-3">{opp.pain_severity}</td>
-                      <td className="text-right py-3">{opp.buying_intent}</td>
-                      <td className="text-right py-3">{opp.competition_risk}</td>
+                      <td className="text-right py-3">{opp.competition}</td>
+                      <td className="text-right py-3">{opp.monetization}</td>
+                      <td className="text-right py-3">{opp.build_difficulty}</td>
                     </tr>
                   ))}
                 </tbody>

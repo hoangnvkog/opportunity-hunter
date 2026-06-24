@@ -72,3 +72,18 @@ export const StartupIdeaSchema = z.object({
 });
 
 export type StartupIdeaResponse = z.infer<typeof StartupIdeaSchema>;
+
+/**
+ * Schema for opportunity validation response (Sprint 52).
+ * AI validates opportunities across 4 dimensions.
+ */
+export const ValidationSchema = z.object({
+  market_demand: z.number().min(0).max(100),
+  competition: z.number().min(0).max(100),
+  monetization: z.number().min(0).max(100),
+  build_difficulty: z.number().min(0).max(100),
+  validation_score: z.number().min(0).max(100),
+  reasoning: z.string(),
+});
+
+export type ValidationResponseItem = z.infer<typeof ValidationSchema>;

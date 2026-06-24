@@ -1,7 +1,8 @@
 /**
  * Opportunity Validations Repository.
  *
- * Provides CRUD operations for the opportunity_validations table.
+ * CRUD operations for the opportunity_validations table (Sprint 52).
+ * AI-powered validation replaces the deterministic Sprint 51 version.
  */
 
 import type {
@@ -13,7 +14,7 @@ import { RepositoryError, translateError } from "@/lib/db/errors";
 
 const ENTITY = "opportunity_validations";
 
-export type Uuid = string;
+export type { OpportunityValidationRow, OpportunityValidationInsert };
 
 export interface ListValidationsOptions {
   limit?: number;
@@ -26,7 +27,9 @@ export class OpportunityValidationsRepository {
 
   static async create(): Promise<OpportunityValidationsRepository> {
     const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunityValidationsRepository(await getSupabaseServerClient());
+    return new OpportunityValidationsRepository(
+      await getSupabaseServerClient(),
+    );
   }
 
   /** Insert a new validation record. */
@@ -44,7 +47,7 @@ export class OpportunityValidationsRepository {
 
   /**
    * Upsert a validation record — replace any existing validation for the
-   * given opportunity_id with the new values.
+   * given opportunity_id (idempotent, skip duplicates).
    */
   async upsert(
     input: OpportunityValidationInsert,
@@ -56,12 +59,15 @@ export class OpportunityValidationsRepository {
       .single();
 
     if (error) throw translateError(ENTITY, error);
-    if (!data) throw new RepositoryError(`${ENTITY} upsert returned no row`);
+    if (!data)
+      throw new RepositoryError(`${ENTITY} upsert returned no row`);
     return data;
   }
 
   /** Find by opportunity_id. */
-  async findByOpportunityId(oppId: Uuid): Promise<OpportunityValidationRow | null> {
+  async findByOpportunityId(
+    oppId: string,
+  ): Promise<OpportunityValidationRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -72,7 +78,10 @@ export class OpportunityValidationsRepository {
     return data;
   }
 
-  /** List validations ordered by validation_score DESC. */
+  /**
+   * List validations ordered by validation_score DESC.
+   * Optionally filter by minimum score.
+   */
   async list(opts: ListValidationsOptions = {}): Promise<OpportunityValidationRow[]> {
     const { limit = 50, offset = 0, minScore } = opts;
 
@@ -82,7 +91,8 @@ export class OpportunityValidationsRepository {
       .order("validation_score", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (minScore !== undefined) query = query.gte("validation_score", minScore);
+    if (minScore !== undefined)
+      query = query.gte("validation_score", minScore);
 
     const { data, error } = await query;
     if (error) throw translateError(ENTITY, error);
@@ -94,7 +104,7 @@ export class OpportunityValidationsRepository {
     return this.list({ limit, offset: 0 });
   }
 
-  /** Count validated opportunities. */
+  /** Count all validation records. */
   async count(): Promise<number> {
     const { count, error } = await this.client
       .from(ENTITY)
@@ -102,5 +112,16 @@ export class OpportunityValidationsRepository {
 
     if (error) throw translateError(ENTITY, error);
     return count ?? 0;
+  }
+
+  /** Get IDs of all already-validated opportunities. */
+  async listValidatedIds(limit = 1000): Promise<string[]> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("opportunity_id")
+      .limit(limit);
+
+    if (error) throw translateError(ENTITY, error);
+    return (data ?? []).map((r) => r.opportunity_id as string);
   }
 }

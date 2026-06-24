@@ -12,7 +12,7 @@ import { generateEmbeddingsFromDatabase } from "./embeddings.service";
 import { clusterPainPointsFromDatabase } from "./clusters.service";
 import { generateOpportunitiesFromDatabase } from "./opportunities.service";
 import { generateStartupIdeasFromDatabase } from "./startup-ideas.service";
-import { validateAllOpportunities } from "../validation/validation.service";
+import { validateOpportunitiesFromDatabase } from "../validation/validation.service";
 
 /**
  * Result of a complete pipeline run
@@ -127,10 +127,10 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     }
 
     // Stage 6: Validate opportunities (deterministic scoring)
-    const validationResult = await validateAllOpportunities(100);
+    const validationResult = await validateOpportunitiesFromDatabase(100);
     console.log(
       `Validated ${validationResult.validated} opportunities ` +
-      `(${validationResult.skipped} skipped)`,
+      `(${validationResult.skipped} skipped, ${validationResult.inserted} inserted)`,
     );
 
     // Stage 7: Generate startup ideas (only from validated opportunities with score >= 70)

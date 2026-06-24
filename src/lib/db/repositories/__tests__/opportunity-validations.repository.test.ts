@@ -4,16 +4,22 @@ import type { OpportunityValidationRow } from "@/types/validation";
 
 const mockClient = { from: vi.fn() };
 
-const makeRow = (score: string): OpportunityValidationRow => ({
-  id: `val-${score}`,
-  opportunity_id: `opp-${score}`,
-  validation_score: score,
-  market_demand: "80.00",
-  pain_severity: "90.00",
-  buying_intent: "85.00",
-  competition_risk: "75.00",
-  created_at: new Date().toISOString(),
-});
+const makeRow = (
+  score: string,
+  fields?: Partial<OpportunityValidationRow>,
+): OpportunityValidationRow =>
+  ({
+    id: `val-${score}`,
+    opportunity_id: `opp-${score}`,
+    validation_score: score,
+    market_demand: "80.00",
+    competition: "40.00",
+    monetization: "75.00",
+    build_difficulty: "50.00",
+    reasoning: `Mock validation ${score}`,
+    created_at: new Date().toISOString(),
+    ...fields,
+  });
 
 describe("OpportunityValidationsRepository", () => {
   beforeEach(() => {
@@ -34,9 +40,9 @@ describe("OpportunityValidationsRepository", () => {
       opportunity_id: "opp-456",
       validation_score: "85.00",
       market_demand: "80.00",
-      pain_severity: "90.00",
-      buying_intent: "85.00",
-      competition_risk: "75.00",
+      competition: "40.00",
+      monetization: "75.00",
+      build_difficulty: "50.00",
     });
 
     expect(result).toEqual(mockRow);
@@ -59,9 +65,9 @@ describe("OpportunityValidationsRepository", () => {
       opportunity_id: "opp-456",
       validation_score: "85.00",
       market_demand: "80.00",
-      pain_severity: "90.00",
-      buying_intent: "85.00",
-      competition_risk: "75.00",
+      competition: "40.00",
+      monetization: "75.00",
+      build_difficulty: "50.00",
     });
 
     expect(result).toEqual(mockRow);
