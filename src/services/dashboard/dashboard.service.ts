@@ -23,6 +23,7 @@ import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repositor
 import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
 import { WeeklyDigestsRepository } from "@/lib/db/repositories/weekly-digests.repository";
 import { OpportunityValidationsRepository } from "@/lib/db/repositories/opportunity-validations.repository";
+import { OpportunityEvidenceRepository } from "@/lib/db/repositories/opportunity-evidence.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -50,6 +51,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     alertsRepo,
     weeklyDigestsRepo,
     validationsRepo,
+    evidenceRepo,
   ] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
@@ -62,6 +64,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     AlertsRepository.create(),
     WeeklyDigestsRepository.create(),
     OpportunityValidationsRepository.create(),
+    OpportunityEvidenceRepository.create(),
   ]);
 
   const [
@@ -79,6 +82,9 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     weeklyOpportunities,
     weeklyEmailsSent,
     validated,
+    evidenceCount,
+    averageEvidenceConfidence,
+    opportunitiesWithEvidence,
   ] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
@@ -94,6 +100,9 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     weeklyDigestsRepo.countOpportunitiesSince(7),
     weeklyDigestsRepo.countSent(),
     validationsRepo.count(),
+    evidenceRepo.count(),
+    evidenceRepo.averageConfidence(),
+    evidenceRepo.countOpportunitiesWithEvidence(),
   ]);
 
   return {
@@ -103,6 +112,9 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     clusters,
     opportunities,
     validated,
+    evidenceCount,
+    averageEvidenceConfidence,
+    opportunitiesWithEvidence,
     ideas,
     savedCount,
     watchlistsCount,

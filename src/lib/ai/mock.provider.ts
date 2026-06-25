@@ -15,6 +15,7 @@ import type {
 } from "@/types/pipeline";
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
+import type { EvidenceInput } from "@/types/evidence";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -149,6 +150,59 @@ export class MockProvider implements AIProvider {
           `Market=${marketDemand}, Competition=${competition}, ` +
           `Monetization=${monetization}, Difficulty=${buildDifficulty}`,
       };
+    });
+  }
+
+  async findMarketEvidence(
+    opportunities: OpportunityInput[],
+  ): Promise<EvidenceInput[][]> {
+    // Deterministic mock evidence for testing
+    // Returns 3-5 evidence items per opportunity
+    return opportunities.map((opp, idx) => {
+      const baseScore = (opp.score ?? 50) / 100;
+      const evidence: EvidenceInput[] = [
+        {
+          evidence_type: "competitor",
+          source: "Market Analysis",
+          title: `Competitor ${idx + 1}`,
+          summary: `Established player ${idx + 1} serving the ${opp.cluster_name ?? "market"} space`,
+          confidence: Math.round((0.7 + baseScore * 0.2) * 100) / 100 * 100,
+        },
+        {
+          evidence_type: "pricing",
+          source: "Pricing Data",
+          title: "Market pricing signal",
+          summary: "Pricing ranges from $29-$199/month in this segment",
+          confidence: 85,
+        },
+        {
+          evidence_type: "customer_quote",
+          source: "Customer Feedback",
+          title: "Customer pain point",
+          summary: "Users seeking better solutions for this problem",
+          confidence: Math.round((0.6 + baseScore * 0.3) * 100) / 100 * 100,
+        },
+      ];
+      // Add more evidence for higher-scored opportunities
+      if (opp.score >= 80) {
+        evidence.push({
+          evidence_type: "market_report",
+          source: "Industry Report",
+          title: "Market growth report",
+          summary: "Market showing strong growth trajectory",
+          confidence: 90,
+        });
+      }
+      if (opp.score >= 90) {
+        evidence.push({
+          evidence_type: "google_trend",
+          source: "Google Trends",
+          title: "Search trend spike",
+          summary: "Search interest up 40% YoY",
+          confidence: 88,
+        });
+      }
+      return evidence;
     });
   }
 }

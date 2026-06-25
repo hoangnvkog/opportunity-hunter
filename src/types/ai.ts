@@ -11,55 +11,24 @@ import type {
 } from "./pipeline";
 import type { OpportunityInsightInput } from "./opportunity-insight";
 import type { OpportunityValidationInput } from "./validation";
+import type { EvidenceInput } from "./evidence";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
  * Implementations: MockProvider, OpenAIProvider, GeminiProvider
  */
 export interface AIProvider {
-  /**
-   * Extract pain points from raw posts using AI/NLP
-   */
   extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]>;
-
-  /**
-   * Cluster similar pain points using AI/similarity algorithms
-   */
   clusterPainPoints(painPoints: PainPointInput[]): Promise<PainClusterInput[]>;
-
+  generateOpportunities(clusters: PainClusterInput[]): Promise<OpportunityInput[]>;
+  generateInsights(opportunities: OpportunityInput[]): Promise<OpportunityInsightInput[]>;
+  generateStartupIdeas(opportunities: OpportunityInput[]): Promise<StartupIdeaInput[]>;
+  validateOpportunities(opportunities: OpportunityInput[]): Promise<OpportunityValidationInput[]>;
   /**
-   * Generate business opportunities from pain clusters using AI
-   */
-  generateOpportunities(
-    clusters: PainClusterInput[],
-  ): Promise<OpportunityInput[]>;
-
-  /**
-   * Generate business insights for opportunities using AI (Sprint 46).
-   * Returns one insight per input opportunity. AI returns business
-   * data only — no UUIDs, no foreign keys.
-   */
-  generateInsights(
-    opportunities: OpportunityInput[],
-  ): Promise<OpportunityInsightInput[]>;
-
-  /**
-   * Generate startup ideas from opportunities using AI
-   */
-  generateStartupIdeas(
-    opportunities: OpportunityInput[],
-  ): Promise<StartupIdeaInput[]>;
-
-  /**
-   * Validate opportunities across 4 dimensions (Sprint 52).
+   * Find market evidence for validated opportunities (Sprint 53).
    * AI returns business data only — no UUIDs, no foreign keys.
+   * Each result array = evidence items for one opportunity.
    */
-  validateOpportunities(
-    opportunities: OpportunityInput[],
-  ): Promise<OpportunityValidationInput[]>;
-
-  /**
-   * Generate embeddings for text using OpenAI embedding model
-   */
+  findMarketEvidence(opportunities: OpportunityInput[]): Promise<EvidenceInput[][]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

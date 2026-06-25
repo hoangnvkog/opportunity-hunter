@@ -16,6 +16,12 @@ export interface DashboardStats {
   weeklyOpportunities: number;
   /** Total weekly digests marked as `sent` across all users. */
   weeklyEmailsSent: number;
+  /** Total evidence records in the system (Sprint 53). */
+  evidenceCount: number;
+  /** Average confidence score across all evidence (0-100). */
+  averageEvidenceConfidence: number;
+  /** Opportunities that have at least one evidence record. */
+  opportunitiesWithEvidence: number;
 }
 
 export interface OpportunityCardData {

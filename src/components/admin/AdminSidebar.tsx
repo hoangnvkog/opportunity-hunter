@@ -11,6 +11,7 @@ import {
   BarChart3,
   FileText,
   Zap,
+  Search,
 } from "lucide-react";
 
 const adminNav = [
@@ -19,6 +20,7 @@ const adminNav = [
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
   { name: "Revenue", href: "/admin/revenue", icon: DollarSign },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "Evidence", href: "/admin/evidence", icon: Search },
   { name: "Logs", href: "/admin/logs", icon: FileText },
 ];
 

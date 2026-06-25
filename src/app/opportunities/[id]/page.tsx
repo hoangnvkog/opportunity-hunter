@@ -5,8 +5,10 @@ import { OpportunityScoreCard } from "@/components/opportunity/opportunity-score
 import { OpportunityOverviewCard } from "@/components/opportunity/opportunity-overview-card";
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
 import { AIAnalysisCard } from "@/components/insights/AIAnalysisCard";
+import { MarketEvidenceCard } from "@/components/evidence/market-evidence-card";
 import { getOpportunityDetailAction } from "@/actions/opportunities.actions";
 import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
+import { getEvidenceAction } from "@/actions/evidence.actions";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -38,14 +40,17 @@ export default async function OpportunityDetailPage({
 }: OpportunityPageProps) {
   const { id } = await params;
 
-  const [detail, insight] = await Promise.all([
+  const [detail, insight, evidenceResult] = await Promise.all([
     getOpportunityDetailAction(id),
     findInsightByOpportunityIdAction(id),
+    getEvidenceAction(id),
   ]);
 
   if (!detail) {
     notFound();
   }
+
+  const evidence = evidenceResult.success ? evidenceResult.data ?? [] : [];
 
   return (
     <AppLayout>
@@ -74,6 +79,8 @@ export default async function OpportunityDetailPage({
         />
 
         <AIAnalysisCard insight={insight} />
+
+        <MarketEvidenceCard evidence={evidence} />
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>

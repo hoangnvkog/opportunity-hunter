@@ -31,3 +31,4 @@ export { UsageLimitsRepository } from "./usage-limits.repository";
 export { AiUsageRepository } from "./ai-usage.repository";
 export { SystemLogsRepository } from "./system-logs.repository";
 export { OpportunityValidationsRepository } from "./opportunity-validations.repository";
+export { OpportunityEvidenceRepository } from "./opportunity-evidence.repository";

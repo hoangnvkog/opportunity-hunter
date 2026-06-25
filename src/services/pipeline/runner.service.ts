@@ -2,7 +2,7 @@
  * Pipeline Runner - orchestrates the entire Opportunity Hunter pipeline
  *
  * Flow:
- * Multi-source ingestion → raw_posts → pain_points → embeddings → pain_clusters → opportunities → startup_ideas
+ * Multi-source ingestion → raw_posts → pain_points → embeddings → pain_clusters → opportunities → validation → startup_ideas → market_evidence
  */
 
 import { fetchAllSources } from "@/services/sources/ingestion.service";
@@ -13,6 +13,7 @@ import { clusterPainPointsFromDatabase } from "./clusters.service";
 import { generateOpportunitiesFromDatabase } from "./opportunities.service";
 import { generateStartupIdeasFromDatabase } from "./startup-ideas.service";
 import { validateOpportunitiesFromDatabase } from "../validation/validation.service";
+import { generateEvidenceBatch } from "../evidence/evidence.service";
 
 /**
  * Result of a complete pipeline run
@@ -140,6 +141,13 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       console.log("No new startup ideas generated (all duplicates or no opportunities)");
     }
 
+    // Stage 8: Generate market evidence (only from validated opportunities with score >= 70)
+    const evidenceResult = await generateEvidenceBatch(50);
+    console.log(
+      `Generated market evidence: ${evidenceResult.inserted} records ` +
+      `(${evidenceResult.skipped} skipped, ${evidenceResult.generated} total generated)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -170,6 +178,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 6 (opportunity validation): ${message}`);
     } else if (message.includes("idea") || message.includes("startup")) {
       throw new Error(`Pipeline failed at stage 7 (startup idea generation): ${message}`);
+    } else if (message.includes("evidence") || message.includes("market_evidence")) {
+      throw new Error(`Pipeline failed at stage 8 (market evidence generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

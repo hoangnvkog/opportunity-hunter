@@ -87,3 +87,22 @@ export const ValidationSchema = z.object({
 });
 
 export type ValidationResponseItem = z.infer<typeof ValidationSchema>;
+
+/**
+ * Schema for market evidence generation response (Sprint 53).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const EvidenceSchema = z.object({
+  evidence_type: z.enum(["reddit", "google_trend", "competitor", "market_report", "pricing", "customer_quote"]),
+  source: z.string(),
+  title: z.string(),
+  url: z.string().optional(),
+  summary: z.string(),
+  confidence: z.number().min(0).max(100),
+});
+
+export const MarketEvidenceResponseSchema = z.object({
+  results: z.array(EvidenceSchema),
+});
+
+export type EvidenceResponseItem = z.infer<typeof EvidenceSchema>;

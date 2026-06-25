@@ -18,6 +18,7 @@ import {
   OpportunityInsightSchema,
   StartupIdeaSchema,
   ValidationSchema,
+  EvidenceSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -28,6 +29,7 @@ import type {
 } from "@/types/pipeline";
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
+import type { EvidenceInput } from "@/types/evidence";
 import { logAiUsageFromResponse } from "./ai-usage";
 
 export class OpenAIProvider implements AIProvider {
@@ -559,6 +561,106 @@ Do NOT include markdown formatting or code blocks.`,
     } catch (error) {
       console.error("validateOpportunities failed:", error);
       return [];
+    }
+  }
+
+  async findMarketEvidence(
+    opportunities: OpportunityInput[],
+  ): Promise<EvidenceInput[][]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a market research analyst. For each business opportunity generate 5-10 pieces of market evidence.
+
+Evidence types to generate (use a mix of these):
+- competitor: Named companies solving the same problem (e.g. "Zapier", "Make", "Airtable")
+- pricing: Market pricing signals for solutions in this space
+- customer_quote: Customer complaints or requests that reveal demand
+- market_report: Reports or data showing market growth/trend
+- google_trend: Search trend evidence
+- reddit: Reddit discussions showing community interest
+
+Return ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "opportunity_index": number,
+      "evidence": [
+        {
+          "evidence_type": "competitor" | "pricing" | "customer_quote" | "market_report" | "google_trend" | "reddit",
+          "source": "string",
+          "title": "string",
+          "url": "optional URL string",
+          "summary": "string",
+          "confidence": number
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- confidence: 0-100 (higher = more confident this evidence is real/relevant)
+- Return evidence for ALL ${opportunities.length} opportunities
+- opportunity_index must match the position in the input array (0-based)
+- Include 5-10 evidence items per opportunity
+- title should be a short, specific name (e.g. "Zapier raised $250M Series B" or "Workflow automation Reddit thread 12k upvotes")
+- summary should be 1-2 sentences explaining why this evidence matters
+- Use realistic company names and data where possible
+
+Do NOT include markdown formatting or code blocks.`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp, i) => ({
+                index: i,
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                score: opp.score,
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed: unknown = JSON.parse(content);
+      const results = (parsed as { results?: { opportunity_index: number; evidence: unknown[] }[] }).results ?? [];
+
+      // Build output array in input order
+      const output: EvidenceInput[][] = opportunities.map(() => []);
+      for (const item of results) {
+        const idx = item.opportunity_index;
+        if (idx < 0 || idx >= opportunities.length) continue;
+        for (const ev of item.evidence) {
+          try {
+            const validated = EvidenceSchema.parse(ev);
+            output[idx].push({
+              evidence_type: validated.evidence_type,
+              source: validated.source,
+              title: validated.title,
+              url: validated.url,
+              summary: validated.summary,
+              confidence: validated.confidence,
+            });
+          } catch {
+            // skip invalid evidence
+          }
+        }
+      }
+      return output;
+    } catch (error) {
+      console.error("findMarketEvidence failed:", error);
+      return opportunities.map(() =>  []);
     }
   }
 
