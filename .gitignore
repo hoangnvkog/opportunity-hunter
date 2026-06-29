@@ -37,3 +37,4 @@ supabase/.temp/
 Thumbs.db
 tsconfig.tsbuildinfo
 .supabase-token
+coverage/

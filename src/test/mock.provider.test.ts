@@ -268,6 +268,95 @@ describe("MockProvider", () => {
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // generateMarketIntelligence (Sprint 55)
+  // ---------------------------------------------------------------------------
+  describe("generateMarketIntelligence", () => {
+    it("returns empty array for empty input", async () => {
+      const result = await provider.generateMarketIntelligence([]);
+      expect(result).toEqual([]);
+    });
+
+    it("returns one intelligence record per opportunity", async () => {
+      const opps: OpportunityInput[] = [
+        { score: 90, frequency: 4, severity: 0.9, buying_intent: 0.8 },
+        { score: 50, frequency: 2, severity: 0.5, buying_intent: 0.3 },
+      ];
+      const result = await provider.generateMarketIntelligence(opps);
+      expect(result).toHaveLength(2);
+    });
+
+    it("output shape matches MarketIntelligenceInput (no UUIDs)", async () => {
+      const opps: OpportunityInput[] = [
+        {
+          score: 80,
+          frequency: 3,
+          severity: 0.7,
+          buying_intent: 0.6,
+          cluster_name: "Workflow pain",
+        },
+      ];
+      const result = await provider.generateMarketIntelligence(opps);
+      const intel = result[0];
+      expect(typeof intel.reddit_score).toBe("number");
+      expect(typeof intel.github_score).toBe("number");
+      expect(typeof intel.product_hunt_score).toBe("number");
+      expect(typeof intel.news_score).toBe("number");
+      expect(typeof intel.google_trends_score).toBe("number");
+      expect(typeof intel.jobs_score).toBe("number");
+      expect(typeof intel.overall_score).toBe("number");
+      expect(typeof intel.confidence).toBe("number");
+      expect(typeof intel.summary).toBe("string");
+      // Must NOT contain any foreign key / UUID
+      expect("id" in intel).toBe(false);
+      expect("opportunity_id" in intel).toBe(false);
+    });
+
+    it("scores are in range [0, 100]", async () => {
+      const opps: OpportunityInput[] = [
+        { score: 95, frequency: 5, severity: 0.95, buying_intent: 0.9 },
+      ];
+      const result = await provider.generateMarketIntelligence(opps);
+      const intel = result[0];
+      for (const key of [
+        "reddit_score",
+        "github_score",
+        "product_hunt_score",
+        "news_score",
+        "google_trends_score",
+        "jobs_score",
+        "overall_score",
+        "confidence",
+      ] as const) {
+        expect(intel[key]).toBeGreaterThanOrEqual(0);
+        expect(intel[key]).toBeLessThanOrEqual(100);
+      }
+    });
+
+    it("higher opportunity score yields higher overall_score", async () => {
+      const opps: OpportunityInput[] = [
+        { score: 30, frequency: 1, severity: 0.3, buying_intent: 0.2 },
+        { score: 95, frequency: 5, severity: 0.95, buying_intent: 0.9 },
+      ];
+      const result = await provider.generateMarketIntelligence(opps);
+      expect(result[1].overall_score).toBeGreaterThan(result[0].overall_score);
+    });
+
+    it("summary mentions cluster name when provided", async () => {
+      const opps: OpportunityInput[] = [
+        {
+          score: 80,
+          frequency: 3,
+          severity: 0.7,
+          buying_intent: 0.6,
+          cluster_name: "Cold Outreach Pain",
+        },
+      ];
+      const result = await provider.generateMarketIntelligence(opps);
+      expect(result[0].summary).toContain("Cold Outreach Pain");
+    });
+  });
+
   // generateEmbeddings is optional and not implemented on MockProvider
   it("generateEmbeddings is not implemented on MockProvider", () => {
     expect((provider as any).generateEmbeddings).toBeUndefined();

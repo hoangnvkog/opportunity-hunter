@@ -96,6 +96,24 @@ export type WeeklyDigestStats = {
     growth_probability: number;
     momentum: number;
   }>;
+  /**
+   * Sprint 55: Top market intelligence signals by overall_score.
+   * Each entry aggregates 6 external signals + overall_score + confidence.
+   * Empty array when no intelligence records exist yet.
+   */
+  top_market_signals: ReadonlyArray<{
+    opportunity_id: Uuid;
+    title: string;
+    url: string;
+    overall_score: number;
+    confidence: number;
+    reddit_score: number;
+    github_score: number;
+    product_hunt_score: number;
+    news_score: number;
+    google_trends_score: number;
+    jobs_score: number;
+  }>;
 };
 
 /**

@@ -17,6 +17,7 @@ import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
 import type { ForecastInput } from "@/types/forecast";
+import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -222,6 +223,37 @@ export class MockProvider implements AIProvider {
         confidence,
         momentum,
         prediction_summary: `Mock forecast: Score=${forecastScore}, Growth=${growthProbability}%.`,
+      };
+    });
+  }
+
+  async generateMarketIntelligence(
+    opportunities: OpportunityInput[],
+  ): Promise<MarketIntelligenceInput[]> {
+    // Deterministic mock intelligence: scores scale with opportunity score
+    // so tests can verify ordering without burning API quota.
+    return opportunities.map((opp, idx) => {
+      const base = Math.max(0, Math.min(1, (opp.score ?? 50) / 100));
+      const reddit = Math.round(55 + base * 40);
+      const github = Math.round(50 + base * 40);
+      const productHunt = Math.round(40 + base * 50);
+      const news = Math.round(35 + base * 50);
+      const googleTrends = Math.round(45 + base * 45);
+      const jobs = Math.round(30 + base * 55);
+      const overall = Math.round(
+        (reddit + github + productHunt + news + googleTrends + jobs) / 6,
+      );
+      const confidence = Math.round(60 + base * 35);
+      return {
+        reddit_score: reddit,
+        github_score: github,
+        product_hunt_score: productHunt,
+        news_score: news,
+        google_trends_score: googleTrends,
+        jobs_score: jobs,
+        overall_score: overall,
+        confidence,
+        summary: `Mock market intelligence for ${opp.cluster_name ?? `opportunity ${idx + 1}`}: overall ${overall}, confidence ${confidence}.`,
       };
     });
   }

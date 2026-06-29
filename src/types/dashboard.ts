@@ -28,6 +28,14 @@ export interface DashboardStats {
   averageForecastScore: number;
   /** Highest forecast score. */
   topForecastScore: number;
+  /** Sprint 55: Total market intelligence records. */
+  intelligenceCount: number;
+  /** Sprint 55: Average overall score across all intelligence records (0-100). */
+  averageIntelligenceScore: number;
+  /** Sprint 55: Highest overall score (0-100). */
+  highestIntelligenceScore: number;
+  /** Sprint 55: Opportunity ID with the highest overall_score (most discussed). */
+  mostDiscussedOpportunityId: string | null;
 }
 
 export interface OpportunityCardData {

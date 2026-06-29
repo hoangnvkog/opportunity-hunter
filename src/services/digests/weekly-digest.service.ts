@@ -21,6 +21,7 @@ import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repositor
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { OpportunityInsightsRepository } from "@/lib/db/repositories/opportunity-insights.repository";
 import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunity-forecasts.repository";
+import { MarketIntelligenceRepository } from "@/lib/db/repositories/market-intelligence.repository";
 import { NotificationSettingsRepository } from "@/lib/db/repositories/email-notifications.repository";
 import { sendEmail } from "@/lib/email/resend.provider";
 import {
@@ -38,6 +39,7 @@ const WEEK_DAYS = 7;
 const TOP_CLUSTERS_LIMIT = 5;
 const TOP_OPPORTUNITIES_LIMIT = 5;
 const TOP_FORECASTS_LIMIT = 5;
+const TOP_MARKET_SIGNALS_LIMIT = 5;
 
 const EMAIL_SUBJECT_PREFIX = "[Opportunity Hunter] Your weekly digest";
 
@@ -94,6 +96,7 @@ export class WeeklyDigestService {
     private insightsRepo: OpportunityInsightsRepository,
     private settingsRepo: NotificationSettingsRepository,
     private forecastsRepo: OpportunityForecastsRepository,
+    private intelligenceRepo: MarketIntelligenceRepository,
   ) {}
 
   static async create(): Promise<WeeklyDigestService> {
@@ -105,6 +108,7 @@ export class WeeklyDigestService {
       insightsRepo,
       settingsRepo,
       forecastsRepo,
+      intelligenceRepo,
     ] = await Promise.all([
       WeeklyDigestsRepository.create(),
       AlertsRepository.create(),
@@ -113,6 +117,7 @@ export class WeeklyDigestService {
       OpportunityInsightsRepository.create(),
       NotificationSettingsRepository.create(),
       OpportunityForecastsRepository.create(),
+      MarketIntelligenceRepository.create(),
     ]);
     return new WeeklyDigestService(
       digestsRepo,
@@ -122,6 +127,7 @@ export class WeeklyDigestService {
       insightsRepo,
       settingsRepo,
       forecastsRepo,
+      intelligenceRepo,
     );
   }
 
@@ -141,8 +147,10 @@ export class WeeklyDigestService {
     const weekEndStr = toDateInput(weekEnd);
 
     const activity = await this.collectUserActivity(userId);
-    const stats = await this.applyForecastEnrichment(
-      await this.applyAiInsightEnrichment(this.summarize(activity)),
+    const stats = await this.applyIntelligenceEnrichment(
+      await this.applyForecastEnrichment(
+        await this.applyAiInsightEnrichment(this.summarize(activity)),
+      ),
     );
 
     const enrichedStats: WeeklyDigestStats = {
@@ -339,6 +347,7 @@ export class WeeklyDigestService {
       ai_summary: null,
       top_recommendation: null,
       top_forecasts: [],
+      top_market_signals: [],
     };
   }
 
@@ -366,6 +375,37 @@ export class WeeklyDigestService {
         forecast_score: f.forecast_score,
         growth_probability: f.growth_probability,
         momentum: f.momentum,
+      })),
+    };
+  }
+
+  /**
+   * Enrich the summary with the top market intelligence signals (Sprint 55).
+   * Aggregates 6 external signals (Reddit, GitHub, Product Hunt, News,
+   * Google Trends, Jobs) + overall_score + confidence.
+   */
+  private async applyIntelligenceEnrichment(
+    stats: WeeklyDigestStats,
+  ): Promise<WeeklyDigestStats> {
+    const signals = await this.intelligenceRepo.listCards({
+      limit: TOP_MARKET_SIGNALS_LIMIT,
+    });
+    if (signals.length === 0) return stats;
+
+    return {
+      ...stats,
+      top_market_signals: signals.map((s) => ({
+        opportunity_id: s.opportunity_id,
+        title: s.opportunity_title,
+        url: `${getBaseUrl()}/opportunities/${s.opportunity_id}`,
+        overall_score: s.overall_score,
+        confidence: s.confidence,
+        reddit_score: s.reddit_score,
+        github_score: s.github_score,
+        product_hunt_score: s.product_hunt_score,
+        news_score: s.news_score,
+        google_trends_score: s.google_trends_score,
+        jobs_score: s.jobs_score,
       })),
     };
   }

@@ -12,6 +12,7 @@ import {
   FileText,
   Zap,
   Search,
+  Brain,
 } from "lucide-react";
 
 const adminNav = [
@@ -22,6 +23,7 @@ const adminNav = [
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Evidence", href: "/admin/evidence", icon: Search },
   { name: "Forecasts", href: "/admin/forecasts", icon: Zap },
+  { name: "Intelligence", href: "/admin/intelligence", icon: Brain },
   { name: "Logs", href: "/admin/logs", icon: FileText },
 ];
 

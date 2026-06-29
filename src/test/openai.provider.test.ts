@@ -175,4 +175,108 @@ describe("OpenAIProvider", () => {
       expect(result).toEqual([]);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // generateMarketIntelligence (Sprint 55)
+  // ---------------------------------------------------------------------------
+  describe("generateMarketIntelligence", () => {
+    it("should return empty array for empty input", async () => {
+      const result = await provider.generateMarketIntelligence([]);
+      expect(result).toEqual([]);
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    it("should parse valid intelligence response", async () => {
+      mockCreate.mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                results: [
+                  {
+                    reddit_score: 70,
+                    github_score: 65,
+                    product_hunt_score: 60,
+                    news_score: 55,
+                    google_trends_score: 75,
+                    jobs_score: 50,
+                    overall_score: 62.5,
+                    confidence: 80,
+                    summary: "Strong signals",
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+        usage: { prompt_tokens: 100, completion_tokens: 50 },
+      });
+
+      const result = await provider.generateMarketIntelligence([
+        {
+          score: 85,
+          frequency: 5,
+          severity: 0.8,
+          buying_intent: 0.7,
+          cluster_name: "Test",
+          cluster_description: "Test desc",
+        },
+      ]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].overall_score).toBe(62.5);
+      expect(result[0].summary).toBe("Strong signals");
+    });
+
+    it("should return zeroed fallback on error", async () => {
+      mockCreate.mockRejectedValue(new Error("API error"));
+
+      const result = await provider.generateMarketIntelligence([
+        {
+          score: 85,
+          frequency: 5,
+          severity: 0.8,
+          buying_intent: 0.7,
+        },
+      ]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].overall_score).toBe(0);
+      expect(result[0].summary).toContain("failed");
+    });
+
+    it("output must NOT contain UUIDs or FKs", async () => {
+      mockCreate.mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                results: [
+                  {
+                    reddit_score: 70,
+                    github_score: 65,
+                    product_hunt_score: 60,
+                    news_score: 55,
+                    google_trends_score: 75,
+                    jobs_score: 50,
+                    overall_score: 62.5,
+                    confidence: 80,
+                    summary: "ok",
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      });
+
+      const result = await provider.generateMarketIntelligence([
+        { score: 80, frequency: 1, severity: 0.5, buying_intent: 0.5 },
+      ]);
+      const intel = result[0];
+      expect("id" in intel).toBe(false);
+      expect("opportunity_id" in intel).toBe(false);
+    });
+  });
 });

@@ -152,6 +152,20 @@ export function renderWeeklyDigestHtml(context: WeeklyDigestEmailContext): strin
     parts.push("</td></tr></table></td></tr>");
   }
 
+  // Top market signals (Sprint 55)
+  if (stats.top_market_signals.length > 0) {
+    parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #fed7aa;border-radius:6px;background-color:#fff7ed;\"><tr><td style=\"padding:20px;\">");
+    parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#c2410c;\">\uD83D\uDD25 Top market signals</h2>");
+    for (const sig of stats.top_market_signals) {
+      parts.push("<div style=\"padding:10px 0;border-bottom:1px solid #fed7aa;\">");
+      parts.push(`<a href="${escapeAttr(sig.url)}" style="color:#c2410c;font-weight:600;font-size:14px;text-decoration:none;">${escapeHtml(sig.title)}</a>`);
+      parts.push(`<div style="font-size:12px;color:#6b7280;margin-top:2px;">Overall ${escapeHtml(formatNumber(sig.overall_score))} \u00b7 confidence ${escapeHtml(formatNumber(sig.confidence))}%</div>`);
+      parts.push(`<div style="font-size:11px;color:#9ca3af;margin-top:2px;">Reddit ${escapeHtml(formatNumber(sig.reddit_score))} \u00b7 GitHub ${escapeHtml(formatNumber(sig.github_score))} \u00b7 PH ${escapeHtml(formatNumber(sig.product_hunt_score))} \u00b7 News ${escapeHtml(formatNumber(sig.news_score))} \u00b7 Trends ${escapeHtml(formatNumber(sig.google_trends_score))} \u00b7 Jobs ${escapeHtml(formatNumber(sig.jobs_score))}</div>`);
+      parts.push("</div>");
+    }
+    parts.push("</td></tr></table></td></tr>");
+  }
+
   // Recommendations
   parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #e5e7eb;border-radius:6px;\"><tr><td style=\"padding:20px;\">");
   parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#111827;\">Recommendations</h2>");
@@ -230,6 +244,17 @@ export function renderWeeklyDigestText(context: WeeklyDigestEmailContext): strin
       lines.push(`  - ${fc.title}`);
       lines.push(`    forecast ${formatNumber(fc.forecast_score)} · growth ${formatNumber(fc.growth_probability)}% · momentum ${formatNumber(fc.momentum)}`);
       lines.push(`    ${fc.url}`);
+    }
+  }
+
+  if (stats.top_market_signals.length > 0) {
+    lines.push("");
+    lines.push("TOP MARKET SIGNALS");
+    for (const sig of stats.top_market_signals) {
+      lines.push(`  - ${sig.title}`);
+      lines.push(`    overall ${formatNumber(sig.overall_score)} · confidence ${formatNumber(sig.confidence)}%`);
+      lines.push(`    reddit ${formatNumber(sig.reddit_score)} · github ${formatNumber(sig.github_score)} · producthunt ${formatNumber(sig.product_hunt_score)} · news ${formatNumber(sig.news_score)} · trends ${formatNumber(sig.google_trends_score)} · jobs ${formatNumber(sig.jobs_score)}`);
+      lines.push(`    ${sig.url}`);
     }
   }
 

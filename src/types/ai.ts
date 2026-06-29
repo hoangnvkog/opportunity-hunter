@@ -13,6 +13,7 @@ import type { OpportunityInsightInput } from "./opportunity-insight";
 import type { OpportunityValidationInput } from "./validation";
 import type { EvidenceInput } from "./evidence";
 import type { ForecastInput } from "./forecast";
+import type { MarketIntelligenceInput } from "./market-intelligence";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -36,5 +37,10 @@ export interface AIProvider {
    * AI returns business data only — no UUIDs, no foreign keys.
    */
   forecastOpportunities(opportunities: OpportunityInput[]): Promise<ForecastInput[]>;
+  /**
+   * Aggregate external market signals into one intelligence score (Sprint 55).
+   * AI returns business data only — no UUIDs, no foreign keys.
+   */
+  generateMarketIntelligence(opportunities: OpportunityInput[]): Promise<MarketIntelligenceInput[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

@@ -59,6 +59,10 @@ import type {
   OpportunityForecastRow,
   OpportunityForecastInsert,
 } from "./forecast";
+import type {
+  MarketIntelligenceRow,
+  MarketIntelligenceInsert,
+} from "./market-intelligence";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -707,6 +711,20 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "opportunity_forecasts_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      market_intelligence: {
+        Row: MarketIntelligenceRow;
+        Insert: MarketIntelligenceInsert;
+        Update: Partial<MarketIntelligenceInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "market_intelligence_opportunity_id_fkey";
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";

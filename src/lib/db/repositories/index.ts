@@ -33,3 +33,4 @@ export { SystemLogsRepository } from "./system-logs.repository";
 export { OpportunityValidationsRepository } from "./opportunity-validations.repository";
 export { OpportunityEvidenceRepository } from "./opportunity-evidence.repository";
 export { OpportunityForecastsRepository } from "./opportunity-forecasts.repository";
+export { MarketIntelligenceRepository } from "./market-intelligence.repository";

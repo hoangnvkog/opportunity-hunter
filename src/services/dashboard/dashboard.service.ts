@@ -25,11 +25,13 @@ import { WeeklyDigestsRepository } from "@/lib/db/repositories/weekly-digests.re
 import { OpportunityValidationsRepository } from "@/lib/db/repositories/opportunity-validations.repository";
 import { OpportunityEvidenceRepository } from "@/lib/db/repositories/opportunity-evidence.repository";
 import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunity-forecasts.repository";
+import { MarketIntelligenceRepository } from "@/lib/db/repositories/market-intelligence.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
   StartupIdeaCardData,
 } from "@/types/dashboard";
+import type { MarketIntelligenceCardData } from "@/types/market-intelligence";
 import type { PipelineRunHistory } from "@/types/pipeline-run-history";
 import type { OpportunityFilters, StartupIdeaFilters } from "@/types/filters";
 
@@ -54,6 +56,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     validationsRepo,
     evidenceRepo,
     forecastsRepo,
+    intelligenceRepo,
   ] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
@@ -68,6 +71,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     OpportunityValidationsRepository.create(),
     OpportunityEvidenceRepository.create(),
     OpportunityForecastsRepository.create(),
+    MarketIntelligenceRepository.create(),
   ]);
 
   const [
@@ -91,6 +95,10 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     forecastCount,
     averageForecastScore,
     topForecastScore,
+    intelligenceCount,
+    averageIntelligenceScore,
+    highestIntelligenceScore,
+    mostDiscussedOpportunityId,
   ] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
@@ -112,6 +120,10 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     forecastsRepo.count(),
     forecastsRepo.averageForecastScore(),
     forecastsRepo.topForecastScore(),
+    intelligenceRepo.count(),
+    intelligenceRepo.averageScore(),
+    intelligenceRepo.topScore(),
+    intelligenceRepo.mostDiscussedOpportunityId(),
   ]);
 
   return {
@@ -135,6 +147,10 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     forecastCount,
     averageForecastScore,
     topForecastScore,
+    intelligenceCount,
+    averageIntelligenceScore,
+    highestIntelligenceScore,
+    mostDiscussedOpportunityId,
   };
 }
 
@@ -192,4 +208,14 @@ export async function getLatestPipelineRuns(
 ): Promise<PipelineRunHistory[]> {
   const pipelineRunsRepo = await PipelineRunsRepository.create();
   return pipelineRunsRepo.listLatest(limit);
+}
+
+/**
+ * Get top market intelligence signals for the dashboard.
+ */
+export async function getTopMarketSignals(
+  limit = 10
+): Promise<MarketIntelligenceCardData[]> {
+  const repo = await MarketIntelligenceRepository.create();
+  return repo.listCards({ limit });
 }

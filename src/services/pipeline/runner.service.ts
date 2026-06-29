@@ -32,6 +32,7 @@ export interface PipelineRunResult {
   largestClusterSize: number;
   forecasts?: number;
   forecastAlerts?: number;
+  marketIntelligence?: number;
 }
 
 /**
@@ -166,6 +167,16 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       `(${forecastAlertResult.triggered} triggered, ${forecastAlertResult.emailsQueued} emails queued)`,
     );
 
+    // Stage 11: Generate market intelligence (only for opportunities with
+    // validation_score >= 70 AND forecast_score >= 70).
+    // Triggers "🔥 Massive Market Signal" alert when overall_score > 90.
+    const { generateBatch: generateMarketIntelligenceBatch } = await import("../market-intelligence/market-intelligence.service");
+    const intelligenceResult = await generateMarketIntelligenceBatch(50);
+    console.log(
+      `Generated market intelligence: ${intelligenceResult.inserted} records ` +
+      `(${intelligenceResult.skipped} skipped, ${intelligenceResult.generated} total generated)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -179,6 +190,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       largestClusterSize: clusters.largestClusterSize,
       forecasts: forecastResult.inserted,
       forecastAlerts: forecastAlertResult.alertsCreated,
+      marketIntelligence: intelligenceResult.inserted,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error
@@ -202,6 +214,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 8 (market evidence generation): ${message}`);
     } else if (message.includes("forecast")) {
       throw new Error(`Pipeline failed at stage 9 (forecasting): ${message}`);
+    } else if (message.includes("intelligence") || message.includes("market_intelligence")) {
+      throw new Error(`Pipeline failed at stage 11 (market intelligence generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

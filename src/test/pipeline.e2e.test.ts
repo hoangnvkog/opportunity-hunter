@@ -48,6 +48,9 @@ vi.mock("@/services/forecasts/forecast-alerts.service", () => ({
     threshold: 90,
   }),
 }));
+vi.mock("@/services/market-intelligence/market-intelligence.service", () => ({
+  generateBatch: vi.fn(),
+}));
 
 import { runPipeline } from "@/services/pipeline/runner.service";
 import { fetchAllSources } from "@/services/sources/ingestion.service";
@@ -60,6 +63,7 @@ import { generateStartupIdeasFromDatabase } from "@/services/pipeline/startup-id
 import { validateOpportunitiesFromDatabase } from "@/services/validation/validation.service";
 import { generateEvidenceBatch } from "@/services/evidence/evidence.service";
 import { generateForecastBatch } from "@/services/forecasts/forecast.service";
+import { generateBatch as generateMarketIntelligenceBatch } from "@/services/market-intelligence/market-intelligence.service";
 
 // Helper to create correct-shaped mock returns
 const oppResult = (processed: number, generated: number, inserted: number) => ({
@@ -114,6 +118,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(validateOpportunitiesFromDatabase).mockResolvedValue({ processed: 2, validated: 2, inserted: 2, skipped: 0 });
     vi.mocked(generateEvidenceBatch).mockResolvedValue({ processed: 2, generated: 10, skipped: 0, inserted: 10 });
     vi.mocked(generateForecastBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
+    vi.mocked(generateMarketIntelligenceBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
 
     const result = await runPipeline();
 
@@ -127,6 +132,7 @@ describe("runPipeline (E2E)", () => {
     expect(result.averageClusterSize).toBe(2.5);
     expect(result.largestClusterSize).toBe(3);
     expect(result.forecasts).toBe(2);
+    expect(result.marketIntelligence).toBe(2);
 
     // Verify all stages were called
     expect(fetchAllSources).toHaveBeenCalledWith(25);
@@ -216,6 +222,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(generateStartupIdeasFromDatabase).mockResolvedValue(ideasResult(0, 0, 0, 0));
     vi.mocked(validateOpportunitiesFromDatabase).mockResolvedValue({ processed: 0, validated: 0, inserted: 0, skipped: 0 });
     vi.mocked(generateEvidenceBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
+    vi.mocked(generateMarketIntelligenceBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
 
     const result = await runPipeline();
 

@@ -120,3 +120,21 @@ export const ForecastSchema = z.object({
 });
 
 export type ForecastResponseItem = z.infer<typeof ForecastSchema>;
+
+/**
+ * Schema for market intelligence response (Sprint 55).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const MarketIntelligenceSchema = z.object({
+  reddit_score: z.number().min(0).max(100),
+  github_score: z.number().min(0).max(100),
+  product_hunt_score: z.number().min(0).max(100),
+  news_score: z.number().min(0).max(100),
+  google_trends_score: z.number().min(0).max(100),
+  jobs_score: z.number().min(0).max(100),
+  overall_score: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
+  summary: z.string(),
+});
+
+export type MarketIntelligenceResponseItem = z.infer<typeof MarketIntelligenceSchema>;

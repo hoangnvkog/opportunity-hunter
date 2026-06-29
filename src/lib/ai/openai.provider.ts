@@ -19,6 +19,7 @@ import {
   StartupIdeaSchema,
   ValidationSchema,
   EvidenceSchema,
+  MarketIntelligenceSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -31,6 +32,7 @@ import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
 import type { ForecastInput } from "@/types/forecast";
+import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import { logAiUsageFromResponse } from "./ai-usage";
 import { ForecastSchema } from "./schemas";
 
@@ -749,6 +751,112 @@ Rules:
         confidence: 0,
         momentum: 0,
         prediction_summary: "Forecast generation failed",
+      }));
+    }
+  }
+
+  async generateMarketIntelligence(
+    opportunities: OpportunityInput[],
+  ): Promise<MarketIntelligenceInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a venture capital market analyst.
+
+Estimate external market signals for this opportunity.
+
+Output ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "reddit_score": number,
+      "github_score": number,
+      "product_hunt_score": number,
+      "news_score": number,
+      "google_trends_score": number,
+      "jobs_score": number,
+      "overall_score": number,
+      "confidence": number,
+      "summary": string
+    }
+  ]
+}
+
+Rules:
+- All scores are 0-100 (higher = stronger signal)
+- reddit_score: community discussion volume on Reddit
+- github_score: open-source activity, related repos, stars
+- product_hunt_score: comparable launches and upvotes
+- news_score: press coverage and industry mentions
+- google_trends_score: search interest trajectory
+- jobs_score: hiring signals for this problem space
+- overall_score: weighted average of all 6 signals
+- confidence: 0-100, how confident you are in the estimate
+- summary: 1-2 sentence market intelligence summary
+- Return exactly ${opportunities.length} objects in the results array, one for each opportunity
+- Do NOT include markdown formatting or code blocks
+- Output ONLY JSON`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp, i) => ({
+                index: i,
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                validation_score: opp.score,
+                severity: Number(opp.severity.toFixed(3)),
+                buying_intent: Number(opp.buying_intent.toFixed(3)),
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed = JSON.parse(content);
+      const results = (parsed as { results?: unknown[] }).results ?? [];
+
+      const output: MarketIntelligenceInput[] = [];
+      for (const item of results) {
+        try {
+          const validated = MarketIntelligenceSchema.parse(item);
+          output.push({
+            reddit_score: validated.reddit_score,
+            github_score: validated.github_score,
+            product_hunt_score: validated.product_hunt_score,
+            news_score: validated.news_score,
+            google_trends_score: validated.google_trends_score,
+            jobs_score: validated.jobs_score,
+            overall_score: validated.overall_score,
+            confidence: validated.confidence,
+            summary: validated.summary,
+          });
+        } catch {
+          // skip invalid intelligence item
+        }
+      }
+      return output;
+    } catch (error) {
+      console.error("generateMarketIntelligence failed:", error);
+      return opportunities.map(() => ({
+        reddit_score: 0,
+        github_score: 0,
+        product_hunt_score: 0,
+        news_score: 0,
+        google_trends_score: 0,
+        jobs_score: 0,
+        overall_score: 0,
+        confidence: 0,
+        summary: "Market intelligence generation failed",
       }));
     }
   }
