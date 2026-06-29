@@ -63,6 +63,10 @@ import type {
   MarketIntelligenceRow,
   MarketIntelligenceInsert,
 } from "./market-intelligence";
+import type {
+  StartupScoreRow,
+  StartupScoreInsert,
+} from "./startup-score";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -725,6 +729,20 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "market_intelligence_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      startup_scores: {
+        Row: StartupScoreRow;
+        Insert: StartupScoreInsert;
+        Update: Partial<StartupScoreInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "startup_scores_opportunity_id_fkey";
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";

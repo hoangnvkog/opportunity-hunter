@@ -6,9 +6,11 @@ import { OpportunityOverviewCard } from "@/components/opportunity/opportunity-ov
 import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-section";
 import { AIAnalysisCard } from "@/components/insights/AIAnalysisCard";
 import { MarketEvidenceCard } from "@/components/evidence/market-evidence-card";
+import { InvestmentScoreCard } from "@/components/investment/investment-score-card";
 import { getOpportunityDetailAction } from "@/actions/opportunities.actions";
 import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
 import { getEvidenceAction } from "@/actions/evidence.actions";
+import { getOpportunityScoreAction } from "@/actions/startup-score.actions";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -40,10 +42,11 @@ export default async function OpportunityDetailPage({
 }: OpportunityPageProps) {
   const { id } = await params;
 
-  const [detail, insight, evidenceResult] = await Promise.all([
+  const [detail, insight, evidenceResult, scoreResult] = await Promise.all([
     getOpportunityDetailAction(id),
     findInsightByOpportunityIdAction(id),
     getEvidenceAction(id),
+    getOpportunityScoreAction(id),
   ]);
 
   if (!detail) {
@@ -51,6 +54,7 @@ export default async function OpportunityDetailPage({
   }
 
   const evidence = evidenceResult.success ? evidenceResult.data ?? [] : [];
+  const score = scoreResult.success && scoreResult.data ? scoreResult.data : null;
 
   return (
     <AppLayout>
@@ -81,6 +85,8 @@ export default async function OpportunityDetailPage({
         <AIAnalysisCard insight={insight} />
 
         <MarketEvidenceCard evidence={evidence} />
+
+        <InvestmentScoreCard score={score} />
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>

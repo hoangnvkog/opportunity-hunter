@@ -22,6 +22,7 @@ import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
 import type { ForecastInput } from "@/types/forecast";
 import type { MarketIntelligenceInput } from "@/types/market-intelligence";
+import type { StartupScoreInput } from "@/types/startup-score";
 
 export class GeminiProvider implements AIProvider {
   constructor(
@@ -120,6 +121,17 @@ export class GeminiProvider implements AIProvider {
     // or implement when @google/generative-ai SDK is installed.
     throw new Error(
       "GeminiProvider.generateMarketIntelligence() not implemented yet. " +
+      "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
+    );
+  }
+
+  async scoreStartupPotential(
+    _opportunities: OpportunityInput[],
+  ): Promise<StartupScoreInput[]> {
+    // Gemini stub — fall back to OpenAI path in the service layer
+    // or implement when @google/generative-ai SDK is installed.
+    throw new Error(
+      "GeminiProvider.scoreStartupPotential() not implemented yet. " +
       "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
     );
   }

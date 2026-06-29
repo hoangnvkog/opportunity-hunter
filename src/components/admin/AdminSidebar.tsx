@@ -13,6 +13,7 @@ import {
   Zap,
   Search,
   Brain,
+  Star,
 } from "lucide-react";
 
 const adminNav = [
@@ -24,6 +25,7 @@ const adminNav = [
   { name: "Evidence", href: "/admin/evidence", icon: Search },
   { name: "Forecasts", href: "/admin/forecasts", icon: Zap },
   { name: "Intelligence", href: "/admin/intelligence", icon: Brain },
+  { name: "Investment", href: "/admin/investment", icon: Star },
   { name: "Logs", href: "/admin/logs", icon: FileText },
 ];
 

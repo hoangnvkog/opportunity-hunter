@@ -33,6 +33,7 @@ export interface PipelineRunResult {
   forecasts?: number;
   forecastAlerts?: number;
   marketIntelligence?: number;
+  startupScores?: number;
 }
 
 /**
@@ -177,6 +178,16 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       `(${intelligenceResult.skipped} skipped, ${intelligenceResult.generated} total generated)`,
     );
 
+    // Stage 12: Generate VC-style startup scores (only for opportunities
+    // with validation >= 70 AND forecast >= 70 AND market_intelligence >= 70).
+    // Triggers "⭐ Investment Grade Startup" alert when overall_score >= 90.
+    const { generateBatch: generateStartupScoreBatch } = await import("../startup-score/startup-score.service");
+    const startupScoreResult = await generateStartupScoreBatch(50);
+    console.log(
+      `Generated startup scores: ${startupScoreResult.inserted} records ` +
+      `(${startupScoreResult.skipped} skipped, ${startupScoreResult.generated} total generated)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -191,6 +202,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       forecasts: forecastResult.inserted,
       forecastAlerts: forecastAlertResult.alertsCreated,
       marketIntelligence: intelligenceResult.inserted,
+      startupScores: startupScoreResult.inserted,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error
@@ -216,6 +228,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 9 (forecasting): ${message}`);
     } else if (message.includes("intelligence") || message.includes("market_intelligence")) {
       throw new Error(`Pipeline failed at stage 11 (market intelligence generation): ${message}`);
+    } else if (message.includes("startup") || message.includes("scoreStartup")) {
+      throw new Error(`Pipeline failed at stage 12 (startup scoring): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

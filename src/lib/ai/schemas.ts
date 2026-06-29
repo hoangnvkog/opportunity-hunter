@@ -138,3 +138,23 @@ export const MarketIntelligenceSchema = z.object({
 });
 
 export type MarketIntelligenceResponseItem = z.infer<typeof MarketIntelligenceSchema>;
+
+/**
+ * Schema for VC-style investment scoring response (Sprint 56).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const StartupScoreSchema = z.object({
+  tam_score: z.number().min(0).max(100),
+  market_timing_score: z.number().min(0).max(100),
+  competition_score: z.number().min(0).max(100),
+  moat_score: z.number().min(0).max(100),
+  distribution_score: z.number().min(0).max(100),
+  execution_score: z.number().min(0).max(100),
+  capital_efficiency_score: z.number().min(0).max(100),
+  overall_score: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
+  recommendation: z.string(),
+  summary: z.string(),
+});
+
+export type StartupScoreResponseItem = z.infer<typeof StartupScoreSchema>;

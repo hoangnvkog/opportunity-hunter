@@ -23,6 +23,7 @@ import { OpportunityInsightsRepository } from "@/lib/db/repositories/opportunity
 import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunity-forecasts.repository";
 import { MarketIntelligenceRepository } from "@/lib/db/repositories/market-intelligence.repository";
 import { NotificationSettingsRepository } from "@/lib/db/repositories/email-notifications.repository";
+import { StartupScoresRepository } from "@/lib/db/repositories/startup-scores.repository";
 import { sendEmail } from "@/lib/email/resend.provider";
 import {
   renderWeeklyDigestHtml,
@@ -40,6 +41,9 @@ const TOP_CLUSTERS_LIMIT = 5;
 const TOP_OPPORTUNITIES_LIMIT = 5;
 const TOP_FORECASTS_LIMIT = 5;
 const TOP_MARKET_SIGNALS_LIMIT = 5;
+const TOP_INVESTMENT_GRADES_LIMIT = 5;
+/** Sprint 56: only surface overall_score >= this in the digest. */
+const INVESTMENT_GRADE_DISPLAY_MIN = 90;
 
 const EMAIL_SUBJECT_PREFIX = "[Opportunity Hunter] Your weekly digest";
 
@@ -97,6 +101,7 @@ export class WeeklyDigestService {
     private settingsRepo: NotificationSettingsRepository,
     private forecastsRepo: OpportunityForecastsRepository,
     private intelligenceRepo: MarketIntelligenceRepository,
+    private startupScoresRepo: StartupScoresRepository,
   ) {}
 
   static async create(): Promise<WeeklyDigestService> {
@@ -109,6 +114,7 @@ export class WeeklyDigestService {
       settingsRepo,
       forecastsRepo,
       intelligenceRepo,
+      startupScoresRepo,
     ] = await Promise.all([
       WeeklyDigestsRepository.create(),
       AlertsRepository.create(),
@@ -118,6 +124,7 @@ export class WeeklyDigestService {
       NotificationSettingsRepository.create(),
       OpportunityForecastsRepository.create(),
       MarketIntelligenceRepository.create(),
+      StartupScoresRepository.create(),
     ]);
     return new WeeklyDigestService(
       digestsRepo,
@@ -128,6 +135,7 @@ export class WeeklyDigestService {
       settingsRepo,
       forecastsRepo,
       intelligenceRepo,
+      startupScoresRepo,
     );
   }
 
@@ -147,9 +155,11 @@ export class WeeklyDigestService {
     const weekEndStr = toDateInput(weekEnd);
 
     const activity = await this.collectUserActivity(userId);
-    const stats = await this.applyIntelligenceEnrichment(
-      await this.applyForecastEnrichment(
-        await this.applyAiInsightEnrichment(this.summarize(activity)),
+    const stats = await this.applyStartupScoreEnrichment(
+      await this.applyIntelligenceEnrichment(
+        await this.applyForecastEnrichment(
+          await this.applyAiInsightEnrichment(this.summarize(activity)),
+        ),
       ),
     );
 
@@ -348,6 +358,7 @@ export class WeeklyDigestService {
       top_recommendation: null,
       top_forecasts: [],
       top_market_signals: [],
+      top_investment_grades: [],
     };
   }
 
@@ -406,6 +417,40 @@ export class WeeklyDigestService {
         news_score: s.news_score,
         google_trends_score: s.google_trends_score,
         jobs_score: s.jobs_score,
+      })),
+    };
+  }
+
+  /**
+   * Enrich the summary with top VC-style investment grades (Sprint 56).
+   * Filter to overall_score >= INVESTMENT_GRADE_DISPLAY_MIN so we only
+   * surface truly investment-grade opportunities.
+   * Empty array when no records exist yet.
+   */
+  private async applyStartupScoreEnrichment(
+    stats: WeeklyDigestStats,
+  ): Promise<WeeklyDigestStats> {
+    const scores = await this.startupScoresRepo.listCards({
+      limit: TOP_INVESTMENT_GRADES_LIMIT,
+      minScore: INVESTMENT_GRADE_DISPLAY_MIN,
+    });
+    if (scores.length === 0) return stats;
+
+    return {
+      ...stats,
+      top_investment_grades: scores.map((s: import("@/types/startup-score").StartupScoreCardData) => ({
+        opportunity_id: s.opportunity_id,
+        title: s.opportunity_title,
+        url: `${getBaseUrl()}/opportunities/${s.opportunity_id}`,
+        overall_score: s.overall_score,
+        recommendation: s.recommendation ?? "Watch",
+        tam_score: s.tam_score,
+        market_timing_score: s.market_timing_score,
+        competition_score: s.competition_score,
+        moat_score: s.moat_score,
+        distribution_score: s.distribution_score,
+        execution_score: s.execution_score,
+        capital_efficiency_score: s.capital_efficiency_score,
       })),
     };
   }

@@ -114,6 +114,25 @@ export type WeeklyDigestStats = {
     google_trends_score: number;
     jobs_score: number;
   }>;
+  /**
+   * Sprint 56: Top investment-grade opportunities (overall_score >= 90).
+   * Each entry = VC due-diligence scores + recommendation.
+   * Empty array when no investment-grade records exist yet.
+   */
+  top_investment_grades: ReadonlyArray<{
+    opportunity_id: Uuid;
+    title: string;
+    url: string;
+    overall_score: number;
+    recommendation: string;
+    tam_score: number;
+    market_timing_score: number;
+    competition_score: number;
+    moat_score: number;
+    distribution_score: number;
+    execution_score: number;
+    capital_efficiency_score: number;
+  }>;
 };
 
 /**

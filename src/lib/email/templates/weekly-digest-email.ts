@@ -166,6 +166,20 @@ export function renderWeeklyDigestHtml(context: WeeklyDigestEmailContext): strin
     parts.push("</td></tr></table></td></tr>");
   }
 
+  // Top investment grades (Sprint 56)
+  if (stats.top_investment_grades.length > 0) {
+    parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #fde68a;border-radius:6px;background-color:#fffbeb;\"><tr><td style=\"padding:20px;\">");
+    parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#92400e;\">\u2B50 Top investment grades</h2>");
+    for (const ig of stats.top_investment_grades) {
+      parts.push("<div style=\"padding:10px 0;border-bottom:1px solid #fde68a;\">");
+      parts.push(`<a href="${escapeAttr(ig.url)}" style="color:#92400e;font-weight:600;font-size:14px;text-decoration:none;">${escapeHtml(ig.title)}</a>`);
+      parts.push(`<div style="font-size:12px;color:#6b7280;margin-top:2px;">Overall ${escapeHtml(formatNumber(ig.overall_score))} \u00b7 ${escapeHtml(ig.recommendation)}</div>`);
+      parts.push(`<div style="font-size:11px;color:#9ca3af;margin-top:2px;">TAM ${escapeHtml(formatNumber(ig.tam_score))} \u00b7 Timing ${escapeHtml(formatNumber(ig.market_timing_score))} \u00b7 Competition ${escapeHtml(formatNumber(ig.competition_score))} \u00b7 Moat ${escapeHtml(formatNumber(ig.moat_score))} \u00b7 Distribution ${escapeHtml(formatNumber(ig.distribution_score))} \u00b7 Execution ${escapeHtml(formatNumber(ig.execution_score))} \u00b7 Capital ${escapeHtml(formatNumber(ig.capital_efficiency_score))}</div>`);
+      parts.push("</div>");
+    }
+    parts.push("</td></tr></table></td></tr>");
+  }
+
   // Recommendations
   parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #e5e7eb;border-radius:6px;\"><tr><td style=\"padding:20px;\">");
   parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#111827;\">Recommendations</h2>");
@@ -255,6 +269,17 @@ export function renderWeeklyDigestText(context: WeeklyDigestEmailContext): strin
       lines.push(`    overall ${formatNumber(sig.overall_score)} · confidence ${formatNumber(sig.confidence)}%`);
       lines.push(`    reddit ${formatNumber(sig.reddit_score)} · github ${formatNumber(sig.github_score)} · producthunt ${formatNumber(sig.product_hunt_score)} · news ${formatNumber(sig.news_score)} · trends ${formatNumber(sig.google_trends_score)} · jobs ${formatNumber(sig.jobs_score)}`);
       lines.push(`    ${sig.url}`);
+    }
+  }
+
+  if (stats.top_investment_grades.length > 0) {
+    lines.push("");
+    lines.push("TOP INVESTMENT GRADES");
+    for (const ig of stats.top_investment_grades) {
+      lines.push(`  - ${ig.title}`);
+      lines.push(`    overall ${formatNumber(ig.overall_score)} · ${ig.recommendation}`);
+      lines.push(`    tam ${formatNumber(ig.tam_score)} · timing ${formatNumber(ig.market_timing_score)} · competition ${formatNumber(ig.competition_score)} · moat ${formatNumber(ig.moat_score)} · distribution ${formatNumber(ig.distribution_score)} · execution ${formatNumber(ig.execution_score)} · capital ${formatNumber(ig.capital_efficiency_score)}`);
+      lines.push(`    ${ig.url}`);
     }
   }
 

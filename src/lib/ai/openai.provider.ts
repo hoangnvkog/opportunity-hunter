@@ -20,6 +20,7 @@ import {
   ValidationSchema,
   EvidenceSchema,
   MarketIntelligenceSchema,
+  StartupScoreSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -33,6 +34,7 @@ import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
 import type { ForecastInput } from "@/types/forecast";
 import type { MarketIntelligenceInput } from "@/types/market-intelligence";
+import type { StartupScoreInput } from "@/types/startup-score";
 import { logAiUsageFromResponse } from "./ai-usage";
 import { ForecastSchema } from "./schemas";
 
@@ -857,6 +859,127 @@ Rules:
         overall_score: 0,
         confidence: 0,
         summary: "Market intelligence generation failed",
+      }));
+    }
+  }
+
+  async scoreStartupPotential(
+    opportunities: OpportunityInput[],
+  ): Promise<StartupScoreInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a venture capitalist.
+
+Evaluate this opportunity.
+
+Score each category from 0–100:
+
+- TAM (Total Addressable Market size)
+- Market Timing (window of opportunity)
+- Competition (crowdedness — higher = less crowded, more attractive)
+- Moat (defensibility)
+- Distribution (go-to-market channel strength)
+- Execution (team/capability to ship)
+- Capital Efficiency (revenue per dollar raised)
+
+Provide:
+
+- overall_score (0–100, weighted average)
+- confidence (0–100)
+- recommendation ("Strong Invest" | "Watch" | "Pass")
+- summary (1-2 sentence analyst write-up)
+
+Output ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "tam_score": number,
+      "market_timing_score": number,
+      "competition_score": number,
+      "moat_score": number,
+      "distribution_score": number,
+      "execution_score": number,
+      "capital_efficiency_score": number,
+      "overall_score": number,
+      "confidence": number,
+      "recommendation": string,
+      "summary": string
+    }
+  ]
+}
+
+Rules:
+- All numeric scores are 0-100
+- Return exactly ${opportunities.length} objects in the results array, one for each opportunity
+- Do NOT include markdown formatting or code blocks
+- Output ONLY JSON`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp, i) => ({
+                index: i,
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                validation_score: opp.score,
+                severity: Number(opp.severity.toFixed(3)),
+                buying_intent: Number(opp.buying_intent.toFixed(3)),
+                frequency: opp.frequency ?? 0,
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed = JSON.parse(content);
+      const results = (parsed as { results?: unknown[] }).results ?? [];
+
+      const output: StartupScoreInput[] = [];
+      for (const item of results) {
+        try {
+          const validated = StartupScoreSchema.parse(item);
+          output.push({
+            tam_score: validated.tam_score,
+            market_timing_score: validated.market_timing_score,
+            competition_score: validated.competition_score,
+            moat_score: validated.moat_score,
+            distribution_score: validated.distribution_score,
+            execution_score: validated.execution_score,
+            capital_efficiency_score: validated.capital_efficiency_score,
+            overall_score: validated.overall_score,
+            confidence: validated.confidence,
+            recommendation: validated.recommendation,
+            summary: validated.summary,
+          });
+        } catch {
+          // skip invalid score item
+        }
+      }
+      return output;
+    } catch (error) {
+      console.error("scoreStartupPotential failed:", error);
+      return opportunities.map(() => ({
+        tam_score: 0,
+        market_timing_score: 0,
+        competition_score: 0,
+        moat_score: 0,
+        distribution_score: 0,
+        execution_score: 0,
+        capital_efficiency_score: 0,
+        overall_score: 0,
+        confidence: 0,
+        recommendation: "Pass",
+        summary: "Investment scoring failed",
       }));
     }
   }

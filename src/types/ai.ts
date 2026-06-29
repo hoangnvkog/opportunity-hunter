@@ -14,6 +14,7 @@ import type { OpportunityValidationInput } from "./validation";
 import type { EvidenceInput } from "./evidence";
 import type { ForecastInput } from "./forecast";
 import type { MarketIntelligenceInput } from "./market-intelligence";
+import type { StartupScoreInput } from "./startup-score";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -42,5 +43,10 @@ export interface AIProvider {
    * AI returns business data only — no UUIDs, no foreign keys.
    */
   generateMarketIntelligence(opportunities: OpportunityInput[]): Promise<MarketIntelligenceInput[]>;
+  /**
+   * VC-style investment scoring (Sprint 56).
+   * AI returns business data only — no UUIDs, no foreign keys.
+   */
+  scoreStartupPotential(opportunities: OpportunityInput[]): Promise<StartupScoreInput[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }
