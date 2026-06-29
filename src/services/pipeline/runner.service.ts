@@ -14,6 +14,7 @@ import { generateOpportunitiesFromDatabase } from "./opportunities.service";
 import { generateStartupIdeasFromDatabase } from "./startup-ideas.service";
 import { validateOpportunitiesFromDatabase } from "../validation/validation.service";
 import { generateEvidenceBatch } from "../evidence/evidence.service";
+import { generateForecastBatch } from "../forecasts/forecast.service";
 
 /**
  * Result of a complete pipeline run
@@ -29,6 +30,8 @@ export interface PipelineRunResult {
   ideas: number;
   averageClusterSize: number;
   largestClusterSize: number;
+  forecasts?: number;
+  forecastAlerts?: number;
 }
 
 /**
@@ -148,6 +151,21 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       `(${evidenceResult.skipped} skipped, ${evidenceResult.generated} total generated)`,
     );
 
+    // Stage 9: Generate forecasts (only from validated opportunities with score >= 70)
+    const forecastResult = await generateForecastBatch(50);
+    console.log(
+      `Generated forecasts: ${forecastResult.inserted} records ` +
+      `(${forecastResult.skipped} skipped, ${forecastResult.generated} total generated)`,
+    );
+
+    // Stage 10: Trigger forecast alerts for breakout opportunities (forecast_score > 90)
+    const { processForecastAlerts } = await import("../forecasts/forecast-alerts.service");
+    const forecastAlertResult = await processForecastAlerts();
+    console.log(
+      `Forecast alerts: ${forecastAlertResult.alertsCreated} created ` +
+      `(${forecastAlertResult.triggered} triggered, ${forecastAlertResult.emailsQueued} emails queued)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -159,6 +177,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       ideas: ideas.inserted,
       averageClusterSize: clusters.averageClusterSize,
       largestClusterSize: clusters.largestClusterSize,
+      forecasts: forecastResult.inserted,
+      forecastAlerts: forecastAlertResult.alertsCreated,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error
@@ -180,6 +200,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 7 (startup idea generation): ${message}`);
     } else if (message.includes("evidence") || message.includes("market_evidence")) {
       throw new Error(`Pipeline failed at stage 8 (market evidence generation): ${message}`);
+    } else if (message.includes("forecast")) {
+      throw new Error(`Pipeline failed at stage 9 (forecasting): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

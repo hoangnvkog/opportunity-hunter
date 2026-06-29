@@ -24,6 +24,7 @@ import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
 import { WeeklyDigestsRepository } from "@/lib/db/repositories/weekly-digests.repository";
 import { OpportunityValidationsRepository } from "@/lib/db/repositories/opportunity-validations.repository";
 import { OpportunityEvidenceRepository } from "@/lib/db/repositories/opportunity-evidence.repository";
+import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunity-forecasts.repository";
 import type {
   DashboardStats,
   OpportunityCardData,
@@ -52,6 +53,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     weeklyDigestsRepo,
     validationsRepo,
     evidenceRepo,
+    forecastsRepo,
   ] = await Promise.all([
     RawPostsRepository.create(),
     PainPointsRepository.create(),
@@ -65,6 +67,7 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     WeeklyDigestsRepository.create(),
     OpportunityValidationsRepository.create(),
     OpportunityEvidenceRepository.create(),
+    OpportunityForecastsRepository.create(),
   ]);
 
   const [
@@ -85,6 +88,9 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     evidenceCount,
     averageEvidenceConfidence,
     opportunitiesWithEvidence,
+    forecastCount,
+    averageForecastScore,
+    topForecastScore,
   ] = await Promise.all([
     rawPostsRepo.count(),
     painPointsRepo.count(),
@@ -103,6 +109,9 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     evidenceRepo.count(),
     evidenceRepo.averageConfidence(),
     evidenceRepo.countOpportunitiesWithEvidence(),
+    forecastsRepo.count(),
+    forecastsRepo.averageForecastScore(),
+    forecastsRepo.topForecastScore(),
   ]);
 
   return {
@@ -123,6 +132,9 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     largestClusterSize,
     weeklyOpportunities,
     weeklyEmailsSent,
+    forecastCount,
+    averageForecastScore,
+    topForecastScore,
   };
 }
 

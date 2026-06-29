@@ -45,6 +45,9 @@ function buildService() {
     listRecentCards: vi.fn().mockResolvedValue([]),
   };
   const settingsRepo = { getOrCreate: vi.fn() };
+  const forecastsRepo = {
+    listTopForecasts: vi.fn().mockResolvedValue([]),
+  };
 
   const service = new WeeklyDigestService(
     digestsRepo as unknown as import("@/lib/db/repositories/weekly-digests.repository").WeeklyDigestsRepository,
@@ -53,6 +56,7 @@ function buildService() {
     opportunitiesRepo as never,
     insightsRepo as never,
     settingsRepo as never,
+    forecastsRepo as never,
   );
 
   return {
@@ -68,6 +72,7 @@ function buildService() {
     watchlistsRepo,
     opportunitiesRepo,
     settingsRepo,
+    forecastsRepo,
   };
 }
 
@@ -98,6 +103,7 @@ const baseStats = (): WeeklyDigestStats => ({
   ],
   ai_summary: null,
   top_recommendation: null,
+  top_forecasts: [],
 });
 
 describe("WeeklyDigestService", () => {

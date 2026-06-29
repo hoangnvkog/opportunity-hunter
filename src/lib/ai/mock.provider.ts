@@ -16,6 +16,7 @@ import type {
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
+import type { ForecastInput } from "@/types/forecast";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -203,6 +204,25 @@ export class MockProvider implements AIProvider {
         });
       }
       return evidence;
+    });
+  }
+
+  async forecastOpportunities(
+    opportunities: OpportunityInput[],
+  ): Promise<ForecastInput[]> {
+    return opportunities.map((opp) => {
+      const base = (opp.score ?? 50) / 100;
+      const forecastScore = Math.round(60 + base * 35);
+      const growthProbability = Math.round(50 + base * 45);
+      const confidence = Math.round(55 + base * 40);
+      const momentum = Math.round(50 + base * 40);
+      return {
+        forecast_score: forecastScore,
+        growth_probability: growthProbability,
+        confidence,
+        momentum,
+        prediction_summary: `Mock forecast: Score=${forecastScore}, Growth=${growthProbability}%.`,
+      };
     });
   }
 }

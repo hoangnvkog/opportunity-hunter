@@ -30,7 +30,9 @@ import type {
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
+import type { ForecastInput } from "@/types/forecast";
 import { logAiUsageFromResponse } from "./ai-usage";
+import { ForecastSchema } from "./schemas";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -661,6 +663,93 @@ Do NOT include markdown formatting or code blocks.`,
     } catch (error) {
       console.error("findMarketEvidence failed:", error);
       return opportunities.map(() =>  []);
+    }
+  }
+
+  async forecastOpportunities(
+    opportunities: OpportunityInput[],
+  ): Promise<ForecastInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a venture analyst. Predict future opportunity growth for each business opportunity.
+
+Return ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "forecast_score": number,
+      "growth_probability": number,
+      "confidence": number,
+      "momentum": number,
+      "prediction_summary": "string"
+    }
+  ]
+}
+
+Rules:
+- forecast_score: 0-100 (overall forecast quality)
+- growth_probability: 0-100 (percentage chance of growth)
+- confidence: 0-100 (confidence in this forecast)
+- momentum: 0-100 (current momentum indicator)
+- prediction_summary: 1-2 sentence explanation
+- Return exactly ${opportunities.length} objects in the results array
+- Use the validation score, evidence, and trend data to inform predictions
+- Do NOT include markdown formatting or code blocks.`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp, i) => ({
+                index: i,
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                validation_score: opp.score,
+                severity: opp.severity,
+                buying_intent: opp.buying_intent,
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed = JSON.parse(content);
+      const results = (parsed as { results?: unknown[] }).results ?? [];
+
+      const output: ForecastInput[] = [];
+      for (const item of results) {
+        try {
+          const validated = ForecastSchema.parse(item);
+          output.push({
+            forecast_score: validated.forecast_score,
+            growth_probability: validated.growth_probability,
+            confidence: validated.confidence,
+            momentum: validated.momentum,
+            prediction_summary: validated.prediction_summary,
+          });
+        } catch {
+          // skip invalid forecast
+        }
+      }
+      return output;
+    } catch (error) {
+      console.error("forecastOpportunities failed:", error);
+      return opportunities.map(() => ({
+        forecast_score: 0,
+        growth_probability: 0,
+        confidence: 0,
+        momentum: 0,
+        prediction_summary: "Forecast generation failed",
+      }));
     }
   }
 

@@ -12,6 +12,7 @@ import type {
 import type { OpportunityInsightInput } from "./opportunity-insight";
 import type { OpportunityValidationInput } from "./validation";
 import type { EvidenceInput } from "./evidence";
+import type { ForecastInput } from "./forecast";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -30,5 +31,10 @@ export interface AIProvider {
    * Each result array = evidence items for one opportunity.
    */
   findMarketEvidence(opportunities: OpportunityInput[]): Promise<EvidenceInput[][]>;
+  /**
+   * Forecast future opportunity growth (Sprint 54).
+   * AI returns business data only — no UUIDs, no foreign keys.
+   */
+  forecastOpportunities(opportunities: OpportunityInput[]): Promise<ForecastInput[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

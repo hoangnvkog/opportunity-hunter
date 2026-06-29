@@ -84,6 +84,18 @@ export type WeeklyDigestStats = {
     confidence_score: number;
     summary: string;
   } | null;
+  /**
+   * Sprint 54: Top forecasted opportunities by forecast_score.
+   * Empty array when no forecasts exist yet (section degrades gracefully).
+   */
+  top_forecasts: ReadonlyArray<{
+    opportunity_id: Uuid;
+    title: string;
+    url: string;
+    forecast_score: number;
+    growth_probability: number;
+    momentum: number;
+  }>;
 };
 
 /**

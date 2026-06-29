@@ -1,5 +1,5 @@
 import { MetricCard } from "./metric-card";
-import { TrendingUp, AlertCircle, Target, Brain, Star, Eye, Bell, Mail, CalendarDays, CheckCircle, FileText, Percent } from "lucide-react";
+import { TrendingUp, AlertCircle, Target, Brain, Star, Eye, Bell, Mail, CalendarDays, CheckCircle, FileText, Percent, Zap, BarChart3 } from "lucide-react";
 import type { DashboardStats } from "@/types/dashboard";
 
 interface MetricsGridProps {
@@ -70,6 +70,21 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
         value={Math.round(metrics.averageEvidenceConfidence)}
         suffix="%"
         icon={<Percent className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Forecasted Opportunities"
+        value={metrics.forecastCount}
+        icon={<Zap className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Highest Forecast Score"
+        value={Math.round(metrics.topForecastScore)}
+        icon={<TrendingUp className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Avg Forecast Score"
+        value={Math.round(metrics.averageForecastScore)}
+        icon={<BarChart3 className="h-4 w-4" />}
       />
     </div>
   );

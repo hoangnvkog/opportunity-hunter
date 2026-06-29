@@ -55,6 +55,10 @@ import type {
   OpportunityEvidenceRow,
   OpportunityEvidenceInsert,
 } from "./evidence";
+import type {
+  OpportunityForecastRow,
+  OpportunityForecastInsert,
+} from "./forecast";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -689,6 +693,20 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "opportunity_evidence_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      opportunity_forecasts: {
+        Row: OpportunityForecastRow;
+        Insert: OpportunityForecastInsert;
+        Update: Partial<OpportunityForecastInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_forecasts_opportunity_id_fkey";
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";

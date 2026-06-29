@@ -22,6 +22,12 @@ export interface DashboardStats {
   averageEvidenceConfidence: number;
   /** Opportunities that have at least one evidence record. */
   opportunitiesWithEvidence: number;
+  /** Total forecast records in the system (Sprint 54). */
+  forecastCount: number;
+  /** Average forecast score across all forecasts (0-100). */
+  averageForecastScore: number;
+  /** Highest forecast score. */
+  topForecastScore: number;
 }
 
 export interface OpportunityCardData {

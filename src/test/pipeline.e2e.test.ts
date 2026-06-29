@@ -12,6 +12,7 @@ vi.mock("@/lib/db/repositories", () => ({
   PainPointsRepository: { create: vi.fn() },
   PainClustersRepository: { create: vi.fn() },
   StartupIdeasRepository: { create: vi.fn() },
+  OpportunityForecastsRepository: { create: vi.fn() },
 }));
 vi.mock("@/services/pipeline/pain-points.service", () => ({
   extractPainPointsFromPosts: vi.fn(),
@@ -34,6 +35,19 @@ vi.mock("@/services/validation/validation.service", () => ({
 vi.mock("@/services/evidence/evidence.service", () => ({
   generateEvidenceBatch: vi.fn(),
 }));
+vi.mock("@/services/forecasts/forecast.service", () => ({
+  generateForecastBatch: vi.fn(),
+}));
+vi.mock("@/services/forecasts/forecast-alerts.service", () => ({
+  processForecastAlerts: vi.fn().mockResolvedValue({
+    processed: 0,
+    alertsCreated: 0,
+    emailsQueued: 0,
+    triggered: 0,
+    skipped: 0,
+    threshold: 90,
+  }),
+}));
 
 import { runPipeline } from "@/services/pipeline/runner.service";
 import { fetchAllSources } from "@/services/sources/ingestion.service";
@@ -45,6 +59,7 @@ import { generateOpportunitiesFromDatabase } from "@/services/pipeline/opportuni
 import { generateStartupIdeasFromDatabase } from "@/services/pipeline/startup-ideas.service";
 import { validateOpportunitiesFromDatabase } from "@/services/validation/validation.service";
 import { generateEvidenceBatch } from "@/services/evidence/evidence.service";
+import { generateForecastBatch } from "@/services/forecasts/forecast.service";
 
 // Helper to create correct-shaped mock returns
 const oppResult = (processed: number, generated: number, inserted: number) => ({
@@ -98,6 +113,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(generateStartupIdeasFromDatabase).mockResolvedValue(ideasResult(2, 2, 0, 2));
     vi.mocked(validateOpportunitiesFromDatabase).mockResolvedValue({ processed: 2, validated: 2, inserted: 2, skipped: 0 });
     vi.mocked(generateEvidenceBatch).mockResolvedValue({ processed: 2, generated: 10, skipped: 0, inserted: 10 });
+    vi.mocked(generateForecastBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
 
     const result = await runPipeline();
 
@@ -110,6 +126,7 @@ describe("runPipeline (E2E)", () => {
     expect(result.ideas).toBe(2);
     expect(result.averageClusterSize).toBe(2.5);
     expect(result.largestClusterSize).toBe(3);
+    expect(result.forecasts).toBe(2);
 
     // Verify all stages were called
     expect(fetchAllSources).toHaveBeenCalledWith(25);

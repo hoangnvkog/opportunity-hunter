@@ -20,6 +20,7 @@ import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { OpportunityInsightsRepository } from "@/lib/db/repositories/opportunity-insights.repository";
+import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunity-forecasts.repository";
 import { NotificationSettingsRepository } from "@/lib/db/repositories/email-notifications.repository";
 import { sendEmail } from "@/lib/email/resend.provider";
 import {
@@ -36,6 +37,7 @@ import type { Uuid } from "@/types";
 const WEEK_DAYS = 7;
 const TOP_CLUSTERS_LIMIT = 5;
 const TOP_OPPORTUNITIES_LIMIT = 5;
+const TOP_FORECASTS_LIMIT = 5;
 
 const EMAIL_SUBJECT_PREFIX = "[Opportunity Hunter] Your weekly digest";
 
@@ -91,6 +93,7 @@ export class WeeklyDigestService {
     private opportunitiesRepo: OpportunitiesRepository,
     private insightsRepo: OpportunityInsightsRepository,
     private settingsRepo: NotificationSettingsRepository,
+    private forecastsRepo: OpportunityForecastsRepository,
   ) {}
 
   static async create(): Promise<WeeklyDigestService> {
@@ -101,6 +104,7 @@ export class WeeklyDigestService {
       opportunitiesRepo,
       insightsRepo,
       settingsRepo,
+      forecastsRepo,
     ] = await Promise.all([
       WeeklyDigestsRepository.create(),
       AlertsRepository.create(),
@@ -108,6 +112,7 @@ export class WeeklyDigestService {
       OpportunitiesRepository.create(),
       OpportunityInsightsRepository.create(),
       NotificationSettingsRepository.create(),
+      OpportunityForecastsRepository.create(),
     ]);
     return new WeeklyDigestService(
       digestsRepo,
@@ -116,6 +121,7 @@ export class WeeklyDigestService {
       opportunitiesRepo,
       insightsRepo,
       settingsRepo,
+      forecastsRepo,
     );
   }
 
@@ -135,7 +141,9 @@ export class WeeklyDigestService {
     const weekEndStr = toDateInput(weekEnd);
 
     const activity = await this.collectUserActivity(userId);
-    const stats = await this.applyAiInsightEnrichment(this.summarize(activity));
+    const stats = await this.applyForecastEnrichment(
+      await this.applyAiInsightEnrichment(this.summarize(activity)),
+    );
 
     const enrichedStats: WeeklyDigestStats = {
       ...stats,
@@ -330,6 +338,35 @@ export class WeeklyDigestService {
       }),
       ai_summary: null,
       top_recommendation: null,
+      top_forecasts: [],
+    };
+  }
+
+  /**
+   * Enrich the summary with the top forecasted opportunities.
+   * Collapses to an empty array when no forecasts exist yet so the
+   * email/section degrades gracefully.
+   */
+  private async applyForecastEnrichment(
+    stats: WeeklyDigestStats,
+  ): Promise<WeeklyDigestStats> {
+    const forecasts = await this.forecastsRepo.listTopForecasts(TOP_FORECASTS_LIMIT);
+    if (forecasts.length === 0) return stats;
+
+    const oppIds = [...new Set(forecasts.map((f) => f.opportunity_id))];
+    const opportunities = await this.opportunitiesRepo.findByIds(oppIds);
+    const titleMap = new Map(opportunities.map((o) => [o.id, o.title]));
+
+    return {
+      ...stats,
+      top_forecasts: forecasts.map((f) => ({
+        opportunity_id: f.opportunity_id,
+        title: titleMap.get(f.opportunity_id) ?? "Unknown",
+        url: `${getBaseUrl()}/opportunities/${f.opportunity_id}`,
+        forecast_score: f.forecast_score,
+        growth_probability: f.growth_probability,
+        momentum: f.momentum,
+      })),
     };
   }
 

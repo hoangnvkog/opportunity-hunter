@@ -20,6 +20,7 @@ import type {
 import type { OpportunityInsightInput } from "@/types/opportunity-insight";
 import type { OpportunityValidationInput } from "@/types/validation";
 import type { EvidenceInput } from "@/types/evidence";
+import type { ForecastInput } from "@/types/forecast";
 
 export class GeminiProvider implements AIProvider {
   constructor(
@@ -98,6 +99,15 @@ export class GeminiProvider implements AIProvider {
     // or implement when @google/generative-ai SDK is installed.
     throw new Error(
       "GeminiProvider.findMarketEvidence() not implemented yet. " +
+      "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
+    );
+  }
+
+  async forecastOpportunities(
+    _opportunities: OpportunityInput[],
+  ): Promise<ForecastInput[]> {
+    throw new Error(
+      "GeminiProvider.forecastOpportunities() not implemented yet. " +
       "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
     );
   }

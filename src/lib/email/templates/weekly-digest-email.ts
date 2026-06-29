@@ -139,6 +139,19 @@ export function renderWeeklyDigestHtml(context: WeeklyDigestEmailContext): strin
     parts.push("</td></tr></table></td></tr>");
   }
 
+  // Top forecasted opportunities (Sprint 54)
+  if (stats.top_forecasts.length > 0) {
+    parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #dbeafe;border-radius:6px;background-color:#eff6ff;\"><tr><td style=\"padding:20px;\">");
+    parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#1d4ed8;\">\uD83D\uDE80 Top forecasted opportunities</h2>");
+    for (const fc of stats.top_forecasts) {
+      parts.push("<div style=\"padding:10px 0;border-bottom:1px solid #dbeafe;\">");
+      parts.push(`<a href="${escapeAttr(fc.url)}" style="color:#1d4ed8;font-weight:600;font-size:14px;text-decoration:none;">${escapeHtml(fc.title)}</a>`);
+      parts.push(`<div style="font-size:12px;color:#6b7280;margin-top:2px;">Forecast ${escapeHtml(formatNumber(fc.forecast_score))} · growth ${escapeHtml(formatNumber(fc.growth_probability))}% · momentum ${escapeHtml(formatNumber(fc.momentum))}</div>`);
+      parts.push("</div>");
+    }
+    parts.push("</td></tr></table></td></tr>");
+  }
+
   // Recommendations
   parts.push("<tr><td style=\"padding:0 32px 24px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid #e5e7eb;border-radius:6px;\"><tr><td style=\"padding:20px;\">");
   parts.push("<h2 style=\"margin:0 0 12px 0;font-size:16px;font-weight:600;color:#111827;\">Recommendations</h2>");
@@ -207,6 +220,16 @@ export function renderWeeklyDigestText(context: WeeklyDigestEmailContext): strin
       lines.push(`  - ${opp.title}`);
       lines.push(`    ${opp.cluster_name} · score ${formatNumber(opp.score)}`);
       lines.push(`    ${opp.url}`);
+    }
+  }
+
+  if (stats.top_forecasts.length > 0) {
+    lines.push("");
+    lines.push("TOP FORECASTED OPPORTUNITIES");
+    for (const fc of stats.top_forecasts) {
+      lines.push(`  - ${fc.title}`);
+      lines.push(`    forecast ${formatNumber(fc.forecast_score)} · growth ${formatNumber(fc.growth_probability)}% · momentum ${formatNumber(fc.momentum)}`);
+      lines.push(`    ${fc.url}`);
     }
   }
 

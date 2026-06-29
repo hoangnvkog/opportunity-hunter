@@ -106,3 +106,17 @@ export const MarketEvidenceResponseSchema = z.object({
 });
 
 export type EvidenceResponseItem = z.infer<typeof EvidenceSchema>;
+
+/**
+ * Schema for opportunity forecast response (Sprint 54).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const ForecastSchema = z.object({
+  forecast_score: z.number().min(0).max(100),
+  growth_probability: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
+  momentum: z.number().min(0).max(100),
+  prediction_summary: z.string(),
+});
+
+export type ForecastResponseItem = z.infer<typeof ForecastSchema>;

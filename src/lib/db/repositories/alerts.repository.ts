@@ -105,4 +105,23 @@ export class AlertsRepository {
     if (error) throw error;
     return count || 0;
   }
+
+  /**
+   * Find an existing alert for a (watchlist, opportunity) pair.
+   * Used for idempotency in forecast alert creation.
+   */
+  async findByWatchlistAndOpportunity(
+    watchlistId: Uuid,
+    opportunityId: Uuid,
+  ): Promise<{ id: Uuid } | null> {
+    const { data, error } = await this.client
+      .from("alerts")
+      .select("id")
+      .eq("watchlist_id", watchlistId)
+      .eq("opportunity_id", opportunityId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
 }

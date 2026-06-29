@@ -21,6 +21,7 @@ const adminNav = [
   { name: "Revenue", href: "/admin/revenue", icon: DollarSign },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Evidence", href: "/admin/evidence", icon: Search },
+  { name: "Forecasts", href: "/admin/forecasts", icon: Zap },
   { name: "Logs", href: "/admin/logs", icon: FileText },
 ];
 
