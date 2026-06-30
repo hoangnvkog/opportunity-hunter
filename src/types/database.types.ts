@@ -67,6 +67,14 @@ import type {
   StartupScoreRow,
   StartupScoreInsert,
 } from "./startup-score";
+import type {
+  VentureReportRow,
+  VentureReportInsert,
+} from "./venture-report";
+import type {
+  InvestmentMemoRow,
+  InvestmentMemoInsert,
+} from "./investment-memo";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -746,6 +754,55 @@ export interface Database {
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      venture_reports: {
+        Row: VentureReportRow;
+        Insert: VentureReportInsert;
+        Update: Partial<VentureReportInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "venture_reports_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "venture_reports_startup_score_id_fkey";
+            columns: ["startup_score_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_scores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      investment_memos: {
+        Row: InvestmentMemoRow;
+        Insert: InvestmentMemoInsert;
+        Update: Partial<InvestmentMemoInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "investment_memos_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "investment_memos_venture_report_id_fkey";
+            columns: ["venture_report_id"];
+            isOneToOne: false;
+            referencedRelation: "venture_reports";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "investment_memos_investment_score_id_fkey";
+            columns: ["investment_score_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_scores";
             referencedColumns: ["id"];
           },
         ];

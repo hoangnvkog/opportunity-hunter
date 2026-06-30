@@ -7,10 +7,13 @@ import { StartupIdeasSection } from "@/components/startup-ideas/startup-ideas-se
 import { AIAnalysisCard } from "@/components/insights/AIAnalysisCard";
 import { MarketEvidenceCard } from "@/components/evidence/market-evidence-card";
 import { InvestmentScoreCard } from "@/components/investment/investment-score-card";
+import { InvestmentMemoCard } from "@/components/investment-memo/investment-memo-card";
+import { InvestmentMemoExportMenu } from "@/components/investment-memo/investment-memo-export-menu";
 import { getOpportunityDetailAction } from "@/actions/opportunities.actions";
 import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
 import { getEvidenceAction } from "@/actions/evidence.actions";
 import { getOpportunityScoreAction } from "@/actions/startup-score.actions";
+import { getOpportunityMemoAction } from "@/actions/investment-memo.actions";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -42,11 +45,12 @@ export default async function OpportunityDetailPage({
 }: OpportunityPageProps) {
   const { id } = await params;
 
-  const [detail, insight, evidenceResult, scoreResult] = await Promise.all([
+  const [detail, insight, evidenceResult, scoreResult, memoResult] = await Promise.all([
     getOpportunityDetailAction(id),
     findInsightByOpportunityIdAction(id),
     getEvidenceAction(id),
     getOpportunityScoreAction(id),
+    getOpportunityMemoAction(id),
   ]);
 
   if (!detail) {
@@ -55,6 +59,7 @@ export default async function OpportunityDetailPage({
 
   const evidence = evidenceResult.success ? evidenceResult.data ?? [] : [];
   const score = scoreResult.success && scoreResult.data ? scoreResult.data : null;
+  const memo = memoResult.success && memoResult.data ? memoResult.data : null;
 
   return (
     <AppLayout>
@@ -87,6 +92,16 @@ export default async function OpportunityDetailPage({
         <MarketEvidenceCard evidence={evidence} />
 
         <InvestmentScoreCard score={score} />
+
+        <InvestmentMemoCard memo={memo} />
+        {memo && (
+          <div className="rounded-md border bg-muted/30 p-4">
+            <InvestmentMemoExportMenu
+              memoId={memo.id}
+              opportunityId={memo.opportunity_id}
+            />
+          </div>
+        )}
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>

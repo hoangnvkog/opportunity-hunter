@@ -20,6 +20,7 @@ import type { ForecastInput } from "@/types/forecast";
 import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import type { StartupScoreInput } from "@/types/startup-score";
 import type { VentureReportInput } from "@/types/venture-report";
+import type { InvestmentMemoInput } from "@/types/investment-memo";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -322,6 +323,41 @@ export class MockProvider implements AIProvider {
         moat_analysis: `Data moat from user interactions. Switching costs from workflow integration. Brand moat from community.`,
         financial_outlook: `Year 1: $${Math.round(200 + base * 800)}K ARR. Year 3: $${Math.round(2 + base * 8)}M ARR. Path to profitability by Year 2.`,
         recommendation: confidence >= 85 ? "STRONG BUY" : confidence >= 70 ? "BUY" : "HOLD",
+        confidence,
+      };
+    });
+  }
+
+  async generateInvestmentMemo(
+    opportunities: OpportunityInput[],
+  ): Promise<InvestmentMemoInput[]> {
+    // Deterministic mock investment memos for testing.
+    // Mirrors the cadence of internal memos at YC / Sequoia / a16z / Accel:
+    // concise, decision-oriented, one-paragraph sections.
+    return opportunities.map((opp, idx) => {
+      const base = Math.max(0, Math.min(1, (opp.score ?? 50) / 100));
+      const confidence = Math.round(75 + base * 22); // 75-97
+      const isStrongBuy = confidence >= 85;
+      const recommendation = isStrongBuy ? "STRONG BUY" : confidence >= 70 ? "BUY" : "HOLD";
+      const decision = isStrongBuy
+        ? "INVEST — lead the round at $1.5M-$3M seed."
+        : confidence >= 70
+          ? "INVEST — participate at $1M-$2M seed, prorata reserved."
+          : "PASS — revisit in 6 months after traction milestone.";
+      return {
+        title: `Investment Memo — ${opp.cluster_name ?? `Opportunity ${idx + 1}`}`,
+        thesis: `${opp.cluster_name ?? "This opportunity"} sits at the intersection of an underserved ${opp.cluster_description ?? "vertical"} and accelerating AI/automation demand. We believe a focused team can capture 5-10% of the $${Math.round(200 + base * 800)}M TAM within 5 years.`,
+        market: `$${Math.round(200 + base * 800)}M globally, ${Math.round(30 + base * 40)}% CAGR. Buyer segment: SMB + mid-market, low brand loyalty, willingness to switch.`,
+        problem: `Customers waste ${Math.round(5 + base * 15)} hours/week on manual workarounds. Existing solutions are fragmented, expensive, or built for enterprises.`,
+        solution: `AI-first workflow automation for ${opp.cluster_name ?? "this vertical"}: zero-config onboarding, vertical-specific templates, and a usage-based pricing model that aligns incentives with customer ROI.`,
+        business_model: `PLG SaaS. Free tier → $99/mo Pro → $499/mo Team → enterprise contracts. Blended ARPU ~$${Math.round(120 + base * 80)}/mo with 110% net retention.`,
+        traction: `~${Math.round(50 + base * 450)} active users in private beta, ${Math.round(5 + base * 25)}% week-over-week growth. Early NPS ${Math.round(40 + base * 25)}.`,
+        competition: `${Math.round(3 + base * 8)} horizontal incumbents (low vertical depth) and ${Math.round(1 + base * 4)} direct vertical challengers. No clear category leader.`,
+        risks: `Distribution risk: CAC inflation in crowded channels. Technical risk: LLM cost scaling with usage. Competitive risk: incumbent bundles from HubSpot/Salesforce.`,
+        strengths: `Founders have shipped 2 prior exits in this vertical. Proprietary evaluation dataset gives 18-month head-start. PLG loop converts free → paid at ${Math.round(8 + base * 7)}%.`,
+        why_now: `GPT-class models crossed quality/cost threshold in 2024-2025. Buyer tolerance for AI-only tools reached an inflection. Regulatory clarity in target geographies.`,
+        investment_decision: decision,
+        recommendation,
         confidence,
       };
     });

@@ -35,6 +35,7 @@ export interface PipelineRunResult {
   marketIntelligence?: number;
   startupScores?: number;
   ventureReports?: number;
+  investmentMemos?: number;
 }
 
 /**
@@ -199,6 +200,16 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       `(${ventureReportResult.skipped} skipped, ${ventureReportResult.generated} total generated)`,
     );
 
+    // Stage 14: Generate Investment Memos (only for opportunities
+    // with startup_score overall_score >= 85 AND a venture_report).
+    // Triggers "💰 Investor Ready Startup" alert when recommendation == "STRONG BUY".
+    const { generateBatch: generateInvestmentMemoBatch } = await import("../investment-memo/investment-memo.service");
+    const investmentMemoResult = await generateInvestmentMemoBatch(50);
+    console.log(
+      `Generated investment memos: ${investmentMemoResult.inserted} records ` +
+      `(${investmentMemoResult.skipped} skipped, ${investmentMemoResult.generated} total generated)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -215,6 +226,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       marketIntelligence: intelligenceResult.inserted,
       startupScores: startupScoreResult.inserted,
       ventureReports: ventureReportResult.inserted,
+      investmentMemos: investmentMemoResult.inserted,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error
@@ -244,6 +256,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 12 (startup scoring): ${message}`);
     } else if (message.includes("venture") || message.includes("venture_report")) {
       throw new Error(`Pipeline failed at stage 13 (venture report generation): ${message}`);
+    } else if (message.includes("memo") || message.includes("investment_memo")) {
+      throw new Error(`Pipeline failed at stage 14 (investment memo generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

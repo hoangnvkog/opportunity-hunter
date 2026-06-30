@@ -24,6 +24,7 @@ import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunit
 import { MarketIntelligenceRepository } from "@/lib/db/repositories/market-intelligence.repository";
 import { NotificationSettingsRepository } from "@/lib/db/repositories/email-notifications.repository";
 import { StartupScoresRepository } from "@/lib/db/repositories/startup-scores.repository";
+import { InvestmentMemosRepository } from "@/lib/db/repositories/investment-memos.repository";
 import { sendEmail } from "@/lib/email/resend.provider";
 import {
   renderWeeklyDigestHtml,
@@ -42,8 +43,11 @@ const TOP_OPPORTUNITIES_LIMIT = 5;
 const TOP_FORECASTS_LIMIT = 5;
 const TOP_MARKET_SIGNALS_LIMIT = 5;
 const TOP_INVESTMENT_GRADES_LIMIT = 5;
+const TOP_INVESTMENT_MEMOS_LIMIT = 5;
 /** Sprint 56: only surface overall_score >= this in the digest. */
 const INVESTMENT_GRADE_DISPLAY_MIN = 90;
+/** Sprint 58: surface memos with confidence >= this in the digest. */
+const INVESTMENT_MEMO_DISPLAY_MIN = 80;
 
 const EMAIL_SUBJECT_PREFIX = "[Opportunity Hunter] Your weekly digest";
 
@@ -102,6 +106,7 @@ export class WeeklyDigestService {
     private forecastsRepo: OpportunityForecastsRepository,
     private intelligenceRepo: MarketIntelligenceRepository,
     private startupScoresRepo: StartupScoresRepository,
+    private investmentMemosRepo: InvestmentMemosRepository,
   ) {}
 
   static async create(): Promise<WeeklyDigestService> {
@@ -115,6 +120,7 @@ export class WeeklyDigestService {
       forecastsRepo,
       intelligenceRepo,
       startupScoresRepo,
+      investmentMemosRepo,
     ] = await Promise.all([
       WeeklyDigestsRepository.create(),
       AlertsRepository.create(),
@@ -125,6 +131,7 @@ export class WeeklyDigestService {
       OpportunityForecastsRepository.create(),
       MarketIntelligenceRepository.create(),
       StartupScoresRepository.create(),
+      InvestmentMemosRepository.create(),
     ]);
     return new WeeklyDigestService(
       digestsRepo,
@@ -136,6 +143,7 @@ export class WeeklyDigestService {
       forecastsRepo,
       intelligenceRepo,
       startupScoresRepo,
+      investmentMemosRepo,
     );
   }
 
@@ -359,6 +367,7 @@ export class WeeklyDigestService {
       top_forecasts: [],
       top_market_signals: [],
       top_investment_grades: [],
+      top_investment_memos: [],
     };
   }
 
@@ -451,6 +460,46 @@ export class WeeklyDigestService {
         distribution_score: s.distribution_score,
         execution_score: s.execution_score,
         capital_efficiency_score: s.capital_efficiency_score,
+      })),
+    };
+  }
+
+  /**
+   * Enrich the summary with top investment memos (Sprint 58).
+   * Surfaces concise, decision-oriented memos for opportunities with
+   * confidence >= INVESTMENT_MEMO_DISPLAY_MIN.
+   * Empty array when no records exist yet.
+   */
+  private async applyInvestmentMemoEnrichment(
+    stats: WeeklyDigestStats,
+  ): Promise<WeeklyDigestStats> {
+    const cards = await this.investmentMemosRepo.listCards({
+      limit: TOP_INVESTMENT_MEMOS_LIMIT,
+      minConfidence: INVESTMENT_MEMO_DISPLAY_MIN,
+    });
+    if (cards.length === 0) return stats;
+
+    // Pull investment decisions in bulk so the digest can show the
+    // one-line directive per memo.
+    const memoIds = cards.map((c) => c.id);
+    const memos = await this.investmentMemosRepo.list({ limit: 1000 });
+    const decisionMap = new Map(
+      memos
+        .filter((m) => memoIds.includes(m.id))
+        .map((m) => [m.id, m.investment_decision] as const),
+    );
+
+    return {
+      ...stats,
+      top_investment_memos: cards.map((c) => ({
+        id: c.id,
+        opportunity_id: c.opportunity_id,
+        title: c.opportunity_title,
+        url: `${getBaseUrl()}/opportunities/${c.opportunity_id}`,
+        confidence: c.confidence,
+        recommendation: c.recommendation,
+        investment_decision: decisionMap.get(c.id) ?? "—",
+        created_at: c.created_at,
       })),
     };
   }

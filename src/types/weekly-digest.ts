@@ -133,6 +133,21 @@ export type WeeklyDigestStats = {
     execution_score: number;
     capital_efficiency_score: number;
   }>;
+  /**
+   * Sprint 58: Top investment memos generated this week.
+   * Concise, decision-oriented memos for the highest-scoring opportunities.
+   * Empty array when no memos exist yet.
+   */
+  top_investment_memos: ReadonlyArray<{
+    id: Uuid;
+    opportunity_id: Uuid;
+    title: string;
+    url: string;
+    confidence: number;
+    recommendation: string;
+    investment_decision: string;
+    created_at: string;
+  }>;
 };
 
 /**

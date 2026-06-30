@@ -160,6 +160,32 @@ export const StartupScoreSchema = z.object({
 export type StartupScoreResponseItem = z.infer<typeof StartupScoreSchema>;
 
 /**
+ * Schema for Investment Memo generation response (Sprint 58).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ *
+ * Mirrors internal memos used by Y Combinator, Sequoia, a16z, Accel:
+ * concise, decision-oriented, investor-friendly language.
+ */
+export const InvestmentMemoSchema = z.object({
+  title: z.string(),
+  thesis: z.string(),
+  market: z.string(),
+  problem: z.string(),
+  solution: z.string(),
+  business_model: z.string(),
+  traction: z.string(),
+  competition: z.string(),
+  risks: z.string(),
+  strengths: z.string(),
+  why_now: z.string(),
+  investment_decision: z.string(),
+  recommendation: z.string(),
+  confidence: z.number().min(0).max(100),
+});
+
+export type InvestmentMemoResponseItem = z.infer<typeof InvestmentMemoSchema>;
+
+/**
  * Schema for Venture Research Report generation response (Sprint 57).
  * AI returns business data only — no UUIDs, no foreign keys.
  */

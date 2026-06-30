@@ -16,6 +16,7 @@ import type { ForecastInput } from "./forecast";
 import type { MarketIntelligenceInput } from "./market-intelligence";
 import type { StartupScoreInput } from "./startup-score";
 import type { VentureReportInput } from "./venture-report";
+import type { InvestmentMemoInput } from "./investment-memo";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -54,5 +55,11 @@ export interface AIProvider {
    * AI returns business data only — no UUIDs, no foreign keys.
    */
   generateVentureReport(opportunities: OpportunityInput[]): Promise<VentureReportInput[]>;
+  /**
+   * Generate a concise, decision-oriented investment memo (Sprint 58).
+   * AI returns business data only — no UUIDs, no foreign keys.
+   * Mirrors internal memos used by YC, Sequoia, a16z, Accel.
+   */
+  generateInvestmentMemo(opportunities: OpportunityInput[]): Promise<InvestmentMemoInput[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

@@ -57,6 +57,9 @@ vi.mock("@/services/startup-score/startup-score.service", () => ({
 vi.mock("@/services/venture-report/venture-report.service", () => ({
   generateBatch: vi.fn(),
 }));
+vi.mock("@/services/investment-memo/investment-memo.service", () => ({
+  generateBatch: vi.fn(),
+}));
 
 import { runPipeline } from "@/services/pipeline/runner.service";
 import { fetchAllSources } from "@/services/sources/ingestion.service";
@@ -72,6 +75,7 @@ import { generateForecastBatch } from "@/services/forecasts/forecast.service";
 import { generateBatch as generateMarketIntelligenceBatch } from "@/services/market-intelligence/market-intelligence.service";
 import { generateBatch as generateStartupScoreBatch } from "@/services/startup-score/startup-score.service";
 import { generateBatch as generateVentureReportBatch } from "@/services/venture-report/venture-report.service";
+import { generateBatch as generateInvestmentMemoBatch } from "@/services/investment-memo/investment-memo.service";
 
 // Helper to create correct-shaped mock returns
 const oppResult = (processed: number, generated: number, inserted: number) => ({
@@ -129,6 +133,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(generateMarketIntelligenceBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
     vi.mocked(generateStartupScoreBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
     vi.mocked(generateVentureReportBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
+    vi.mocked(generateInvestmentMemoBatch).mockResolvedValue({ processed: 2, generated: 2, skipped: 0, inserted: 2 });
     const result = await runPipeline();
 
     expect(result.sources).toBe(1); // reddit only
@@ -143,6 +148,7 @@ describe("runPipeline (E2E)", () => {
     expect(result.forecasts).toBe(2);
     expect(result.marketIntelligence).toBe(2);
     expect(result.ventureReports).toBe(2);
+    expect(result.investmentMemos).toBe(2);
 
     // Verify all stages were called
     expect(fetchAllSources).toHaveBeenCalledWith(25);
@@ -182,6 +188,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(validateOpportunitiesFromDatabase).mockResolvedValue({ processed: 0, validated: 0, inserted: 0, skipped: 0 });
     vi.mocked(generateStartupScoreBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
     vi.mocked(generateVentureReportBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
+    vi.mocked(generateInvestmentMemoBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
 
     const result = await runPipeline();
 
@@ -209,6 +216,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(generateEvidenceBatch).mockResolvedValue({ processed: 1, generated: 5, skipped: 0, inserted: 5 });
     vi.mocked(generateStartupScoreBatch).mockResolvedValue({ processed: 1, generated: 1, skipped: 0, inserted: 1 });
     vi.mocked(generateVentureReportBatch).mockResolvedValue({ processed: 1, generated: 1, skipped: 0, inserted: 1 });
+    vi.mocked(generateInvestmentMemoBatch).mockResolvedValue({ processed: 1, generated: 1, skipped: 0, inserted: 1 });
 
     const result = await runPipeline();
 
@@ -239,6 +247,7 @@ describe("runPipeline (E2E)", () => {
     vi.mocked(generateMarketIntelligenceBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
     vi.mocked(generateStartupScoreBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
     vi.mocked(generateVentureReportBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
+    vi.mocked(generateInvestmentMemoBatch).mockResolvedValue({ processed: 0, generated: 0, skipped: 0, inserted: 0 });
     const result = await runPipeline();
 
     expect(result.sources).toBe(2); // reddit + hackernews

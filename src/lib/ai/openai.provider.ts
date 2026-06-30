@@ -22,6 +22,7 @@ import {
   ForecastSchema,
   MarketIntelligenceSchema,
   StartupScoreSchema,
+  InvestmentMemoSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -38,6 +39,7 @@ import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import type { StartupScoreInput } from "@/types/startup-score";
 import { logAiUsageFromResponse } from "./ai-usage";
 import type { VentureReportInput } from "@/types/venture-report";
+import type { InvestmentMemoInput } from "@/types/investment-memo";
 import { VentureReportSchema } from "./schemas";
 
 export class OpenAIProvider implements AIProvider {
@@ -1126,6 +1128,125 @@ Rules:
         competitive_advantages: "",
         moat_analysis: "",
         financial_outlook: "",
+        recommendation: "PASS",
+        confidence: 0,
+      }));
+    }
+  }
+
+  async generateInvestmentMemo(
+    opportunities: OpportunityInput[],
+  ): Promise<InvestmentMemoInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a VC Partner.
+
+Write a concise internal investment memo.
+
+Use professional VC language and the same cadence as memos used by Y Combinator, Sequoia, Andreessen Horowitz, and Accel.
+
+Return ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "title": "string",
+      "thesis": "string",
+      "market": "string",
+      "problem": "string",
+      "solution": "string",
+      "business_model": "string",
+      "traction": "string",
+      "competition": "string",
+      "risks": "string",
+      "strengths": "string",
+      "why_now": "string",
+      "investment_decision": "string",
+      "recommendation": "string",
+      "confidence": number
+    }
+  ]
+}
+
+Rules:
+- All fields are required strings (except confidence which is 0-100)
+- recommendation: "STRONG BUY" | "BUY" | "HOLD" | "PASS"
+- confidence: 0-100
+- Each section is concise: 2-4 sentences, decision-oriented, no fluff
+- investment_decision must be a one-line directive ("INVEST — lead the round at $X-Y." / "PASS — revisit in N months.")
+- Return exactly ${opportunities.length} objects in the results array, one for each opportunity
+- Do NOT include markdown formatting or code blocks
+- Output ONLY JSON`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp, i) => ({
+                index: i,
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                validation_score: opp.score,
+                severity: Number(opp.severity.toFixed(3)),
+                buying_intent: Number(opp.buying_intent.toFixed(3)),
+                frequency: opp.frequency ?? 0,
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed = JSON.parse(content);
+      const results = (parsed as { results?: unknown[] }).results ?? [];
+
+      const output: InvestmentMemoInput[] = [];
+      for (const item of results) {
+        try {
+          const validated = InvestmentMemoSchema.parse(item);
+          output.push({
+            title: validated.title,
+            thesis: validated.thesis,
+            market: validated.market,
+            problem: validated.problem,
+            solution: validated.solution,
+            business_model: validated.business_model,
+            traction: validated.traction,
+            competition: validated.competition,
+            risks: validated.risks,
+            strengths: validated.strengths,
+            why_now: validated.why_now,
+            investment_decision: validated.investment_decision,
+            recommendation: validated.recommendation,
+            confidence: validated.confidence,
+          });
+        } catch {
+          // skip invalid memo item
+        }
+      }
+      return output;
+    } catch (error) {
+      console.error("generateInvestmentMemo failed:", error);
+      return opportunities.map(() => ({
+        title: "Investment Memo Generation Failed",
+        thesis: "Could not generate memo",
+        market: "",
+        problem: "",
+        solution: "",
+        business_model: "",
+        traction: "",
+        competition: "",
+        risks: "",
+        strengths: "",
+        why_now: "",
+        investment_decision: "PASS — could not evaluate.",
         recommendation: "PASS",
         confidence: 0,
       }));

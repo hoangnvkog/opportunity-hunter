@@ -24,6 +24,7 @@ import type { ForecastInput } from "@/types/forecast";
 import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import type { StartupScoreInput } from "@/types/startup-score";
 import type { VentureReportInput } from "@/types/venture-report";
+import type { InvestmentMemoInput } from "@/types/investment-memo";
 
 export class GeminiProvider implements AIProvider {
   constructor(
@@ -142,6 +143,15 @@ export class GeminiProvider implements AIProvider {
   ): Promise<VentureReportInput[]> {
     throw new Error(
       "GeminiProvider.generateVentureReport() not implemented yet. " +
+      "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
+    );
+  }
+
+  async generateInvestmentMemo(
+    _opportunities: OpportunityInput[],
+  ): Promise<InvestmentMemoInput[]> {
+    throw new Error(
+      "GeminiProvider.generateInvestmentMemo() not implemented yet. " +
       "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
     );
   }
