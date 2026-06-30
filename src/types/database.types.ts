@@ -75,6 +75,10 @@ import type {
   InvestmentMemoRow,
   InvestmentMemoInsert,
 } from "./investment-memo";
+import type {
+  BacktestRow,
+  BacktestInsert,
+} from "./backtesting";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -803,6 +807,20 @@ export interface Database {
             columns: ["investment_score_id"];
             isOneToOne: false;
             referencedRelation: "startup_scores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      opportunity_backtests: {
+        Row: BacktestRow;
+        Insert: BacktestInsert;
+        Update: Partial<BacktestInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_backtests_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
             referencedColumns: ["id"];
           },
         ];

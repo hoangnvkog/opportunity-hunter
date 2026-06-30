@@ -40,7 +40,8 @@ import type { StartupScoreInput } from "@/types/startup-score";
 import { logAiUsageFromResponse } from "./ai-usage";
 import type { VentureReportInput } from "@/types/venture-report";
 import type { InvestmentMemoInput } from "@/types/investment-memo";
-import { VentureReportSchema } from "./schemas";
+import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
+import { VentureReportSchema, BacktestEvaluationSchema } from "./schemas";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -1249,6 +1250,47 @@ Rules:
         investment_decision: "PASS — could not evaluate.",
         recommendation: "PASS",
         confidence: 0,
+      }));
+    }
+  }
+
+  async evaluateBacktest(inputs: BacktestInput[]): Promise<BacktestEvaluation[]> {
+    if (inputs.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a prediction accuracy analyst. Evaluate each backtest prediction and determine the actual score and accuracy.',
+          },
+          {
+            role: 'user',
+            content: JSON.stringify(inputs),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content_text = response.choices[0]?.message?.content?.trim() ?? '';
+      const parsed = JSON.parse(content_text);
+      const results = Array.isArray(parsed) ? parsed : (parsed.results ?? []);
+
+      return results.map((item: Record<string, unknown>) => ({
+        actual_score: Number(item.actual_score),
+        prediction_delta: Number(item.prediction_delta),
+        accuracy: Number(item.accuracy),
+        notes: String(item.notes ?? ''),
+      }));
+    } catch (error) {
+      console.error('evaluateBacktest failed:', error);
+      return inputs.map((input) => ({
+        actual_score: input.current_score,
+        prediction_delta: input.predicted_score - input.current_score,
+        accuracy: 0,
+        notes: 'Evaluation failed — model could not assess prediction accuracy.',
       }));
     }
   }

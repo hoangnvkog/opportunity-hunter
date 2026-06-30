@@ -25,6 +25,7 @@ import { MarketIntelligenceRepository } from "@/lib/db/repositories/market-intel
 import { NotificationSettingsRepository } from "@/lib/db/repositories/email-notifications.repository";
 import { StartupScoresRepository } from "@/lib/db/repositories/startup-scores.repository";
 import { InvestmentMemosRepository } from "@/lib/db/repositories/investment-memos.repository";
+import { OpportunityBacktestsRepository } from "@/lib/db/repositories/opportunity-backtests.repository";
 import { sendEmail } from "@/lib/email/resend.provider";
 import {
   renderWeeklyDigestHtml,
@@ -107,6 +108,7 @@ export class WeeklyDigestService {
     private intelligenceRepo: MarketIntelligenceRepository,
     private startupScoresRepo: StartupScoresRepository,
     private investmentMemosRepo: InvestmentMemosRepository,
+    private backtestsRepo?: OpportunityBacktestsRepository,
   ) {}
 
   static async create(): Promise<WeeklyDigestService> {
@@ -121,6 +123,7 @@ export class WeeklyDigestService {
       intelligenceRepo,
       startupScoresRepo,
       investmentMemosRepo,
+      backtestsRepo,
     ] = await Promise.all([
       WeeklyDigestsRepository.create(),
       AlertsRepository.create(),
@@ -132,6 +135,7 @@ export class WeeklyDigestService {
       MarketIntelligenceRepository.create(),
       StartupScoresRepository.create(),
       InvestmentMemosRepository.create(),
+      OpportunityBacktestsRepository.create(),
     ]);
     return new WeeklyDigestService(
       digestsRepo,
@@ -144,6 +148,7 @@ export class WeeklyDigestService {
       intelligenceRepo,
       startupScoresRepo,
       investmentMemosRepo,
+      backtestsRepo,
     );
   }
 
@@ -166,7 +171,13 @@ export class WeeklyDigestService {
     const stats = await this.applyStartupScoreEnrichment(
       await this.applyIntelligenceEnrichment(
         await this.applyForecastEnrichment(
-          await this.applyAiInsightEnrichment(this.summarize(activity)),
+          await this.applyAiInsightEnrichment(
+            await this.applyBacktestEnrichment(
+              await this.applyInvestmentMemoEnrichment(
+                this.summarize(activity),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -368,6 +379,28 @@ export class WeeklyDigestService {
       top_market_signals: [],
       top_investment_grades: [],
       top_investment_memos: [],
+      prediction_accuracy_summary: null,
+    };
+  }
+
+  /**
+   * Sprint 59: Enrich the digest with prediction accuracy summary.
+   */
+  private async applyBacktestEnrichment(
+    stats: WeeklyDigestStats,
+  ): Promise<WeeklyDigestStats> {
+    const repo = this.backtestsRepo;
+    if (!repo) return stats;
+    const btStats = await repo.getStats().catch(() => null);
+    if (!btStats || btStats.total === 0) return stats;
+    return {
+      ...stats,
+      prediction_accuracy_summary: {
+        average_accuracy: btStats.averageAccuracy,
+        average_delta: btStats.averageDelta,
+        successful_predictions: btStats.successfulPredictions,
+        failed_predictions: btStats.failedPredictions,
+      },
     };
   }
 

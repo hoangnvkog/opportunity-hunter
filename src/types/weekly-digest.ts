@@ -148,6 +148,16 @@ export type WeeklyDigestStats = {
     investment_decision: string;
     created_at: string;
   }>;
+  /**
+   * Sprint 59: Prediction accuracy summary from the backtesting engine.
+   * Only populated when backtest records exist.
+   */
+  prediction_accuracy_summary: {
+    average_accuracy: number | null;
+    average_delta: number | null;
+    successful_predictions: number;
+    failed_predictions: number;
+  } | null;
 };
 
 /**

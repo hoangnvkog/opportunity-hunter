@@ -21,6 +21,7 @@ import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import type { StartupScoreInput } from "@/types/startup-score";
 import type { VentureReportInput } from "@/types/venture-report";
 import type { InvestmentMemoInput } from "@/types/investment-memo";
+import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -359,6 +360,27 @@ export class MockProvider implements AIProvider {
         investment_decision: decision,
         recommendation,
         confidence,
+      };
+    });
+  }
+
+  async evaluateBacktest(inputs: BacktestInput[]): Promise<BacktestEvaluation[]> {
+    return inputs.map((input) => {
+      const { predicted_score, current_score } = input;
+      const rawDelta = predicted_score - current_score;
+      const absDelta = Math.abs(rawDelta);
+      const accuracy = Math.max(0, Math.min(100, 100 - absDelta * 2));
+      const notes =
+        absDelta <= 5
+          ? `Prediction highly accurate. Predicted ${predicted_score}, observed ${current_score}.`
+          : absDelta <= 15
+            ? `Minor deviation. Predicted ${rawDelta > 0 ? 'overestimated' : 'underestimated'} by ${absDelta.toFixed(1)} points.`
+            : `Significant deviation. Predicted ${rawDelta > 0 ? 'overestimated' : 'underestimated'} by ${absDelta.toFixed(1)} points. Model needs recalibration.`;
+      return {
+        actual_score: Math.round(current_score * 100) / 100,
+        prediction_delta: Math.round(rawDelta * 100) / 100,
+        accuracy: Math.round(accuracy * 100) / 100,
+        notes,
       };
     });
   }

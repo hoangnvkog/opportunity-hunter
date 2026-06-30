@@ -9,6 +9,7 @@ import { MarketEvidenceCard } from "@/components/evidence/market-evidence-card";
 import { InvestmentScoreCard } from "@/components/investment/investment-score-card";
 import { InvestmentMemoCard } from "@/components/investment-memo/investment-memo-card";
 import { InvestmentMemoExportMenu } from "@/components/investment-memo/investment-memo-export-menu";
+import { BacktestSection } from "@/components/backtesting/backtest-section";
 import { getOpportunityDetailAction } from "@/actions/opportunities.actions";
 import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
 import { getEvidenceAction } from "@/actions/evidence.actions";
@@ -102,6 +103,8 @@ export default async function OpportunityDetailPage({
             />
           </div>
         )}
+
+        <BacktestSection opportunityId={id} />
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>

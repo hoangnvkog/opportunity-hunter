@@ -284,6 +284,16 @@ export function renderWeeklyDigestText(context: WeeklyDigestEmailContext): strin
   }
 
   lines.push("");
+  if (stats.prediction_accuracy_summary) {
+    const ps = stats.prediction_accuracy_summary;
+    lines.push("");
+    lines.push("PREDICTION ACCURACY (Backtesting)");
+    lines.push("  Average accuracy:  " + (ps.average_accuracy != null ? ps.average_accuracy.toFixed(1) + '%' : 'N/A'));
+    lines.push("  Average delta:      " + (ps.average_delta != null ? '±' + ps.average_delta.toFixed(1) : 'N/A'));
+    lines.push("  Successful:         " + ps.successful_predictions);
+    lines.push("  Failed:             " + ps.failed_predictions);
+  }
+  lines.push("");
   lines.push("RECOMMENDATIONS");
   for (const r of recs) lines.push(`  - ${r}`);
 

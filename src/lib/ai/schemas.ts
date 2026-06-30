@@ -212,3 +212,16 @@ export const VentureReportSchema = z.object({
 });
 
 export type VentureReportResponseItem = z.infer<typeof VentureReportSchema>;
+
+/**
+ * Schema for backtest evaluation response (Sprint 59).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const BacktestEvaluationSchema = z.object({
+  actual_score: z.number().min(0).max(100),
+  prediction_delta: z.number(),
+  accuracy: z.number().min(0).max(100),
+  notes: z.string(),
+});
+
+export type BacktestEvaluationResponseItem = z.infer<typeof BacktestEvaluationSchema>;

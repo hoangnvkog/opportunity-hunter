@@ -17,6 +17,7 @@ import type { MarketIntelligenceInput } from "./market-intelligence";
 import type { StartupScoreInput } from "./startup-score";
 import type { VentureReportInput } from "./venture-report";
 import type { InvestmentMemoInput } from "./investment-memo";
+import type { BacktestInput, BacktestEvaluation } from "./backtesting";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -61,5 +62,10 @@ export interface AIProvider {
    * Mirrors internal memos used by YC, Sequoia, a16z, Accel.
    */
   generateInvestmentMemo(opportunities: OpportunityInput[]): Promise<InvestmentMemoInput[]>;
+  /**
+   * Evaluate backtest predictions for opportunities (Sprint 59).
+   * AI returns actual_score, accuracy, and notes — no UUIDs, no foreign keys.
+   */
+  evaluateBacktest(inputs: BacktestInput[]): Promise<BacktestEvaluation[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

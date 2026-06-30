@@ -35,3 +35,4 @@ export { OpportunityEvidenceRepository } from "./opportunity-evidence.repository
 export { OpportunityForecastsRepository } from "./opportunity-forecasts.repository";
 export { MarketIntelligenceRepository } from "./market-intelligence.repository";
 export { StartupScoresRepository } from "./startup-scores.repository";
+export { OpportunityBacktestsRepository } from "./opportunity-backtests.repository";
