@@ -19,6 +19,7 @@ import type { EvidenceInput } from "@/types/evidence";
 import type { ForecastInput } from "@/types/forecast";
 import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import type { StartupScoreInput } from "@/types/startup-score";
+import type { VentureReportInput } from "@/types/venture-report";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -291,6 +292,37 @@ export class MockProvider implements AIProvider {
         confidence,
         recommendation,
         summary: `Mock VC score for ${opp.cluster_name ?? `opportunity ${idx + 1}`}: overall ${overall}, ${recommendation}.`,
+      };
+    });
+  }
+
+  async generateVentureReport(
+    opportunities: OpportunityInput[],
+  ): Promise<VentureReportInput[]> {
+    // Deterministic mock venture reports for testing
+    return opportunities.map((opp, idx) => {
+      const base = Math.max(0, Math.min(1, (opp.score ?? 50) / 100));
+      const confidence = Math.round(70 + base * 25);
+      return {
+        title: `Venture Research Report: ${opp.cluster_name ?? `Opportunity ${idx + 1}`}`,
+        executive_summary: `Executive summary for ${opp.cluster_name ?? `opportunity ${idx + 1}`}. This opportunity shows strong potential with an overall investment score reflecting market timing, competitive positioning, and execution capability.`,
+        problem: `Businesses in the ${opp.cluster_name ?? "target market"} space struggle with manual processes, inefficiency, and lack of automated solutions.`,
+        market_analysis: `The market for ${opp.cluster_name ?? "this segment"} is growing rapidly, driven by digital transformation trends and increasing demand for automation.`,
+        tam_analysis: `Total Addressable Market estimated at $${Math.round(200 + base * 800)}M globally, with ${Math.round(30 + base * 40)}% CAGR over the next 5 years.`,
+        competition_analysis: `Moderate competitive landscape with ${Math.round(3 + base * 10)} key players. Differentiation through AI/ML capabilities and vertical specialization.`,
+        customer_segments: `Primary: SMBs (10-500 employees). Secondary: Mid-market (500-2000 employees). Tertiary: Enterprise (>2000 employees).`,
+        business_model: `SaaS subscription model with tiered pricing. Monthly recurring revenue with annual contracts for enterprise.`,
+        pricing_strategy: `Starter: $99/mo. Professional: $299/mo. Enterprise: Custom pricing. Annual discounts of 20%.`,
+        go_to_market: `Product-led growth with content marketing, SEO, and strategic partnerships. Launch on Product Hunt, leverage Reddit communities.`,
+        distribution_strategy: `Direct sales for enterprise. Self-serve for SMB. Channel partnerships with system integrators.`,
+        product_roadmap: `Q1: Core MVP. Q2: Integrations. Q3: AI features. Q4: Enterprise features and compliance.`,
+        technical_risks: `AI model accuracy at scale. Data privacy compliance. Integration complexity with legacy systems.`,
+        business_risks: `Market saturation risk. Customer acquisition cost inflation. Competitive response from incumbents.`,
+        competitive_advantages: `Proprietary AI models trained on domain-specific data. Deep workflow integrations. Network effects from user-generated templates.`,
+        moat_analysis: `Data moat from user interactions. Switching costs from workflow integration. Brand moat from community.`,
+        financial_outlook: `Year 1: $${Math.round(200 + base * 800)}K ARR. Year 3: $${Math.round(2 + base * 8)}M ARR. Path to profitability by Year 2.`,
+        recommendation: confidence >= 85 ? "STRONG BUY" : confidence >= 70 ? "BUY" : "HOLD",
+        confidence,
       };
     });
   }

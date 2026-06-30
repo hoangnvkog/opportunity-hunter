@@ -19,6 +19,7 @@ import {
   StartupIdeaSchema,
   ValidationSchema,
   EvidenceSchema,
+  ForecastSchema,
   MarketIntelligenceSchema,
   StartupScoreSchema,
 } from "./schemas";
@@ -36,7 +37,8 @@ import type { ForecastInput } from "@/types/forecast";
 import type { MarketIntelligenceInput } from "@/types/market-intelligence";
 import type { StartupScoreInput } from "@/types/startup-score";
 import { logAiUsageFromResponse } from "./ai-usage";
-import { ForecastSchema } from "./schemas";
+import type { VentureReportInput } from "@/types/venture-report";
+import { VentureReportSchema } from "./schemas";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -997,6 +999,136 @@ Rules:
     } catch (error) {
       console.error("generateEmbeddings failed:", error);
       throw error;
+    }
+  }
+
+  async generateVentureReport(
+    opportunities: OpportunityInput[],
+  ): Promise<VentureReportInput[]> {
+    if (opportunities.length === 0) return [];
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a Venture Capital partner writing an investment-grade startup research report.
+
+Generate a comprehensive venture research report similar to documents used by YC, a16z, Sequoia, or internal VC research teams.
+
+Return ONLY a valid JSON object with this structure:
+
+{
+  "results": [
+    {
+      "title": "string",
+      "executive_summary": "string",
+      "problem": "string",
+      "market_analysis": "string",
+      "tam_analysis": "string",
+      "competition_analysis": "string",
+      "customer_segments": "string",
+      "business_model": "string",
+      "pricing_strategy": "string",
+      "go_to_market": "string",
+      "distribution_strategy": "string",
+      "product_roadmap": "string",
+      "technical_risks": "string",
+      "business_risks": "string",
+      "competitive_advantages": "string",
+      "moat_analysis": "string",
+      "financial_outlook": "string",
+      "recommendation": "string",
+      "confidence": number
+    }
+  ]
+}
+
+Rules:
+- All fields are required strings (except confidence which is 0-100 number)
+- recommendation: "STRONG BUY" | "BUY" | "HOLD" | "PASS"
+- confidence: 0-100
+- Return exactly ${opportunities.length} objects in the results array, one for each opportunity
+- Do NOT include markdown formatting or code blocks
+- Output ONLY JSON`,
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              opportunities.map((opp, i) => ({
+                index: i,
+                cluster_name: opp.cluster_name ?? "(unknown)",
+                description: opp.cluster_description ?? "(no description)",
+                validation_score: opp.score,
+                severity: Number(opp.severity.toFixed(3)),
+                buying_intent: Number(opp.buying_intent.toFixed(3)),
+                frequency: opp.frequency ?? 0,
+              })),
+            ),
+          },
+        ],
+      });
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? "";
+      const parsed = JSON.parse(content);
+      const results = (parsed as { results?: unknown[] }).results ?? [];
+
+      const output: VentureReportInput[] = [];
+      for (const item of results) {
+        try {
+          const validated = VentureReportSchema.parse(item);
+          output.push({
+            title: validated.title,
+            executive_summary: validated.executive_summary,
+            problem: validated.problem,
+            market_analysis: validated.market_analysis,
+            tam_analysis: validated.tam_analysis,
+            competition_analysis: validated.competition_analysis,
+            customer_segments: validated.customer_segments,
+            business_model: validated.business_model,
+            pricing_strategy: validated.pricing_strategy,
+            go_to_market: validated.go_to_market,
+            distribution_strategy: validated.distribution_strategy,
+            product_roadmap: validated.product_roadmap,
+            technical_risks: validated.technical_risks,
+            business_risks: validated.business_risks,
+            competitive_advantages: validated.competitive_advantages,
+            moat_analysis: validated.moat_analysis,
+            financial_outlook: validated.financial_outlook,
+            recommendation: validated.recommendation,
+            confidence: validated.confidence,
+          });
+        } catch {
+          // skip invalid report item
+        }
+      }
+      return output;
+    } catch (error) {
+      console.error("generateVentureReport failed:", error);
+      return opportunities.map(() => ({
+        title: "Report Generation Failed",
+        executive_summary: "Could not generate report",
+        problem: "",
+        market_analysis: "",
+        tam_analysis: "",
+        competition_analysis: "",
+        customer_segments: "",
+        business_model: "",
+        pricing_strategy: "",
+        go_to_market: "",
+        distribution_strategy: "",
+        product_roadmap: "",
+        technical_risks: "",
+        business_risks: "",
+        competitive_advantages: "",
+        moat_analysis: "",
+        financial_outlook: "",
+        recommendation: "PASS",
+        confidence: 0,
+      }));
     }
   }
 }

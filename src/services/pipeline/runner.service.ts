@@ -34,6 +34,7 @@ export interface PipelineRunResult {
   forecastAlerts?: number;
   marketIntelligence?: number;
   startupScores?: number;
+  ventureReports?: number;
 }
 
 /**
@@ -188,6 +189,16 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       `(${startupScoreResult.skipped} skipped, ${startupScoreResult.generated} total generated)`,
     );
 
+    // Stage 13: Generate Venture Research Reports (only for opportunities
+    // with startup_score overall_score >= 80).
+    // Triggers "🚀 VC Grade Opportunity" alert when recommendation == "STRONG BUY".
+    const { generateBatch: generateVentureReportBatch } = await import("../venture-report/venture-report.service");
+    const ventureReportResult = await generateVentureReportBatch(50);
+    console.log(
+      `Generated venture reports: ${ventureReportResult.inserted} records ` +
+      `(${ventureReportResult.skipped} skipped, ${ventureReportResult.generated} total generated)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -203,6 +214,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       forecastAlerts: forecastAlertResult.alertsCreated,
       marketIntelligence: intelligenceResult.inserted,
       startupScores: startupScoreResult.inserted,
+      ventureReports: ventureReportResult.inserted,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error
@@ -230,6 +242,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 11 (market intelligence generation): ${message}`);
     } else if (message.includes("startup") || message.includes("scoreStartup")) {
       throw new Error(`Pipeline failed at stage 12 (startup scoring): ${message}`);
+    } else if (message.includes("venture") || message.includes("venture_report")) {
+      throw new Error(`Pipeline failed at stage 13 (venture report generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

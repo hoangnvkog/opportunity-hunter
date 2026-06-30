@@ -158,3 +158,31 @@ export const StartupScoreSchema = z.object({
 });
 
 export type StartupScoreResponseItem = z.infer<typeof StartupScoreSchema>;
+
+/**
+ * Schema for Venture Research Report generation response (Sprint 57).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const VentureReportSchema = z.object({
+  title: z.string(),
+  executive_summary: z.string(),
+  problem: z.string(),
+  market_analysis: z.string(),
+  tam_analysis: z.string(),
+  competition_analysis: z.string(),
+  customer_segments: z.string(),
+  business_model: z.string(),
+  pricing_strategy: z.string(),
+  go_to_market: z.string(),
+  distribution_strategy: z.string(),
+  product_roadmap: z.string(),
+  technical_risks: z.string(),
+  business_risks: z.string(),
+  competitive_advantages: z.string(),
+  moat_analysis: z.string(),
+  financial_outlook: z.string(),
+  recommendation: z.string(),
+  confidence: z.number().min(0).max(100),
+});
+
+export type VentureReportResponseItem = z.infer<typeof VentureReportSchema>;
