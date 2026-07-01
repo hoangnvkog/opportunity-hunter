@@ -15,6 +15,8 @@ import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
 import { getEvidenceAction } from "@/actions/evidence.actions";
 import { getOpportunityScoreAction } from "@/actions/startup-score.actions";
 import { getOpportunityMemoAction } from "@/actions/investment-memo.actions";
+import { PortfolioCard } from "@/components/portfolio/portfolio-card";
+import { getPortfolioByOpportunity } from "@/lib/services/portfolio.service";
 
 interface OpportunityPageProps {
   params: Promise<{
@@ -46,12 +48,13 @@ export default async function OpportunityDetailPage({
 }: OpportunityPageProps) {
   const { id } = await params;
 
-  const [detail, insight, evidenceResult, scoreResult, memoResult] = await Promise.all([
+  const [detail, insight, evidenceResult, scoreResult, memoResult, portfolioItem] = await Promise.all([
     getOpportunityDetailAction(id),
     findInsightByOpportunityIdAction(id),
     getEvidenceAction(id),
     getOpportunityScoreAction(id),
     getOpportunityMemoAction(id),
+    getPortfolioByOpportunity(id),
   ]);
 
   if (!detail) {
@@ -93,6 +96,8 @@ export default async function OpportunityDetailPage({
         <MarketEvidenceCard evidence={evidence} />
 
         <InvestmentScoreCard score={score} />
+
+        <PortfolioCard portfolioItem={portfolioItem} opportunityId={id} />
 
         <InvestmentMemoCard memo={memo} />
         {memo && (

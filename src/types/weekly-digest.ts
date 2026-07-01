@@ -149,6 +149,16 @@ export type WeeklyDigestStats = {
     created_at: string;
   }>;
   /**
+   * Sprint 60: Portfolio intelligence summary.
+   */
+  portfolio_summary: {
+    total_items: number;
+    average_health: number | null;
+    top_gainers: number;
+    top_losers: number;
+    needs_review: number;
+  } | null;
+  /**
    * Sprint 59: Prediction accuracy summary from the backtesting engine.
    * Only populated when backtest records exist.
    */

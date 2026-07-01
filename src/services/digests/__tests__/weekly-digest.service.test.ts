@@ -124,6 +124,7 @@ const baseStats = (): WeeklyDigestStats => ({
   top_market_signals: [],
   top_investment_grades: [],
   top_investment_memos: [],
+  portfolio_summary: null,
   prediction_accuracy_summary: null,
 });
 

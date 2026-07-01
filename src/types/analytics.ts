@@ -81,3 +81,28 @@ export type AdminDashboardSummary = {
   activeAlerts: number;
   systemHealth: SystemHealth;
 };
+// Sprint 60: Portfolio Intelligence - Analytics Event Types
+
+export type PortfolioEventType =
+  | 'portfolio_added'
+  | 'portfolio_archived'
+  | 'portfolio_reviewed'
+  | 'favorite_added'
+  | 'priority_changed'
+  | 'status_changed'
+  | 'health_score_updated';
+
+export type PortfolioEventData = {
+  portfolio_id?: string;
+  opportunity_id?: string;
+  status?: string;
+  priority?: string;
+  old_status?: string;
+  new_status?: string;
+  old_priority?: string;
+  new_priority?: string;
+  health_score?: number;
+  has_notes?: boolean;
+  status_changed?: boolean;
+  priority_changed?: boolean;
+};
