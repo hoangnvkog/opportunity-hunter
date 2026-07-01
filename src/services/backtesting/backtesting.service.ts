@@ -42,6 +42,7 @@ export async function evaluateOpportunity(
       predicted_score: String(score.overall_score),
       predicted_direction: "stable",
       status: "pending",
+      evaluation_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     });
   } catch {
     return { processed: 1, inserted: 0, skipped: 1 };
