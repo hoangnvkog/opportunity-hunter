@@ -8,7 +8,7 @@
  */
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Download, FileText, FileJson, FileType2 } from "lucide-react";
 import { recordMemoExportAction } from "@/actions/investment-memo.actions";
 

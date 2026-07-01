@@ -36,7 +36,7 @@ export async function checkHealthDrops(): Promise<PortfolioAlert[]> {
     .not('health_score', 'is', null);
 
   // For Sprint 60, we'll alert on low health (<50)
-  items?.forEach((item: any) => {
+  items?.forEach((item: Record<string, unknown>) => {
     if (item.health_score < 50) {
       alerts.push({
         type: 'health_drop',
@@ -71,7 +71,7 @@ export async function checkHealthRises(): Promise<PortfolioAlert[]> {
     .eq('archived', false)
     .gte('health_score', 90);
 
-  items?.forEach((item: any) => {
+  items?.forEach((item: Record<string, unknown>) => {
     alerts.push({
       type: 'health_rise',
       portfolio_id: item.id,
@@ -104,7 +104,7 @@ export async function checkCriticalOpportunities(): Promise<PortfolioAlert[]> {
     .eq('archived', false)
     .eq('priority', 'CRITICAL');
 
-  items?.forEach((item: any) => {
+  items?.forEach((item: Record<string, unknown>) => {
     alerts.push({
       type: 'critical_opportunity',
       portfolio_id: item.id,
@@ -140,7 +140,7 @@ export async function checkStaleReviews(): Promise<PortfolioAlert[]> {
     .eq('archived', false)
     .or(`last_reviewed_at.is.null,last_reviewed_at.lt.${thirtyDaysAgo.toISOString()}`);
 
-  items?.forEach((item: any) => {
+  items?.forEach((item: Record<string, unknown>) => {
     const daysSinceReview = item.last_reviewed_at
       ? Math.floor((Date.now() - new Date(item.last_reviewed_at).getTime()) / (1000 * 60 * 60 * 24))
       : null;

@@ -6,8 +6,8 @@
  * opportunities.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { getTopIntelligenceSignalsAction, getIntelligenceStatsAction } from "@/actions/market-intelligence.actions";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";

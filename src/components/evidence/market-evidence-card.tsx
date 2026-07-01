@@ -4,8 +4,8 @@
  * Displays market evidence grouped by type for an opportunity.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { OpportunityEvidenceRow } from "@/types/evidence";
 
 interface MarketEvidenceCardProps {

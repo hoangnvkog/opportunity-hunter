@@ -2,7 +2,7 @@
  * Sprint 59: Admin Backtesting Page
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { OpportunityBacktestsRepository } from "@/lib/db/repositories/opportunity-backtests.repository";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";

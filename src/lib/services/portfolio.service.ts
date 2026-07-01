@@ -1,7 +1,6 @@
 // Sprint 60: Portfolio Intelligence Engine - Service Layer
 
 import { PortfolioRepository } from '@/lib/repositories/portfolio.repository';
-import { trackAnalytics } from '@/lib/services/analytics.service';
 import type {
   PortfolioItemRow,
   PortfolioItemInput,
@@ -16,6 +15,20 @@ import type {
 } from '@/types/portfolio';
 
 const portfolioRepo = new PortfolioRepository();
+
+// Safe analytics wrapper - no-ops if AnalyticsService is unavailable
+async function trackAnalytics(payload: { event_type: string; event_data?: Record<string, unknown> }): Promise<void> {
+  try {
+    const { AnalyticsService } = await import('@/services/admin/analytics.service');
+    const svc = new AnalyticsService();
+    await svc.track(payload.event_type, payload.event_data ?? {});
+  } catch {
+    // Analytics is best-effort
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[analytics]', payload.event_type);
+    }
+  }
+}
 
 // ==========================================
 // ADD TO PORTFOLIO

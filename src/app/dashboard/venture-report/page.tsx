@@ -5,8 +5,8 @@
  * opportunities (startup_score overall_score >= 80).
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { VentureReportRefreshButton } from "@/components/venture-report/venture-report-refresh-button";
 import {

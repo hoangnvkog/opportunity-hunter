@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getStartupIdeaDetailAction } from "@/actions/startup-ideas.actions";
 import { IdeaOverviewCard } from "@/components/startup-idea/idea-overview-card";
 import { BusinessModelCard } from "@/components/startup-idea/business-model-card";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   params: Promise<{ id: string }>;

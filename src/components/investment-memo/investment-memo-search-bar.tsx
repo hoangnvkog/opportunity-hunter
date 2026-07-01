@@ -10,8 +10,8 @@
  */
 
 import { useState, useTransition } from "react";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { searchMemosAction } from "@/actions/investment-memo.actions";
 import type { InvestmentMemoRow } from "@/types/investment-memo";

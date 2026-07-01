@@ -1,6 +1,6 @@
 import { SubscriptionsRepository } from "@/lib/db/repositories/subscriptions.repository";
 import { ProfilesRepository } from "@/lib/db/repositories/profiles.repository";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 

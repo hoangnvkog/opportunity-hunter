@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InsightsFilters } from "@/components/insights/InsightsFilters";
 import { InsightsHistoryTable } from "@/components/insights/InsightsHistoryTable";
 import { GenerateInsightsButton } from "@/components/insights/GenerateInsightsButton";

@@ -4,7 +4,7 @@
  * Admin page to view, regenerate, and delete forecasts.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpportunityForecastsRepository } from "@/lib/db/repositories/opportunity-forecasts.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { RegenerateButton } from "./RegenerateButton";

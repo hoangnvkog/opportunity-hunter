@@ -1,7 +1,7 @@
 import { AnalyticsService } from "@/services/admin/analytics.service";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { UsageChart } from "@/components/admin/UsageChart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
   Activity,

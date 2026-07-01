@@ -5,8 +5,8 @@
  * Mirrors the layout of internal memos used by YC, Sequoia, a16z, Accel.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { InvestmentMemoRow } from "@/types/investment-memo";
 import { FileText, TrendingUp, AlertTriangle, Shield, Clock, Target } from "lucide-react";
 

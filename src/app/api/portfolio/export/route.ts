@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function generateCSV(items: any[]): string {
+function generateCSV(items: Record<string, unknown>[]): string {
   const headers = [
     'ID',
     'Opportunity',

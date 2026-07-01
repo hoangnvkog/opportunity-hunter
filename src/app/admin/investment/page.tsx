@@ -8,8 +8,8 @@
  * - Recommendation breakdown
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { StartupScoresRepository } from "@/lib/db/repositories/startup-scores.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 

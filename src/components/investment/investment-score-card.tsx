@@ -9,8 +9,8 @@
  * - AI summary
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { StartupScoreRow } from "@/types/startup-score";
 import { STARTUP_SCORE_LABELS, type StartupScoreDimension } from "@/types/startup-score";
 import { Star, AlertTriangle, CheckCircle2 } from "lucide-react";

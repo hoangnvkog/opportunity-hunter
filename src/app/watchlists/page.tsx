@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/client";
 import { getUserWatchlistsAction } from "@/actions/watchlists.actions";
 import { WatchlistCard } from "@/components/watchlists/WatchlistCard";
 import { WatchlistForm } from "@/components/watchlists/WatchlistForm";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default async function WatchlistsPage() {
   const client = await getSupabaseServerClient();

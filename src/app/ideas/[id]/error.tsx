@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function IdeaDetailError({
   error: _error,

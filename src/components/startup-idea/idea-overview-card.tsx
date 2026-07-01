@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { StartupIdeaDetail } from "@/types/startup-idea-detail";
 
 interface IdeaOverviewCardProps {

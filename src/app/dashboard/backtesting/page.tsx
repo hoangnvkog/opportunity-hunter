@@ -2,7 +2,7 @@
  * Sprint 59: Backtesting Dashboard Page (Server Component)
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { BacktestRefreshButton } from "@/components/backtesting/backtest-refresh-button";
 import { BacktestTable } from "@/components/backtesting/backtest-table";

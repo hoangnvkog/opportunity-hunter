@@ -8,8 +8,8 @@
  * - Report history (last 30 days)
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { VentureReportsRepository } from "@/lib/db/repositories/venture-reports.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 

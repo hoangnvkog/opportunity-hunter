@@ -1,6 +1,6 @@
 import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Clock } from "lucide-react";
 import Link from "next/link";
 

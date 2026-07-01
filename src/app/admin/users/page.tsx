@@ -1,6 +1,6 @@
 import { ProfilesRepository } from "@/lib/db/repositories/profiles.repository";
 import { SubscriptionsRepository } from "@/lib/db/repositories/subscriptions.repository";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Shield } from "lucide-react";
 
 export const dynamic = "force-dynamic";

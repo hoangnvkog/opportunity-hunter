@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import type { OpportunityView } from "@/services/opportunities";
 
 interface OpportunityListItemProps {

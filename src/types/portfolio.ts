@@ -1,7 +1,7 @@
 // Sprint 60: Portfolio Intelligence Engine - Types
 
 // Database types will be used when available
-type Database = any;
+type Database = { public: { Tables: { portfolio_items: { Row: PortfolioItemRow; Insert: PortfolioItemInput; Update: Partial<PortfolioItemInput> } } } };
 
 // ==========================================
 // ENUMS

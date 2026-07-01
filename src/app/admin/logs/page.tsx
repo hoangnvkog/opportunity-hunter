@@ -1,7 +1,7 @@
 import { SystemLogsRepository } from "@/lib/db/repositories/system-logs.repository";
 import { MonitoringService } from "@/services/admin/monitoring.service";
 import { LogTable } from "@/components/admin/LogTable";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Info, AlertCircle, Bug } from "lucide-react";
 import type { LogLevel } from "@/types/admin";
 

@@ -1,7 +1,7 @@
 import { OpportunityEvidenceRepository } from "@/lib/db/repositories/opportunity-evidence.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 

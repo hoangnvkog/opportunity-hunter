@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import type { PipelineRunHistory } from "@/types/pipeline-run-history";
 
 interface PipelineHistoryTableProps {

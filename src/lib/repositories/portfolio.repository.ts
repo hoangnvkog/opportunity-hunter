@@ -363,7 +363,7 @@ export class PortfolioRepository {
     if (error) throw error;
 
     // Map to PortfolioCard
-    return (data || []).map((item: any) => ({
+    return (data || []).map((item: PortfolioItemRow) => ({
       id: item.id,
       opportunity_id: item.opportunity_id,
       opportunity_title: item.opportunities?.title || 'Unknown',
@@ -411,7 +411,7 @@ export class PortfolioRepository {
       INVESTED: 0,
       ARCHIVED: 0,
     };
-    all.forEach((item: any) => {
+    all.forEach((item: PortfolioItemRow) => {
       byStatus[item.status as PortfolioStatus] = (byStatus[item.status as PortfolioStatus] || 0) + 1;
     });
 
@@ -422,7 +422,7 @@ export class PortfolioRepository {
       HIGH: 0,
       CRITICAL: 0,
     };
-    all.forEach((item: any) => {
+    all.forEach((item: PortfolioItemRow) => {
       byPriority[item.priority as Priority] = (byPriority[item.priority as Priority] || 0) + 1;
     });
 
@@ -434,7 +434,7 @@ export class PortfolioRepository {
       poor: 0,
       unscored: 0,
     };
-    all.forEach((item: any) => {
+    all.forEach((item: PortfolioItemRow) => {
       if (item.health_score === null || item.health_score === undefined) {
         byHealth.unscored++;
       } else if (item.health_score >= 90) {
@@ -449,20 +449,20 @@ export class PortfolioRepository {
     });
 
     // Average health
-    const scored = all.filter((item: any) => item.health_score !== null && item.health_score !== undefined);
+    const scored = all.filter((item: PortfolioItemRow) => item.health_score !== null && item.health_score !== undefined);
     const averageHealth = scored.length > 0
-      ? scored.reduce((sum: number, item: any) => sum + (item.health_score || 0), 0) / scored.length
+      ? scored.reduce((sum: number, item: PortfolioItemRow) => sum + (item.health_score || 0), 0) / scored.length
       : null;
 
     // Needs review (>30 days or never)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const needsReview = all.filter((item: any) =>
+    const needsReview = all.filter((item: PortfolioItemRow) =>
       !item.last_reviewed_at || new Date(item.last_reviewed_at) < thirtyDaysAgo
     ).length;
 
     // Favorites
-    const favorites = all.filter((item: any) => item.favorite).length;
+    const favorites = all.filter((item: PortfolioItemRow) => item.favorite).length;
 
     // Archived count
     const { count: archivedCount } = await supabase

@@ -5,7 +5,7 @@
  * search and refresh to client components.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { InvestmentMemoRefreshButton } from "@/components/investment-memo/investment-memo-refresh-button";
 import { InvestmentMemoSearchBar } from "@/components/investment-memo/investment-memo-search-bar";

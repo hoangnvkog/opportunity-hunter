@@ -4,8 +4,8 @@
  * Displays forecasted opportunities sorted by forecast score.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { getTopForecastsAction, getForecastStatsAction } from "@/actions/forecast.actions";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";

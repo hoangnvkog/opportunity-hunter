@@ -10,8 +10,8 @@
  * - Top memos table
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { InvestmentMemosRepository } from "@/lib/db/repositories/investment-memos.repository";
 
 export const dynamic = "force-dynamic";

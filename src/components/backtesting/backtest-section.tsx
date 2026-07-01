@@ -5,8 +5,8 @@
  * Shows predicted score, actual score, accuracy, and notes.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { getOpportunityBacktests } from "@/services/backtesting/backtesting.service";
 import { getBacktestById } from "@/services/backtesting/backtesting.service";
 import { Target, TrendingUp, CheckCircle2, AlertTriangle } from "lucide-react";

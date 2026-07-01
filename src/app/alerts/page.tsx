@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/client";
 import { getUserAlertsAction, markAllAlertsReadAction } from "@/actions/alerts.actions";
 import { AlertCard } from "@/components/alerts/AlertCard";
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function AlertsPage() {
   const client = await getSupabaseServerClient();

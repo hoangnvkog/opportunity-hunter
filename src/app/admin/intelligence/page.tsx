@@ -7,7 +7,7 @@
  * - Confidence history (daily average confidence)
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarketIntelligenceRepository } from "@/lib/db/repositories/market-intelligence.repository";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 

@@ -18,10 +18,12 @@ import { useState } from 'react';
 import { PortfolioStatusLabels, PriorityLabels } from '@/types/portfolio';
 import type { PortfolioItemRow, PortfolioStatus, Priority } from '@/types/portfolio';
 
-interface PortfolioCardProps {
+// PortfolioCard props
+interface PortfolioCardPropsBase {
   portfolioItem: PortfolioItemRow | null;
   opportunityId: string;
 }
+type PortfolioCardProps = PortfolioCardPropsBase;
 
 export function PortfolioCard({ portfolioItem, opportunityId }: PortfolioCardProps) {
   const [isEditing, setIsEditing] = useState(false);

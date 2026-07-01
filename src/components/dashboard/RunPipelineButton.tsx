@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { runPipelineAction } from "@/actions/pipeline.actions";
 import { Loader2, Play, CheckCircle2, XCircle } from "lucide-react";
 

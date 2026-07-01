@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SaveButton } from "@/components/saved/save-button";
 import type { OpportunityView } from "@/services/opportunities";
 
