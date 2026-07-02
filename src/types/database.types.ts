@@ -304,6 +304,22 @@ export type ProfileRow = {
   updated_at: string;
 };
 
+// Sprint 60: Portfolio Intelligence Engine
+export type PortfolioItemRow = {
+  id: Uuid;
+  opportunity_id: Uuid;
+  status: 'WATCHLIST' | 'RESEARCHING' | 'VALIDATED' | 'BUILDING' | 'INVESTED' | 'ARCHIVED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  health_score: number | null;
+  watch_score: number | null;
+  favorite: boolean;
+  archived: boolean;
+  notes: string | null;
+  last_reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // ---------------------------------------------------------------------------
 // Insert types (server-managed fields are optional)
 // ---------------------------------------------------------------------------
@@ -362,6 +378,23 @@ export type OpportunityInsert = {
   idea_generated?: boolean;
   created_at?: string;
 };
+
+export type PortfolioItemInsert = {
+  id?: Uuid;
+  opportunity_id: Uuid;
+  status?: 'WATCHLIST' | 'RESEARCHING' | 'VALIDATED' | 'BUILDING' | 'INVESTED' | 'ARCHIVED';
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  health_score?: number | null;
+  watch_score?: number | null;
+  favorite?: boolean;
+  archived?: boolean;
+  notes?: string | null;
+  last_reviewed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortfolioItemUpdate = Partial<Omit<PortfolioItemInsert, 'id' | 'opportunity_id'>>;
 
 export type StartupIdeaInsert = {
   id?: Uuid;
@@ -522,6 +555,20 @@ export interface Database {
             columns: ["id"];
             isOneToOne: true;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      portfolio_items: {
+        Row: PortfolioItemRow;
+        Insert: PortfolioItemInsert;
+        Update: PortfolioItemUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_items_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
             referencedColumns: ["id"];
           },
         ];

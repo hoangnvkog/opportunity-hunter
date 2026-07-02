@@ -44,6 +44,14 @@ export class AnalyticsService {
   private systemLogsRepo: SystemLogsRepository;
   private alertsRepo: AlertsRepository;
 
+  // Simple event tracking (fire-and-forget)
+  async track(eventType: string, eventData: Record<string, unknown>): Promise<void> {
+    // In production, this would write to an analytics table or external service
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[analytics:track]', eventType, eventData);
+    }
+  }
+
   constructor(
     profilesRepo: ProfilesRepository,
     subscriptionsRepo: SubscriptionsRepository,

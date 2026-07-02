@@ -20,7 +20,7 @@ const portfolioRepo = new PortfolioRepository();
 async function trackAnalytics(payload: { event_type: string; event_data?: Record<string, unknown> }): Promise<void> {
   try {
     const { AnalyticsService } = await import('@/services/admin/analytics.service');
-    const svc = new AnalyticsService();
+    const svc = await AnalyticsService.create();
     await svc.track(payload.event_type, payload.event_data ?? {});
   } catch {
     // Analytics is best-effort

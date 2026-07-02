@@ -2,6 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { PortfolioItemRow } from '@/types/portfolio';
+import type { Database } from '@/types/database.types';
+
+
+// Type for portfolio item with joined opportunity
+// Uses the actual schema row types to avoid manual interfaces
+interface PortfolioItemWithOpportunity extends PortfolioItemRow {
+  opportunities: Database['public']['Tables']['opportunities']['Row'];
+}
 
 // ==========================================
 // ALERT TYPES
@@ -25,7 +33,6 @@ export async function checkHealthDrops(): Promise<PortfolioAlert[]> {
   const supabase = await createClient();
   const alerts: PortfolioAlert[] = [];
 
-  // Get portfolio items with health history (simplified - would need history table in production)
   const { data: items } = await supabase
     .from('portfolio_items')
     .select(`
@@ -33,11 +40,11 @@ export async function checkHealthDrops(): Promise<PortfolioAlert[]> {
       opportunities!inner(id, title)
     `)
     .eq('archived', false)
-    .not('health_score', 'is', null);
+    .not('health_score', 'is', null)
+    .returns<PortfolioItemWithOpportunity[]>();
 
-  // For Sprint 60, we'll alert on low health (<50)
-  items?.forEach((item: Record<string, unknown>) => {
-    if (item.health_score < 50) {
+  items?.forEach((item: PortfolioItemWithOpportunity) => {
+    if (item.health_score !== null && item.health_score < 50) {
       alerts.push({
         type: 'health_drop',
         portfolio_id: item.id,
@@ -61,7 +68,6 @@ export async function checkHealthRises(): Promise<PortfolioAlert[]> {
   const supabase = await createClient();
   const alerts: PortfolioAlert[] = [];
 
-  // Get portfolio items with excellent health (>90)
   const { data: items } = await supabase
     .from('portfolio_items')
     .select(`
@@ -69,15 +75,16 @@ export async function checkHealthRises(): Promise<PortfolioAlert[]> {
       opportunities!inner(id, title)
     `)
     .eq('archived', false)
-    .gte('health_score', 90);
+    .gte('health_score', 90)
+    .returns<PortfolioItemWithOpportunity[]>();
 
-  items?.forEach((item: Record<string, unknown>) => {
+  items?.forEach((item: PortfolioItemWithOpportunity) => {
     alerts.push({
       type: 'health_rise',
       portfolio_id: item.id,
       opportunity_id: item.opportunity_id,
       opportunity_title: item.opportunities.title,
-      message: `Health score reached ${item.health_score.toFixed(1)} (excellent!)`,
+      message: `Health score reached ${item.health_score!.toFixed(1)} (excellent!)`,
       severity: 'low',
       metadata: { health_score: item.health_score },
     });
@@ -94,7 +101,6 @@ export async function checkCriticalOpportunities(): Promise<PortfolioAlert[]> {
   const supabase = await createClient();
   const alerts: PortfolioAlert[] = [];
 
-  // Get critical priority items
   const { data: items } = await supabase
     .from('portfolio_items')
     .select(`
@@ -102,9 +108,10 @@ export async function checkCriticalOpportunities(): Promise<PortfolioAlert[]> {
       opportunities!inner(id, title)
     `)
     .eq('archived', false)
-    .eq('priority', 'CRITICAL');
+    .eq('priority', 'CRITICAL')
+    .returns<PortfolioItemWithOpportunity[]>();
 
-  items?.forEach((item: Record<string, unknown>) => {
+  items?.forEach((item: PortfolioItemWithOpportunity) => {
     alerts.push({
       type: 'critical_opportunity',
       portfolio_id: item.id,
@@ -130,7 +137,6 @@ export async function checkStaleReviews(): Promise<PortfolioAlert[]> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Get items not reviewed in 30+ days
   const { data: items } = await supabase
     .from('portfolio_items')
     .select(`
@@ -138,9 +144,10 @@ export async function checkStaleReviews(): Promise<PortfolioAlert[]> {
       opportunities!inner(id, title)
     `)
     .eq('archived', false)
-    .or(`last_reviewed_at.is.null,last_reviewed_at.lt.${thirtyDaysAgo.toISOString()}`);
+    .or(`last_reviewed_at.is.null,last_reviewed_at.lt.${thirtyDaysAgo.toISOString()}`)
+    .returns<PortfolioItemWithOpportunity[]>();
 
-  items?.forEach((item: Record<string, unknown>) => {
+  items?.forEach((item: PortfolioItemWithOpportunity) => {
     const daysSinceReview = item.last_reviewed_at
       ? Math.floor((Date.now() - new Date(item.last_reviewed_at).getTime()) / (1000 * 60 * 60 * 24))
       : null;
@@ -179,19 +186,16 @@ export async function getAllPortfolioAlerts(): Promise<PortfolioAlert[]> {
 // ==========================================
 // CREATE ALERT NOTIFICATION
 // ==========================================
+// Note: alerts table only has (id, user_id, watchlist_id, opportunity_id, is_read, created_at)
+// We insert minimal fields; extra metadata would need a schema migration
 
-export async function createAlertNotification(alert: PortfolioAlert): Promise<void> {
+export async function createAlertNotification(alert: PortfolioAlert, watchlistId: string): Promise<void> {
   const supabase = await createClient();
 
   await supabase.from('alerts').insert({
-    type: alert.type,
-    title: alert.message,
-    message: alert.message,
-    severity: alert.severity,
-    metadata: {
-      portfolio_id: alert.portfolio_id,
-      opportunity_id: alert.opportunity_id,
-      ...alert.metadata,
-    },
+    user_id: '', // Will be set by RLS/auth context
+    watchlist_id: watchlistId,
+    opportunity_id: alert.opportunity_id,
+    is_read: false,
   });
 }

@@ -17,6 +17,7 @@ import {
 } from '@/lib/services/portfolio.service';
 import type {
   PortfolioItemInput,
+  PortfolioItemRow,
   PortfolioStatus,
   Priority,
   HealthCalculationInput,

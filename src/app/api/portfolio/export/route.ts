@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { listPortfolioCards } from '@/lib/services/portfolio.service';
-import type { ExportFormat } from '@/types/portfolio';
+import type { ExportFormat, PortfolioCard } from '@/types/portfolio';
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function generateCSV(items: Record<string, unknown>[]): string {
+function generateCSV(items: PortfolioCard[]): string {
   const headers = [
     'ID',
     'Opportunity',
@@ -85,9 +85,9 @@ function generateCSV(items: Record<string, unknown>[]): string {
     item.status,
     item.priority,
     item.health_score !== null ? item.health_score.toFixed(2) : '',
-    item.investment_score !== null ? item.investment_score.toFixed(2) : '',
-    item.backtesting_accuracy !== null ? item.backtesting_accuracy.toFixed(2) : '',
-    item.trend_score !== null ? item.trend_score.toFixed(2) : '',
+    item.investment_score !== null && item.investment_score !== undefined ? item.investment_score.toFixed(2) : '',
+    item.backtesting_accuracy !== null && item.backtesting_accuracy !== undefined ? item.backtesting_accuracy.toFixed(2) : '',
+    item.trend_score !== null && item.trend_score !== undefined ? item.trend_score.toFixed(2) : '',
     item.favorite ? 'Yes' : 'No',
     item.last_reviewed_at || '',
     item.created_at,

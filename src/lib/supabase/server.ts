@@ -1,13 +1,14 @@
 // Supabase server client re-export for Sprint 60
 // Returns a stub client in tests, real client in production
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppSupabaseClient } from '@/lib/supabase/client';
 
-// Type-agnostic client (works for real SupabaseClient or stub)
-type AnyClient = SupabaseClient | { [key: string]: unknown };
+// Type the client against our Database schema
+type TypedSupabaseClient = AppSupabaseClient;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function makeBuilder(data: unknown, error: unknown | null) {
-  const builder: AnyClient = {
+  const builder: any = {
     select: () => builder,
     eq: () => builder,
     order: () => builder,
@@ -28,18 +29,19 @@ function makeBuilder(data: unknown, error: unknown | null) {
   return builder;
 }
 
-const stubClient: AnyClient = {
+const stubClient: any = {
   from: () => makeBuilder(null, new Error('stub client - test environment')),
   rpc: () => Promise.resolve({ data: null, error: null }),
   auth: {
     getUser: () => Promise.resolve({ data: { user: null }, error: null }),
   },
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
-export async function createClient(): Promise<AnyClient> {
+export async function createClient(): Promise<TypedSupabaseClient> {
   // In test environment, return stub to avoid server-only imports
   if (typeof process !== 'undefined' && process.env?.VITEST) {
-    return stubClient;
+    return stubClient as TypedSupabaseClient;
   }
   // In production, use real server client (dynamic import avoids bundling)
   const mod = await import('./client');
