@@ -79,6 +79,12 @@ import type {
   BacktestRow,
   BacktestInsert,
 } from "./backtesting";
+import type {
+  InvestmentCommitteeRow,
+  InvestmentCommitteeInsert,
+  CommitteeVoteRow,
+  CommitteeVoteInsert,
+} from "./investment-committee";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -868,6 +874,34 @@ export interface Database {
             columns: ["opportunity_id"];
             isOneToOne: false;
             referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      investment_committees: {
+        Row: InvestmentCommitteeRow;
+        Insert: InvestmentCommitteeInsert;
+        Update: Partial<InvestmentCommitteeInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "investment_committees_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      committee_votes: {
+        Row: CommitteeVoteRow;
+        Insert: CommitteeVoteInsert;
+        Update: Partial<CommitteeVoteInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "committee_votes_committee_id_fkey";
+            columns: ["committee_id"];
+            isOneToOne: false;
+            referencedRelation: "investment_committees";
             referencedColumns: ["id"];
           },
         ];

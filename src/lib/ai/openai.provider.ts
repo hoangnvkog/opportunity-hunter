@@ -23,6 +23,9 @@ import {
   MarketIntelligenceSchema,
   StartupScoreSchema,
   InvestmentMemoSchema,
+  VentureReportSchema,
+  BacktestEvaluationSchema,
+  CommitteeVoteResponseSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -41,7 +44,8 @@ import { logAiUsageFromResponse } from "./ai-usage";
 import type { VentureReportInput } from "@/types/venture-report";
 import type { InvestmentMemoInput } from "@/types/investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
-import { VentureReportSchema, BacktestEvaluationSchema } from "./schemas";
+import type { CommitteeVoteInput } from "@/types/committee";
+import type { CommitteeAgentVote } from "@/types/investment-committee";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -1291,6 +1295,65 @@ Rules:
         prediction_delta: input.predicted_score - input.current_score,
         accuracy: 0,
         notes: 'Evaluation failed — model could not assess prediction accuracy.',
+      }));
+    }
+  }
+
+  async generateCommitteeVote(input: CommitteeVoteInput): Promise<CommitteeAgentVote[]> {
+    try {
+      const prompt = `You are simulating an AI Investment Committee with five independent VC partners.
+Each partner evaluates the same opportunity from their unique perspective.
+
+Agents:
+${input.agents.map(a => `- ${a.role} (focus: ${a.focus.join(', ')}, weight: ${a.weight})`).join('\n')}
+
+Opportunity Context:
+${JSON.stringify(input.context, null, 2)}
+
+Return ONLY a JSON array with five votes:
+[
+  {
+    "agent_name": "MARKET_ANALYST",
+    "agent_role": "Market Analyst",
+    "vote": "STRONG_BUY" | "BUY" | "NEUTRAL" | "PASS" | "REJECT",
+    "score": 0-100,
+    "confidence": 0-100,
+    "reasoning": "...",
+    "weight": 1.0
+  },
+  ...
+]
+
+Each agent must vote independently. No agent sees another's vote.`;
+
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: 'You are an AI Investment Committee simulator. Return valid JSON only.' },
+          { role: 'user', content: prompt },
+        ],
+      });
+
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? '';
+      const parsed = JSON.parse(content);
+      const votes = Array.isArray(parsed) ? parsed : (parsed.votes ?? []);
+
+      const validated = CommitteeVoteResponseSchema.parse(votes);
+      return validated;
+    } catch (error) {
+      console.error('generateCommitteeVote failed:', error);
+      // Fallback: return neutral votes for all agents
+      return input.agents.map(agent => ({
+        agent_name: agent.name as CommitteeAgentVote['agent_name'],
+        agent_role: agent.role,
+        vote: 'NEUTRAL' as const,
+        score: 50,
+        confidence: 0,
+        reasoning: 'Committee vote generation failed.',
+        weight: agent.weight,
       }));
     }
   }

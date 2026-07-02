@@ -18,6 +18,8 @@ import type { StartupScoreInput } from "./startup-score";
 import type { VentureReportInput } from "./venture-report";
 import type { InvestmentMemoInput } from "./investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "./backtesting";
+import type { CommitteeVoteInput } from "./committee";
+import type { CommitteeAgentVote } from "./investment-committee";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -67,5 +69,11 @@ export interface AIProvider {
    * AI returns actual_score, accuracy, and notes — no UUIDs, no foreign keys.
    */
   evaluateBacktest(inputs: BacktestInput[]): Promise<BacktestEvaluation[]>;
+  /**
+   * AI Investment Committee vote (Sprint 61).
+   * Returns votes from ALL five agents in a single call — no UUIDs, no FKs.
+   * Five independent "VC partners" evaluate the same opportunity.
+   */
+  generateCommitteeVote(input: CommitteeVoteInput): Promise<CommitteeAgentVote[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

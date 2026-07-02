@@ -461,4 +461,76 @@ describe("MockProvider", () => {
       expect(memo.id).toBeUndefined();
     });
   });
+
+  describe("generateCommitteeVote", () => {
+    it("returns 5 votes for 5 agents", async () => {
+      const context = {
+        opportunity: { title: "AI X", description: "...", score: 80, cluster_size: 10, severity: 0.7, buying_intent: 0.6 },
+      };
+      const agents = [
+        { name: "MARKET_ANALYST", role: "Market Analyst", focus: ["Market"], weight: 1.0 },
+        { name: "TECHNICAL_PARTNER", role: "Technical Partner", focus: ["Tech"], weight: 1.0 },
+        { name: "FOUNDER_PARTNER", role: "Founder Partner", focus: ["Founder"], weight: 1.0 },
+        { name: "INVESTMENT_PARTNER", role: "Investment Partner", focus: ["ROI"], weight: 1.0 },
+        { name: "RISK_PARTNER", role: "Risk Partner", focus: ["Risk"], weight: 1.2 },
+      ];
+      const result = await provider.generateCommitteeVote({ context, agents });
+      expect(result).toHaveLength(5);
+      expect(result[0].agent_name).toBe("MARKET_ANALYST");
+      expect(result[4].agent_name).toBe("RISK_PARTNER");
+    });
+
+    it("each vote has required fields", async () => {
+      const context = {
+        opportunity: { title: "AI X", description: "...", score: 80, cluster_size: 10, severity: 0.7, buying_intent: 0.6 },
+      };
+      const agents = [
+        { name: "MARKET_ANALYST", role: "Market Analyst", focus: ["Market"], weight: 1.0 },
+        { name: "TECHNICAL_PARTNER", role: "Technical Partner", focus: ["Tech"], weight: 1.0 },
+        { name: "FOUNDER_PARTNER", role: "Founder Partner", focus: ["Founder"], weight: 1.0 },
+        { name: "INVESTMENT_PARTNER", role: "Investment Partner", focus: ["ROI"], weight: 1.0 },
+        { name: "RISK_PARTNER", role: "Risk Partner", focus: ["Risk"], weight: 1.2 },
+      ];
+      const result = await provider.generateCommitteeVote({ context, agents });
+      for (const vote of result) {
+        expect(vote).toHaveProperty("agent_name");
+        expect(vote).toHaveProperty("agent_role");
+        expect(vote).toHaveProperty("vote");
+        expect(vote).toHaveProperty("score");
+        expect(vote).toHaveProperty("confidence");
+        expect(vote).toHaveProperty("reasoning");
+        expect(vote).toHaveProperty("weight");
+      }
+    });
+
+    it("votes are deterministic (same input = same output)", async () => {
+      const context = {
+        opportunity: { title: "AI X", description: "...", score: 80, cluster_size: 10, severity: 0.7, buying_intent: 0.6 },
+      };
+      const agents = [
+        { name: "MARKET_ANALYST", role: "Market Analyst", focus: ["Market"], weight: 1.0 },
+        { name: "TECHNICAL_PARTNER", role: "Technical Partner", focus: ["Tech"], weight: 1.0 },
+        { name: "FOUNDER_PARTNER", role: "Founder Partner", focus: ["Founder"], weight: 1.0 },
+        { name: "INVESTMENT_PARTNER", role: "Investment Partner", focus: ["ROI"], weight: 1.0 },
+        { name: "RISK_PARTNER", role: "Risk Partner", focus: ["Risk"], weight: 1.2 },
+      ];
+      const a = await provider.generateCommitteeVote({ context, agents });
+      const b = await provider.generateCommitteeVote({ context, agents });
+      expect(a).toEqual(b);
+    });
+
+    it("does NOT include UUIDs or FKs in vote data", async () => {
+      const context = {
+        opportunity: { title: "AI X", description: "...", score: 80, cluster_size: 10, severity: 0.7, buying_intent: 0.6 },
+      };
+      const agents = [
+        { name: "MARKET_ANALYST", role: "Market Analyst", focus: ["Market"], weight: 1.0 },
+      ];
+      const result = await provider.generateCommitteeVote({ context, agents });
+      const vote = result[0] as unknown as Record<string, unknown>;
+      expect(vote.committee_id).toBeUndefined();
+      expect(vote.opportunity_id).toBeUndefined();
+      expect(vote.id).toBeUndefined();
+    });
+  });
 });

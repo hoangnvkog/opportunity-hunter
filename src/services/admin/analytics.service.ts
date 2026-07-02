@@ -11,6 +11,7 @@ import { RawPostsRepository } from "@/lib/db/repositories/raw-posts.repository";
 import { PainPointsRepository } from "@/lib/db/repositories/pain-points.repository";
 import { SystemLogsRepository } from "@/lib/db/repositories/system-logs.repository";
 import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
+import { calculateCommitteeStats } from "@/lib/services/committee.service";
 import type {
   UserMetrics,
   UserActivityTrend,
@@ -19,6 +20,7 @@ import type {
   FeatureUsage,
   SystemHealth,
   AdminDashboardSummary,
+  CommitteeMetrics,
 } from "@/types/analytics";
 
 function daysAgo(n: number): string {
@@ -181,6 +183,10 @@ export class AnalyticsService {
     };
   }
 
+  async getCommitteeMetrics(): Promise<CommitteeMetrics> {
+    return calculateCommitteeStats();
+  }
+
   async getAiCostMetrics(): Promise<AiCostMetrics> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -246,6 +252,7 @@ export class AnalyticsService {
       aiCost,
       opps,
       health,
+      committeeStats,
     ] = await Promise.all([
       this.profilesRepo.findAll(),
       this.subscriptionsRepo.findAll(),
@@ -253,13 +260,14 @@ export class AnalyticsService {
       this.getAiCostMetrics(),
       this.oppsRepo.count(),
       this.getSystemHealth(),
+      calculateCommitteeStats(),
     ]);
 
     const active = subscriptions.filter(
-      (s) => s.status === "active" || s.status === "trialing"
+      (s: { status: string }) => s.status === "active" || s.status === "trialing"
     );
     const PLAN_PRICES: Record<string, number> = { free: 0, pro: 29, team: 99 };
-    const mrr = active.reduce((sum, s) => sum + (PLAN_PRICES[s.plan] ?? 0), 0);
+    const mrr = active.reduce((sum: number, s: { plan: string }) => sum + (PLAN_PRICES[s.plan] ?? 0), 0);
 
     return {
       totalUsers: profiles.length,
@@ -270,6 +278,7 @@ export class AnalyticsService {
       opportunitiesTotal: opps,
       activeAlerts: 0,
       systemHealth: health,
+      committeeMetrics: committeeStats,
     };
   }
 }

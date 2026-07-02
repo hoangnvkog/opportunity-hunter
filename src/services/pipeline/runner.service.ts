@@ -36,6 +36,7 @@ export interface PipelineRunResult {
   startupScores?: number;
   ventureReports?: number;
   investmentMemos?: number;
+  committeeDecisions?: number;
 }
 
 /**
@@ -210,6 +211,48 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       `(${investmentMemoResult.skipped} skipped, ${investmentMemoResult.generated} total generated)`,
     );
 
+    // Stage 15: Run AI Investment Committee (only for opportunities
+    // with an investment_memo). Five independent AI "VC partners" vote.
+    // Triggers "🎯 Committee Strong Buy" or "⚠️ Low Consensus" alerts.
+    const { generateCommitteesForOpportunities: generateCommittees } = await import("../../lib/services/committee.service");
+    // Fetch opportunities with investment memos
+    const supabase = await (await import("@/lib/supabase/server")).createClient();
+    const { data: memosData } = await supabase
+      .from("investment_memos")
+      .select(`
+        opportunity_id,
+        opportunities!inner(
+          id,
+          title,
+          score,
+          cluster_size,
+          severity,
+          buying_intent
+        )
+      `)
+      .limit(50);
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const committeeInputs = (memosData ?? []).map((m: any) => ({
+      id: m.opportunity_id,
+      context: {
+        opportunity: {
+          title: m.opportunities.title,
+          description: m.opportunities.title,
+          score: parseFloat(m.opportunities.score),
+          cluster_size: m.opportunities.cluster_size,
+          severity: parseFloat(m.opportunities.severity),
+          buying_intent: parseFloat(m.opportunities.buying_intent),
+        },
+      },
+    }));
+    
+    const committeeResult = await generateCommittees(committeeInputs);
+    console.log(
+      `Generated committee decisions: ${committeeResult.inserted} records ` +
+      `(${committeeResult.skipped} skipped, ${committeeResult.generated} total generated)`,
+    );
+
     return {
       sources: sourcesCount,
       rawPosts: insertedCount,
@@ -227,6 +270,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       startupScores: startupScoreResult.inserted,
       ventureReports: ventureReportResult.inserted,
       investmentMemos: investmentMemoResult.inserted,
+      committeeDecisions: committeeResult.inserted,
     };
   } catch (error) {
     // Determine which stage failed and provide meaningful error
@@ -258,6 +302,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       throw new Error(`Pipeline failed at stage 13 (venture report generation): ${message}`);
     } else if (message.includes("memo") || message.includes("investment_memo")) {
       throw new Error(`Pipeline failed at stage 14 (investment memo generation): ${message}`);
+    } else if (message.includes("committee") || message.includes("investment_committee")) {
+      throw new Error(`Pipeline failed at stage 15 (committee generation): ${message}`);
     } else {
       throw new Error(`Pipeline failed: ${message}`);
     }

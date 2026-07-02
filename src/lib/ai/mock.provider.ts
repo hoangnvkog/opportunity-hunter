@@ -22,6 +22,8 @@ import type { StartupScoreInput } from "@/types/startup-score";
 import type { VentureReportInput } from "@/types/venture-report";
 import type { InvestmentMemoInput } from "@/types/investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
+import type { CommitteeVoteInput } from "@/types/committee";
+import type { CommitteeAgentVote } from "@/types/investment-committee";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -381,6 +383,50 @@ export class MockProvider implements AIProvider {
         prediction_delta: Math.round(rawDelta * 100) / 100,
         accuracy: Math.round(accuracy * 100) / 100,
         notes,
+      };
+    });
+  }
+
+  async generateCommitteeVote(input: CommitteeVoteInput): Promise<CommitteeAgentVote[]> {
+    // Deterministic mock votes for testing.
+    // Each agent gets a slightly different score/confidence based on focus.
+    const baseScore = input.context.opportunity.score ?? 50;
+    const severity = input.context.opportunity.severity ?? 0.5;
+    const buyingIntent = input.context.opportunity.buying_intent ?? 0.5;
+    
+    return input.agents.map((agent, idx) => {
+      // Each agent biases differently:
+      // Market Analyst: +10 if score high
+      // Technical: -5 (conservative)
+      // Founder: +5 if buying_intent high
+      // Investment: neutral
+      // Risk: -10 (most conservative)
+      let agentScore = baseScore;
+      if (agent.name === "MARKET_ANALYST") agentScore += 10;
+      if (agent.name === "TECHNICAL_PARTNER") agentScore -= 5;
+      if (agent.name === "FOUNDER_PARTNER") agentScore += buyingIntent * 10;
+      if (agent.name === "RISK_PARTNER") agentScore -= 10;
+      
+      agentScore = Math.max(0, Math.min(100, agentScore));
+      const confidence = Math.round(70 + severity * 25); // 70-95
+      
+      let vote: CommitteeAgentVote['vote'] = "NEUTRAL";
+      if (agentScore >= 85) vote = "STRONG_BUY";
+      else if (agentScore >= 70) vote = "BUY";
+      else if (agentScore >= 50) vote = "NEUTRAL";
+      else if (agentScore >= 30) vote = "PASS";
+      else vote = "REJECT";
+      
+      const reasoning = `${agent.role} perspective: opportunity scores ${agentScore.toFixed(1)}/100 based on ${agent.focus.join(", ")}. ${vote === "STRONG_BUY" || vote === "BUY" ? "Strong signals warrant investment." : vote === "NEUTRAL" ? "Mixed signals, wait for more data." : "Risks outweigh potential."}`;
+      
+      return {
+        agent_name: agent.name as CommitteeAgentVote['agent_name'],
+        agent_role: agent.role,
+        vote,
+        score: Math.round(agentScore),
+        confidence,
+        reasoning,
+        weight: agent.weight,
       };
     });
   }

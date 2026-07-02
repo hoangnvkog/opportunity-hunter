@@ -80,6 +80,7 @@ export type AdminDashboardSummary = {
   opportunitiesTotal: number;
   activeAlerts: number;
   systemHealth: SystemHealth;
+  committeeMetrics: CommitteeMetrics;
 };
 // Sprint 60: Portfolio Intelligence - Analytics Event Types
 
@@ -105,4 +106,40 @@ export type PortfolioEventData = {
   has_notes?: boolean;
   status_changed?: boolean;
   priority_changed?: boolean;
+};
+
+// Sprint 61: AI Investment Committee - Analytics Event Types
+
+export type CommitteeEventType =
+  | 'committee_run'
+  | 'committee_vote'
+  | 'committee_approved'
+  | 'committee_rejected'
+  | 'committee_low_consensus';
+
+export type CommitteeEventData = {
+  committee_id?: string;
+  opportunity_id?: string;
+  final_decision?: string;
+  committee_score?: number;
+  consensus?: number;
+  confidence?: number;
+  votes_count?: number;
+  agent_name?: string;
+  agent_vote?: string;
+  agent_score?: number;
+  agent_confidence?: number;
+  low_consensus?: boolean;
+};
+
+export type CommitteeMetrics = {
+  total: number;
+  averageConsensus: number;
+  averageConfidence: number;
+  approvalRate: number;
+  strongBuyCount: number;
+  buyCount: number;
+  neutralCount: number;
+  passCount: number;
+  rejectCount: number;
 };

@@ -225,3 +225,21 @@ export const BacktestEvaluationSchema = z.object({
 });
 
 export type BacktestEvaluationResponseItem = z.infer<typeof BacktestEvaluationSchema>;
+
+/**
+ * Schema for AI Investment Committee vote (Sprint 61).
+ * AI returns votes from ALL five agents in a single call — no UUIDs, no FKs.
+ */
+export const CommitteeAgentVoteSchema = z.object({
+  agent_name: z.enum(["MARKET_ANALYST", "TECHNICAL_PARTNER", "FOUNDER_PARTNER", "INVESTMENT_PARTNER", "RISK_PARTNER"]),
+  agent_role: z.string(),
+  vote: z.enum(["STRONG_BUY", "BUY", "NEUTRAL", "PASS", "REJECT"]),
+  score: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
+  reasoning: z.string(),
+  weight: z.number().min(0).max(5),
+});
+
+export type CommitteeAgentVoteResponseItem = z.infer<typeof CommitteeAgentVoteSchema>;
+
+export const CommitteeVoteResponseSchema = z.array(CommitteeAgentVoteSchema);
