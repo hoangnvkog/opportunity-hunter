@@ -1484,4 +1484,45 @@ ${inputJson}` },
       }));
     }
   }
+
+  async generateFinancialModel(
+    input: { ventureProjectName: string; ventureProjectTagline: string; currency: string; projectionYears: number },
+  ): Promise<import("@/types/financial").FinancialProjectInput> {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a financial modeling expert for early-stage startups. Generate a comprehensive financial model. Return ONLY valid JSON matching this exact structure:\n${JSON.stringify({
+              name: "string",
+              tagline: "string",
+              currency: "string",
+              projectionYears: 5,
+              assumptions: { averagePrice: 99, conversionRate: 0.03, monthlyGrowthRate: 0.08, churnRate: 0.05, grossMargin: 0.75, cac: 120, supportCost: 5000, hostingCost: 2000, payroll: 80000, marketingBudget: 10000, salesCost: 15000, infrastructure: 3000 },
+              projections: [{ year: 1, revenue: 50000, cogs: 12500, grossProfit: 37500, operatingExpenses: 65000, ebitda: -27500, netProfit: -23375, cashBalance: 76625 }],
+              unitEconomics: { cac: 120, ltv: 1188, ltvCacRatio: 9.9, paybackMonths: 2, grossMargin: 75, arpu: 99, monthlyChurn: 0.05 },
+              breakEven: { monthlyFixedCost: 115000, grossMargin: 75, breakEvenRevenue: 153333, breakEvenCustomers: 1549, estimatedBreakEvenMonth: 14 },
+              investmentRecommendation: { stage: "Seed", recommended: true, reasoning: "..." },
+              risks: [{ category: "Revenue Risk", level: "Low", score: 25, reasoning: "..." }],
+              summary: "string",
+              runwayMonths: 18,
+              breakEvenMonth: 14,
+              projectedARR: 50000,
+            }, null, 2)}`,
+          },
+          {
+            role: "user",
+            content: `Generate a ${input.projectionYears}-year financial model for "${input.ventureProjectName}" (${input.ventureProjectTagline}). Currency: ${input.currency}.\n\nConsider typical SaaS metrics: subscription pricing, monthly recurring revenue, customer acquisition cost, lifetime value, gross margin ~75%, operating expenses growing with revenue. Start with realistic early-stage numbers and show growth trajectory.`,
+          },
+        ],
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) throw new Error("No content in response");
+
+      const parsed = JSON.parse(content);
+      return parsed as import("@/types/financial").FinancialProjectInput;
+  }
 }

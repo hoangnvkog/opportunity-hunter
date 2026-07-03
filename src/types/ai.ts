@@ -21,6 +21,7 @@ import type { BacktestInput, BacktestEvaluation } from "./backtesting";
 import type { CommitteeVoteInput } from "./committee";
 import type { CommitteeAgentVote } from "./investment-committee";
 import type { VentureProjectInput } from "./venture-studio";
+import type { FinancialProjectInput } from "./financial";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -82,5 +83,11 @@ export interface AIProvider {
    * No UUIDs, no foreign keys — pure business content.
    */
   generateVentureProject(opportunities: OpportunityInput[]): Promise<VentureProjectInput[]>;
+  /**
+   * Generate complete financial projection model (Sprint 64).
+   * AI returns all financial content (assumptions, projections, unit economics, break-even) in a single call.
+   * No UUIDs, no foreign keys — pure business content.
+   */
+  generateFinancialModel(input: { ventureProjectName: string; ventureProjectTagline: string; currency: string; projectionYears: number }): Promise<FinancialProjectInput>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

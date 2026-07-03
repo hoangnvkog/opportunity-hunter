@@ -103,6 +103,16 @@ import type {
   VentureMvpRow,
   VentureMvpInsert,
 } from "./venture-studio";
+import type {
+  FinancialModelRow,
+  FinancialModelInsert,
+  FinancialProjectionRow,
+  FinancialProjectionInsert,
+  UnitEconomicsRow,
+  UnitEconomicsInsert,
+  BreakEvenRow,
+  BreakEvenInsert,
+} from "./financial";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -1009,6 +1019,62 @@ export interface Database {
             columns: ["venture_project_id"];
             isOneToOne: false;
             referencedRelation: "venture_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      financial_models: {
+        Row: FinancialModelRow;
+        Insert: FinancialModelInsert;
+        Update: Partial<FinancialModelInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "financial_models_venture_project_id_fkey";
+            columns: ["venture_project_id"];
+            isOneToOne: false;
+            referencedRelation: "venture_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      financial_projections: {
+        Row: FinancialProjectionRow;
+        Insert: FinancialProjectionInsert;
+        Update: Partial<FinancialProjectionInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "financial_projections_financial_model_id_fkey";
+            columns: ["financial_model_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_models";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      unit_economics: {
+        Row: UnitEconomicsRow;
+        Insert: UnitEconomicsInsert;
+        Update: Partial<UnitEconomicsInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "unit_economics_financial_model_id_fkey";
+            columns: ["financial_model_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_models";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      break_even_analysis: {
+        Row: BreakEvenRow;
+        Insert: BreakEvenInsert;
+        Update: Partial<BreakEvenInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "break_even_analysis_financial_model_id_fkey";
+            columns: ["financial_model_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_models";
             referencedColumns: ["id"];
           },
         ];

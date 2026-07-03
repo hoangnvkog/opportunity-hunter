@@ -474,4 +474,89 @@ export class MockProvider implements AIProvider {
       };
     });
   }
+
+  async generateFinancialModel(
+    input: { ventureProjectName: string; ventureProjectTagline: string; currency: string; projectionYears: number },
+  ): Promise<import("@/types/financial").FinancialProjectInput> {
+      const baseRevenue = 50000;
+      const growthRate = 0.8;
+      const grossMargin = 0.75;
+      const projections: import("@/types/financial").FinancialProjectionInput[] = [];
+      let cash = 100000;
+
+      for (let year = 1; year <= input.projectionYears; year++) {
+        const revenue = baseRevenue * Math.pow(1 + growthRate, year - 1);
+        const cogs = revenue * (1 - grossMargin);
+        const grossProfit = revenue - cogs;
+        const opex = revenue * (0.3 + 0.05 * year);
+        const ebitda = grossProfit - opex;
+        const netProfit = ebitda * 0.85;
+        cash += netProfit;
+        projections.push({
+          year,
+          revenue: Math.round(revenue),
+          cogs: Math.round(cogs),
+          grossProfit: Math.round(grossProfit),
+          operatingExpenses: Math.round(opex),
+          ebitda: Math.round(ebitda),
+          netProfit: Math.round(netProfit),
+          cashBalance: Math.round(cash),
+        });
+      }
+
+      return {
+        name: input.ventureProjectName,
+        tagline: input.ventureProjectTagline,
+        currency: input.currency,
+        projectionYears: input.projectionYears,
+        assumptions: {
+          averagePrice: 99,
+          conversionRate: 0.03,
+          monthlyGrowthRate: 0.08,
+          churnRate: 0.05,
+          grossMargin: 0.75,
+          cac: 120,
+          supportCost: 5000,
+          hostingCost: 2000,
+          payroll: 80000,
+          marketingBudget: 10000,
+          salesCost: 15000,
+          infrastructure: 3000,
+        },
+        projections,
+        unitEconomics: {
+          cac: 120,
+          ltv: 1188,
+          ltvCacRatio: 9.9,
+          paybackMonths: 2,
+          grossMargin: 75,
+          arpu: 99,
+          monthlyChurn: 0.05,
+        },
+        breakEven: {
+          monthlyFixedCost: 115000,
+          grossMargin: 75,
+          breakEvenRevenue: 153333,
+          breakEvenCustomers: 1549,
+          estimatedBreakEvenMonth: 14,
+        },
+        investmentRecommendation: {
+          stage: "Seed",
+          recommended: true,
+          reasoning: "Strong unit economics (LTV/CAC 9.9x) and reasonable break-even timeline. Seed capital recommended to accelerate growth.",
+        },
+        risks: [
+          { category: "Revenue Risk", level: "Low", score: 25, reasoning: "Strong projected growth." },
+          { category: "Execution Risk", level: "Medium", score: 50, reasoning: "14-month break-even requires consistent execution." },
+          { category: "Market Risk", level: "Low", score: 25, reasoning: "75% gross margin indicates pricing power." },
+          { category: "Capital Risk", level: "Low", score: 25, reasoning: "Efficient customer acquisition at 9.9x LTV/CAC." },
+          { category: "Competition Risk", level: "Medium", score: 50, reasoning: "Market competition assumed moderate." },
+          { category: "Technical Risk", level: "Low", score: 25, reasoning: "Technical execution aligned with financial timeline." },
+        ],
+        summary: `${input.ventureProjectName} projects $${projections[0]?.revenue.toLocaleString() ?? "0"} Year 1 revenue growing to $${projections[projections.length - 1]?.revenue.toLocaleString() ?? "0"} in Year ${input.projectionYears}. LTV/CAC of 9.9x with ${grossMargin * 100}% gross margin. Break-even in month 14.`,
+        runwayMonths: 18,
+        breakEvenMonth: 14,
+        projectedARR: projections[0]?.revenue ?? 0,
+      };
+  }
 }

@@ -308,3 +308,81 @@ export const VentureProjectSchema = z.object({
 });
 
 export type VentureProjectResponseItem = z.infer<typeof VentureProjectSchema>;
+
+// ── Sprint 64: Financial Projection Engine ─────────────────────────────────────
+
+export const FinancialAssumptionsSchema = z.object({
+  averagePrice: z.number(),
+  conversionRate: z.number(),
+  monthlyGrowthRate: z.number(),
+  churnRate: z.number(),
+  grossMargin: z.number(),
+  cac: z.number(),
+  supportCost: z.number(),
+  hostingCost: z.number(),
+  payroll: z.number(),
+  marketingBudget: z.number(),
+  salesCost: z.number(),
+  infrastructure: z.number(),
+});
+
+export const FinancialProjectionItemSchema = z.object({
+  year: z.number(),
+  revenue: z.number(),
+  cogs: z.number(),
+  grossProfit: z.number(),
+  operatingExpenses: z.number(),
+  ebitda: z.number(),
+  netProfit: z.number(),
+  cashBalance: z.number(),
+});
+
+export const UnitEconomicsItemSchema = z.object({
+  cac: z.number(),
+  ltv: z.number(),
+  ltvCacRatio: z.number(),
+  paybackMonths: z.number(),
+  grossMargin: z.number(),
+  arpu: z.number(),
+  monthlyChurn: z.number(),
+});
+
+export const BreakEvenItemSchema = z.object({
+  monthlyFixedCost: z.number(),
+  grossMargin: z.number(),
+  breakEvenRevenue: z.number(),
+  breakEvenCustomers: z.number(),
+  estimatedBreakEvenMonth: z.number(),
+});
+
+export const InvestmentRecommendationSchema = z.object({
+  stage: z.string(),
+  recommended: z.boolean(),
+  reasoning: z.string(),
+});
+
+export const RiskAssessmentSchema = z.object({
+  category: z.string(),
+  level: z.string(),
+  score: z.number(),
+  reasoning: z.string(),
+});
+
+export const FinancialModelSchema = z.object({
+  name: z.string(),
+  tagline: z.string(),
+  currency: z.string(),
+  projectionYears: z.number(),
+  assumptions: FinancialAssumptionsSchema,
+  projections: z.array(FinancialProjectionItemSchema),
+  unitEconomics: UnitEconomicsItemSchema,
+  breakEven: BreakEvenItemSchema,
+  investmentRecommendation: InvestmentRecommendationSchema,
+  risks: z.array(RiskAssessmentSchema),
+  summary: z.string(),
+  runwayMonths: z.number(),
+  breakEvenMonth: z.number(),
+  projectedARR: z.number(),
+});
+
+export type FinancialModelResponseItem = z.infer<typeof FinancialModelSchema>;

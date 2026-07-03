@@ -182,4 +182,13 @@ export class GeminiProvider implements AIProvider {
       "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
     );
   }
+
+  async generateFinancialModel(
+    _input: { ventureProjectName: string; ventureProjectTagline: string; currency: string; projectionYears: number },
+  ): Promise<import("@/types/financial").FinancialProjectInput> {
+    throw new Error(
+      "GeminiProvider.generateFinancialModel() not implemented yet. " +
+      "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
+    );
+  }
 }
