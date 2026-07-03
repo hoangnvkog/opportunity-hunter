@@ -85,6 +85,14 @@ import type {
   CommitteeVoteRow,
   CommitteeVoteInsert,
 } from "./investment-committee";
+import type {
+  ResearchJobRow,
+  ResearchJobInsert,
+  ResearchSourceRow,
+  ResearchSourceInsert,
+  ResearchLogRow,
+  ResearchLogInsert,
+} from "./research-job";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -902,6 +910,32 @@ export interface Database {
             columns: ["committee_id"];
             isOneToOne: false;
             referencedRelation: "investment_committees";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      research_jobs: {
+        Row: ResearchJobRow;
+        Insert: ResearchJobInsert;
+        Update: Partial<ResearchJobInsert>;
+        Relationships: [];
+      };
+      research_sources: {
+        Row: ResearchSourceRow;
+        Insert: ResearchSourceInsert;
+        Update: Partial<ResearchSourceInsert>;
+        Relationships: [];
+      };
+      research_logs: {
+        Row: ResearchLogRow;
+        Insert: ResearchLogInsert;
+        Update: Partial<ResearchLogInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "research_logs_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "research_jobs";
             referencedColumns: ["id"];
           },
         ];
