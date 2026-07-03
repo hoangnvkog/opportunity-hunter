@@ -1,6 +1,6 @@
 import type { EmbeddingRow, EmbeddingInsert, EmbeddingSearchResult } from "@/types/embeddings";
 import type { Uuid } from "@/types/database.types";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { AnySupabaseClient } from "./_base";
 
 export class EmbeddingsRepository {

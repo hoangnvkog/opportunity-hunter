@@ -1,49 +1,59 @@
-// Supabase server client re-export for Sprint 60
-// Returns a stub client in tests, real client in production
+/**
+ * Supabase server client (App Router with cookie auth).
+ *
+ * This module imports from "next/headers" and must NOT be imported
+ * by Client Components. Use ./client.ts for browser code.
+ */
 
-import type { AppSupabaseClient } from '@/lib/supabase/client';
+import type { CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
-// Type the client against our Database schema
-type TypedSupabaseClient = AppSupabaseClient;
+import type { Database } from "@/types";
+import { getPublicEnv } from "@/lib/env";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function makeBuilder(data: unknown, error: unknown | null) {
-  const builder: any = {
-    select: () => builder,
-    eq: () => builder,
-    order: () => builder,
-    limit: () => builder,
-    range: () => builder,
-    gte: () => builder,
-    lte: () => builder,
-    in: () => builder,
-    or: () => builder,
-    ilike: () => builder,
-    not: () => builder,
-    single: () => Promise.resolve({ data, error }),
-    maybeSingle: () => Promise.resolve({ data, error }),
-    insert: () => Promise.resolve({ data, error }),
-    update: () => Promise.resolve({ data, error }),
-    delete: () => Promise.resolve({ data, error }),
-  };
-  return builder;
+/**
+ * Supabase client typed against our `Database` schema.
+ */
+export type AppSupabaseClient = SupabaseClient<Database>;
+
+/**
+ * Server client that reads/writes auth cookies. Use inside server
+ * components, route handlers, and server actions.
+ */
+export async function getSupabaseServerClient(): Promise<AppSupabaseClient> {
+  const env = getPublicEnv();
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(
+          cookiesToSet: {
+            name: string;
+            value: string;
+            options: CookieOptions;
+          }[],
+        ) {
+          try {
+            for (const { name, value, options } of cookiesToSet) {
+              cookieStore.set(name, value, options);
+            }
+          } catch {
+            // setAll from a Server Component is a no-op. This is fine —
+            // middleware refreshes the session.
+          }
+        },
+      },
+    },
+  ) as unknown as AppSupabaseClient;
 }
 
-const stubClient: any = {
-  from: () => makeBuilder(null, new Error('stub client - test environment')),
-  rpc: () => Promise.resolve({ data: null, error: null }),
-  auth: {
-    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-  },
-};
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
-export async function createClient(): Promise<TypedSupabaseClient> {
-  // In test environment, return stub to avoid server-only imports
-  if (typeof process !== 'undefined' && process.env?.VITEST) {
-    return stubClient as TypedSupabaseClient;
-  }
-  // In production, use real server client (dynamic import avoids bundling)
-  const mod = await import('./client');
-  return mod.getSupabaseServerClient();
-}
+// Legacy alias — some files use createClient() instead of getSupabaseServerClient()
+export const createClient = getSupabaseServerClient;

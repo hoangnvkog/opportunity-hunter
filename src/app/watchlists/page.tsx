@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getUserWatchlistsAction } from "@/actions/watchlists.actions";
 import { WatchlistCard } from "@/components/watchlists/WatchlistCard";
 import { WatchlistForm } from "@/components/watchlists/WatchlistForm";

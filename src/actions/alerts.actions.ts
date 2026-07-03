@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { AlertsService } from "@/services/alerts/alerts.service";
 
 export async function getUserAlertsAction() {

@@ -1,14 +1,12 @@
 /**
- * Supabase server client (App Router with cookie auth).
+ * Supabase browser client.
  *
- * This module imports from "next/headers" and must NOT be imported
- * by Client Components. Use ./client-browser.ts for browser code.
+ * Safe to import from Client Components ("use client").
+ * Does NOT import from "next/headers" or any server-only module.
  */
 
-import type { CookieOptions } from "@supabase/ssr";
-import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { createBrowserClient } from "@supabase/ssr";
 
 import type { Database } from "@/types";
 import { getPublicEnv } from "@/lib/env";
@@ -18,39 +16,25 @@ import { getPublicEnv } from "@/lib/env";
  */
 export type AppSupabaseClient = SupabaseClient<Database>;
 
-/**
- * Server client that reads/writes auth cookies. Use inside server
- * components, route handlers, and server actions.
- */
-export async function getSupabaseServerClient(): Promise<AppSupabaseClient> {
-  const env = getPublicEnv();
-  const cookieStore = await cookies();
+let browserClient: AppSupabaseClient | null = null;
 
-  return createServerClient<Database>(
+/**
+ * Singleton browser Supabase client. Safe to call from "use client" components.
+ */
+export function getSupabaseBrowserClient(): AppSupabaseClient {
+  if (typeof window === "undefined") {
+    throw new Error(
+      "getSupabaseBrowserClient() called on the server. " +
+        "Use getSupabaseServerClient() from @/lib/supabase/server instead.",
+    );
+  }
+
+  if (browserClient) return browserClient;
+
+  const env = getPublicEnv();
+  browserClient = createBrowserClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(
-          cookiesToSet: {
-            name: string;
-            value: string;
-            options: CookieOptions;
-          }[],
-        ) {
-          try {
-            for (const { name, value, options } of cookiesToSet) {
-              cookieStore.set(name, value, options);
-            }
-          } catch {
-            // setAll from a Server Component is a no-op. This is fine —
-            // middleware refreshes the session.
-          }
-        },
-      },
-    },
   ) as unknown as AppSupabaseClient;
+  return browserClient;
 }

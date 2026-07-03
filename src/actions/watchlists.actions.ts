@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { WatchlistsService } from "@/services/watchlists/watchlists.service";
 import type { WatchlistInsert, WatchlistUpdate } from "@/types/watchlist";
 

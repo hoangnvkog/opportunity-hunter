@@ -6,7 +6,7 @@
 
 import { PipelineRunsRepository } from "@/lib/db/repositories";
 import { isSchedulerRunning, isPipelineRunning } from "@/lib/scheduler";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface HealthStatus {
   database: "healthy" | "unhealthy";

@@ -1,5 +1,5 @@
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { OpportunityRow } from "@/types/database.types";
 import type { WatchlistRow } from "@/types/watchlist";
 

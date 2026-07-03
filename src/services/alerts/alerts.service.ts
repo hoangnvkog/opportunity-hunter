@@ -1,5 +1,5 @@
 import { AlertsRepository } from "@/lib/db/repositories/alerts.repository";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { AlertCardData } from "@/types/watchlist";
 
 /**

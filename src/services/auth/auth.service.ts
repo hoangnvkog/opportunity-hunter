@@ -2,7 +2,7 @@
  * Authentication service
  */
 
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { User, AuthError } from "@supabase/supabase-js";
 
 export interface SignUpParams {

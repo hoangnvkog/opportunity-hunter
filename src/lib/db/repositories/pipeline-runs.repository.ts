@@ -1,5 +1,5 @@
 import type { PipelineRunHistory, PipelineRunInsert } from "@/types/pipeline-run-history";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { AnySupabaseClient } from "./_base";
 import { translateError } from "@/lib/db/errors";
 

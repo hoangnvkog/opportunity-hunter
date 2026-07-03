@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { signUp, signIn, getCurrentUser, requireUser } from "../auth.service";
 
 // Mock Supabase client
-vi.mock("@/lib/supabase/client", () => ({
+vi.mock("@/lib/supabase/server", () => ({
   getSupabaseServerClient: vi.fn(() => ({
     auth: {
       signUp: vi.fn(),
@@ -25,7 +25,7 @@ describe("Auth Service", () => {
         error: null,
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { signUp: mockSignUp },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -55,7 +55,7 @@ describe("Auth Service", () => {
         error: { message: "Email already taken" },
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { signUp: mockSignUp },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -79,7 +79,7 @@ describe("Auth Service", () => {
         error: null,
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { signInWithPassword: mockSignIn },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -103,7 +103,7 @@ describe("Auth Service", () => {
         error: { message: "Invalid credentials" },
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { signInWithPassword: mockSignIn },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -127,7 +127,7 @@ describe("Auth Service", () => {
         error: null,
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { getUser: mockGetUser },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -144,7 +144,7 @@ describe("Auth Service", () => {
         error: null,
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { getUser: mockGetUser },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -163,7 +163,7 @@ describe("Auth Service", () => {
         error: null,
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { getUser: mockGetUser },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);
@@ -179,7 +179,7 @@ describe("Auth Service", () => {
         error: null,
       });
 
-      const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+      const { getSupabaseServerClient } = await import("@/lib/supabase/server");
       vi.mocked(getSupabaseServerClient).mockResolvedValue({
         auth: { getUser: mockGetUser },
       } as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>);

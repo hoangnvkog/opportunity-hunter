@@ -2,7 +2,7 @@
  * Server-side authentication utilities
  */
 
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { User } from "@supabase/supabase-js";
 
 /**

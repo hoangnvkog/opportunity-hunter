@@ -1,12 +1,12 @@
 /**
  * Supabase module barrel.
  *
- * IMPORTANT: Client Components must import from "./client-browser" only.
- * Server-only code is in "./client" and "./service-client".
+ * IMPORTANT: Client Components must import from "./client" only.
+ * Server-only code is in "./server" and "./service-client".
  */
 export {
   getSupabaseBrowserClient,
   type AppSupabaseClient,
-} from "./client-browser";
-export { getSupabaseServerClient } from "./client";
+} from "./client";
+export { getSupabaseServerClient, createClient } from "./server";
 export { getSupabaseServiceClient } from "./service-client";

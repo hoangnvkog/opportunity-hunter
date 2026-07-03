@@ -388,7 +388,7 @@ async function triggerMassiveSignalAlertIfNeeded(
     const { MatchingService } = await import("@/services/matching/matching.service");
     const { AlertsRepository } = await import("@/lib/db/repositories/alerts.repository");
     const { EmailService } = await import("@/services/email/email.service");
-    const { getSupabaseServerClient } = await import("@/lib/supabase/client");
+    const { getSupabaseServerClient } = await import("@/lib/supabase/server");
     const { OpportunitiesRepository } = await import("@/lib/db/repositories/opportunities.repository");
 
     const client = await getSupabaseServerClient();

@@ -1,5 +1,5 @@
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
-import { getSupabaseServerClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { WatchlistCardData, WatchlistInsert, WatchlistUpdate } from "@/types/watchlist";
 
 /**
