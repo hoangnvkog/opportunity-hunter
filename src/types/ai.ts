@@ -20,6 +20,7 @@ import type { InvestmentMemoInput } from "./investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "./backtesting";
 import type { CommitteeVoteInput } from "./committee";
 import type { CommitteeAgentVote } from "./investment-committee";
+import type { VentureProjectInput } from "./venture-studio";
 
 /**
  * AI Provider interface - defines contract for all AI/LLM providers
@@ -75,5 +76,11 @@ export interface AIProvider {
    * Five independent "VC partners" evaluate the same opportunity.
    */
   generateCommitteeVote(input: CommitteeVoteInput): Promise<CommitteeAgentVote[]>;
+  /**
+   * Generate complete venture studio blueprint (Sprint 63).
+   * AI returns all venture studio content (canvas + GTM + MVP) in a single call.
+   * No UUIDs, no foreign keys — pure business content.
+   */
+  generateVentureProject(opportunities: OpportunityInput[]): Promise<VentureProjectInput[]>;
   generateEmbeddings?(texts: string[]): Promise<number[][]>;
 }

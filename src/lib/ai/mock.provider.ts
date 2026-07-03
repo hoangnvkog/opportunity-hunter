@@ -24,6 +24,7 @@ import type { InvestmentMemoInput } from "@/types/investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
 import type { CommitteeVoteInput } from "@/types/committee";
 import type { CommitteeAgentVote } from "@/types/investment-committee";
+import type { VentureProjectInput } from "@/types/venture-studio";
 
 export class MockProvider implements AIProvider {
   async extractPainPoints(posts: RawPostInput[]): Promise<PainPointInput[]> {
@@ -427,6 +428,49 @@ export class MockProvider implements AIProvider {
         confidence,
         reasoning,
         weight: agent.weight,
+      };
+    });
+  }
+
+  async generateVentureProject(
+    opportunities: OpportunityInput[],
+  ): Promise<VentureProjectInput[]> {
+    return opportunities.map((opp, idx) => {
+      const base = Math.max(0, Math.min(1, (opp.score ?? 50) / 100));
+      const overallScore = Math.round(50 + base * 45);
+      return {
+        name: `Venture: ${opp.cluster_name ?? `Opportunity ${idx + 1}`}`,
+        tagline: `AI-powered solution for ${opp.cluster_description ?? 'the market'}`,
+        overall_score: overallScore,
+        canvas: {
+          problem: `Businesses in ${opp.cluster_name ?? 'this space'} waste significant time on manual, error-prone processes that slow growth.`,
+          solution: `An AI-first platform that automates workflows and provides actionable insights for ${opp.cluster_name ?? 'the vertical'}.`,
+          value_proposition: `Reduce manual work by 80% with intelligent automation tailored to ${opp.cluster_name ?? 'the industry'}.`,
+          customer_segments: `Primary: SMBs (10-100 employees). Secondary: Mid-market (100-500). Tertiary: Enterprise (500+).`,
+          channels: `SEO, Content Marketing, Reddit, Product Hunt, LinkedIn, Partnerships, Community`,
+          customer_relationships: `Self-serve for SMB, dedicated support for enterprise, community-driven for all tiers.`,
+          key_activities: `Product development, AI model training, customer onboarding, content creation, community building.`,
+          key_resources: `Proprietary AI models, domain expertise, customer data, engineering team, brand trust.`,
+          key_partners: `Cloud providers (AWS/GCP), data partners, integration partners, industry consultants.`,
+          cost_structure: `Engineering (40%), Cloud/Infra (20%), Marketing (20%), Sales (10%), Admin (10%).`,
+          revenue_streams: `SaaS subscriptions ($99-$499/mo), enterprise contracts, usage-based add-ons, marketplace commissions.`,
+        },
+        gtm: {
+          launch_strategy: `Phase 1: Private beta with 50 design partners. Phase 2: Product Hunt launch + Reddit AMAs. Phase 3: Content marketing + SEO flywheel.`,
+          acquisition_channels: `SEO (high intent), Reddit (community validation), Product Hunt (launch buzz), LinkedIn (B2B), Cold Email (enterprise), Partnerships (scale).`,
+          pricing_strategy: `Freemium: Free (limited features) → Pro $99/mo → Team $299/mo → Enterprise custom. 20% annual discount. Usage-based add-ons.`,
+          growth_loops: `User-generated templates → SEO traffic → Free signup → Usage → Upgrade → Referral bonus → More users.`,
+          marketing_plan: `Content: 2 blog posts/week, 1 case study/month, 4 social posts/week. Events: 1 webinar/quarter. PR: 1 press hit/quarter.`,
+          sales_plan: `PLG for SMB (self-serve + in-app upsells). Mid-market: inside sales (SDRs + AEs). Enterprise: field sales + solutions engineering.`,
+        },
+        mvp: {
+          core_features: `1. AI workflow builder (drag-and-drop)\n2. Pre-built templates for top 10 use cases\n3. Real-time analytics dashboard\n4. Team collaboration\n5. API & webhook integrations`,
+          roadmap: `Week 1: Core auth + dashboard. Week 2: AI workflow engine. Week 3: Templates + integrations. Month 2: Analytics + team features. Month 3: Enterprise SSO + advanced automation. Month 6: Marketplace + AI agents.`,
+          tech_stack: `Next.js 14 + TypeScript, Supabase (PostgreSQL + Auth + Realtime), OpenAI API, Vercel (hosting), Stripe (payments), Tailwind CSS + shadcn/ui`,
+          estimated_cost: `$15,000 - $25,000 (3-month MVP with 2 engineers)`,
+          estimated_time: `3 months to MVP, 6 months to v1.0`,
+          risks: `1. AI accuracy at scale (mitigate: human-in-the-loop). 2. Cold start for templates (mitigate: seed with 50 templates). 3. Integration complexity (mitigate: start with top 5 APIs).`,
+        },
       };
     });
   }

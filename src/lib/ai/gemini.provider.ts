@@ -28,6 +28,7 @@ import type { InvestmentMemoInput } from "@/types/investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
 import type { CommitteeVoteInput } from "@/types/committee";
 import type { CommitteeAgentVote } from "@/types/investment-committee";
+import type { VentureProjectInput } from "@/types/venture-studio";
 
 export class GeminiProvider implements AIProvider {
   constructor(
@@ -169,6 +170,15 @@ export class GeminiProvider implements AIProvider {
   async generateCommitteeVote(_input: CommitteeVoteInput): Promise<CommitteeAgentVote[]> {
     throw new Error(
       "GeminiProvider.generateCommitteeVote() not implemented yet. " +
+      "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
+    );
+  }
+
+  async generateVentureProject(
+    _opportunities: OpportunityInput[],
+  ): Promise<VentureProjectInput[]> {
+    throw new Error(
+      "GeminiProvider.generateVentureProject() not implemented yet. " +
       "Install @google/generative-ai SDK and implement, or use OpenAI provider.",
     );
   }

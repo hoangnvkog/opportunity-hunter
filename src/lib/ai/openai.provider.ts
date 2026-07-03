@@ -26,6 +26,7 @@ import {
   VentureReportSchema,
   BacktestEvaluationSchema,
   CommitteeVoteResponseSchema,
+  VentureProjectSchema,
 } from "./schemas";
 import type {
   RawPostInput,
@@ -46,6 +47,7 @@ import type { InvestmentMemoInput } from "@/types/investment-memo";
 import type { BacktestInput, BacktestEvaluation } from "@/types/backtesting";
 import type { CommitteeVoteInput } from "@/types/committee";
 import type { CommitteeAgentVote } from "@/types/investment-committee";
+import type { VentureProjectInput } from "@/types/venture-studio";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
@@ -1354,6 +1356,131 @@ Each agent must vote independently. No agent sees another's vote.`;
         confidence: 0,
         reasoning: 'Committee vote generation failed.',
         weight: agent.weight,
+      }));
+    }
+  }
+
+  async generateVentureProject(
+    opportunities: OpportunityInput[],
+  ): Promise<VentureProjectInput[]> {
+    try {
+      const prompt = `You are a venture studio AI. For each opportunity, generate a COMPLETE startup blueprint.
+
+Return a JSON object with key "projects" containing an array of objects, each with:
+- name (string): venture project name
+- tagline (string): one-line tagline
+- overall_score (number, 0-100): overall venture viability score
+- canvas: { problem, solution, value_proposition, customer_segments, channels, customer_relationships, key_activities, key_resources, key_partners, cost_structure, revenue_streams } (all strings)
+- gtm: { launch_strategy, acquisition_channels, pricing_strategy, growth_loops, marketing_plan, sales_plan } (all strings). acquisition_channels MUST include at least one of: SEO, Reddit, Product Hunt, LinkedIn, TikTok, Cold Email, Partnership, Community.
+- mvp: { core_features, roadmap (Week 1-3 + Month 2/3/6), tech_stack, estimated_cost, estimated_time, risks } (all strings)
+
+Return valid JSON only.`;
+
+      const inputJson = JSON.stringify(
+        opportunities.map((o) => ({
+          score: o.score,
+          cluster_name: o.cluster_name,
+          cluster_description: o.cluster_description,
+          frequency: o.frequency,
+          severity: o.severity,
+          buying_intent: o.buying_intent,
+        })),
+      );
+
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        temperature: 0.7,
+        max_tokens: 4096,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: `Generate venture blueprints for these opportunities:
+${inputJson}` },
+        ],
+      });
+
+      await this.trackUsage(this.model, response.usage ?? { prompt_tokens: 0, completion_tokens: 0 });
+
+      const content = response.choices[0]?.message?.content?.trim() ?? '{}';
+      const parsed = JSON.parse(content);
+      const projects = Array.isArray(parsed.projects) ? parsed.projects : [];
+
+      const validated = projects.map((p: Record<string, unknown>) => {
+        const canvas = (p.canvas ?? {}) as Record<string, string>;
+        const gtm = (p.gtm ?? {}) as Record<string, string>;
+        const mvp = (p.mvp ?? {}) as Record<string, string>;
+        return {
+          name: String(p.name ?? 'Untitled Venture'),
+          tagline: String(p.tagline ?? ''),
+          overall_score: Number(p.overall_score ?? 50),
+          canvas: {
+            problem: String(canvas.problem ?? ''),
+            solution: String(canvas.solution ?? ''),
+            value_proposition: String(canvas.value_proposition ?? ''),
+            customer_segments: String(canvas.customer_segments ?? ''),
+            channels: String(canvas.channels ?? ''),
+            customer_relationships: String(canvas.customer_relationships ?? ''),
+            key_activities: String(canvas.key_activities ?? ''),
+            key_resources: String(canvas.key_resources ?? ''),
+            key_partners: String(canvas.key_partners ?? ''),
+            cost_structure: String(canvas.cost_structure ?? ''),
+            revenue_streams: String(canvas.revenue_streams ?? ''),
+          },
+          gtm: {
+            launch_strategy: String(gtm.launch_strategy ?? ''),
+            acquisition_channels: String(gtm.acquisition_channels ?? ''),
+            pricing_strategy: String(gtm.pricing_strategy ?? ''),
+            growth_loops: String(gtm.growth_loops ?? ''),
+            marketing_plan: String(gtm.marketing_plan ?? ''),
+            sales_plan: String(gtm.sales_plan ?? ''),
+          },
+          mvp: {
+            core_features: String(mvp.core_features ?? ''),
+            roadmap: String(mvp.roadmap ?? ''),
+            tech_stack: String(mvp.tech_stack ?? ''),
+            estimated_cost: String(mvp.estimated_cost ?? ''),
+            estimated_time: String(mvp.estimated_time ?? ''),
+            risks: String(mvp.risks ?? ''),
+          },
+        } as VentureProjectInput;
+      });
+
+      return validated;
+    } catch (error) {
+      console.error('generateVentureProject failed:', error);
+      return opportunities.map((opp) => ({
+        name: `Venture: ${opp.cluster_name ?? 'Opportunity'}`,
+        tagline: `AI-powered solution for ${opp.cluster_description ?? 'the market'}`,
+        overall_score: opp.score ?? 50,
+        canvas: {
+          problem: `Businesses in ${opp.cluster_name ?? 'this space'} waste time on manual processes.`,
+          solution: `AI-first platform for ${opp.cluster_name ?? 'the vertical'}.`,
+          value_proposition: `Reduce manual work by 80%.`,
+          customer_segments: 'SMBs (10-100 employees)',
+          channels: 'SEO, Reddit, Product Hunt, LinkedIn',
+          customer_relationships: 'Self-serve + dedicated support',
+          key_activities: 'Product development, AI training, customer onboarding',
+          key_resources: 'AI models, domain expertise, engineering team',
+          key_partners: 'Cloud providers, data partners',
+          cost_structure: 'Engineering 40%, Cloud 20%, Marketing 20%, Sales 10%',
+          revenue_streams: 'SaaS subscriptions ($99-$499/mo)',
+        },
+        gtm: {
+          launch_strategy: 'Beta → Product Hunt → Content marketing',
+          acquisition_channels: 'SEO, Reddit, Product Hunt, LinkedIn, Cold Email, Community',
+          pricing_strategy: 'Freemium → Pro $99/mo → Team $299/mo → Enterprise',
+          growth_loops: 'Templates → SEO → Free signup → Upgrade → Referral',
+          marketing_plan: '2 blog posts/week, 1 case study/month',
+          sales_plan: 'PLG for SMB, inside sales for mid-market, field sales for enterprise',
+        },
+        mvp: {
+          core_features: '1. Core workflow engine\n2. Templates\n3. Analytics\n4. Team collaboration\n5. API integrations',
+          roadmap: 'Week 1-3: Core MVP. Month 2: Analytics. Month 3: Enterprise. Month 6: Marketplace.',
+          tech_stack: 'Next.js, Supabase, OpenAI, Vercel, Stripe, Tailwind',
+          estimated_cost: '$15,000 - $25,000',
+          estimated_time: '3 months to MVP, 6 months to v1.0',
+          risks: 'AI accuracy, cold start, integration complexity',
+        },
       }));
     }
   }

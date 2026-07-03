@@ -243,3 +243,68 @@ export const CommitteeAgentVoteSchema = z.object({
 export type CommitteeAgentVoteResponseItem = z.infer<typeof CommitteeAgentVoteSchema>;
 
 export const CommitteeVoteResponseSchema = z.array(CommitteeAgentVoteSchema);
+
+/**
+ * Schema for Venture Studio Canvas generation (Sprint 63).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const VentureCanvasSchema = z.object({
+  problem: z.string(),
+  solution: z.string(),
+  value_proposition: z.string(),
+  customer_segments: z.string(),
+  channels: z.string(),
+  customer_relationships: z.string(),
+  key_activities: z.string(),
+  key_resources: z.string(),
+  key_partners: z.string(),
+  cost_structure: z.string(),
+  revenue_streams: z.string(),
+});
+
+export type VentureCanvasResponseItem = z.infer<typeof VentureCanvasSchema>;
+
+/**
+ * Schema for Venture Studio GTM generation (Sprint 63).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const VentureGtmSchema = z.object({
+  launch_strategy: z.string(),
+  acquisition_channels: z.string(),
+  pricing_strategy: z.string(),
+  growth_loops: z.string(),
+  marketing_plan: z.string(),
+  sales_plan: z.string(),
+});
+
+export type VentureGtmResponseItem = z.infer<typeof VentureGtmSchema>;
+
+/**
+ * Schema for Venture Studio MVP generation (Sprint 63).
+ * AI returns business data only — no UUIDs, no foreign keys.
+ */
+export const VentureMvpSchema = z.object({
+  core_features: z.string(),
+  roadmap: z.string(),
+  tech_stack: z.string(),
+  estimated_cost: z.string(),
+  estimated_time: z.string(),
+  risks: z.string(),
+});
+
+export type VentureMvpResponseItem = z.infer<typeof VentureMvpSchema>;
+
+/**
+ * Schema for full Venture Project generation (Sprint 63).
+ * AI returns all venture studio content in a single call.
+ */
+export const VentureProjectSchema = z.object({
+  name: z.string(),
+  tagline: z.string(),
+  overall_score: z.number(),
+  canvas: VentureCanvasSchema,
+  gtm: VentureGtmSchema,
+  mvp: VentureMvpSchema,
+});
+
+export type VentureProjectResponseItem = z.infer<typeof VentureProjectSchema>;

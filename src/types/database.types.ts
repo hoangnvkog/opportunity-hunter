@@ -93,6 +93,16 @@ import type {
   ResearchLogRow,
   ResearchLogInsert,
 } from "./research-job";
+import type {
+  VentureProjectRow,
+  VentureProjectInsert,
+  VentureCanvasRow,
+  VentureCanvasInsert,
+  VentureGtmRow,
+  VentureGtmInsert,
+  VentureMvpRow,
+  VentureMvpInsert,
+} from "./venture-studio";
 
 /** Numeric(4,3) stored as string by the JS client to avoid float drift. */
 export type Decimal3 = string;
@@ -936,6 +946,69 @@ export interface Database {
             columns: ["job_id"];
             isOneToOne: false;
             referencedRelation: "research_jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      venture_projects: {
+        Row: VentureProjectRow;
+        Insert: VentureProjectInsert;
+        Update: Partial<VentureProjectInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "venture_projects_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "venture_projects_startup_idea_id_fkey";
+            columns: ["startup_idea_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_ideas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      venture_canvas: {
+        Row: VentureCanvasRow;
+        Insert: VentureCanvasInsert;
+        Update: Partial<VentureCanvasInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "venture_canvas_venture_project_id_fkey";
+            columns: ["venture_project_id"];
+            isOneToOne: false;
+            referencedRelation: "venture_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      venture_gtm: {
+        Row: VentureGtmRow;
+        Insert: VentureGtmInsert;
+        Update: Partial<VentureGtmInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "venture_gtm_venture_project_id_fkey";
+            columns: ["venture_project_id"];
+            isOneToOne: false;
+            referencedRelation: "venture_projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      venture_mvp: {
+        Row: VentureMvpRow;
+        Insert: VentureMvpInsert;
+        Update: Partial<VentureMvpInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "venture_mvp_venture_project_id_fkey";
+            columns: ["venture_project_id"];
+            isOneToOne: false;
+            referencedRelation: "venture_projects";
             referencedColumns: ["id"];
           },
         ];

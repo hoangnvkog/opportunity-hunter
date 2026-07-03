@@ -36,3 +36,7 @@ export { OpportunityForecastsRepository } from "./opportunity-forecasts.reposito
 export { MarketIntelligenceRepository } from "./market-intelligence.repository";
 export { StartupScoresRepository } from "./startup-scores.repository";
 export { OpportunityBacktestsRepository } from "./opportunity-backtests.repository";
+export { VentureProjectsRepository } from "./venture-projects.repository";
+export { VentureCanvasRepository } from "./venture-canvas.repository";
+export { VentureGtmRepository } from "./venture-gtm.repository";
+export { VentureMvpRepository } from "./venture-mvp.repository";
