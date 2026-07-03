@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // Sprint 60: Portfolio Intelligence Engine - Admin Page
 // app/admin/portfolio/page.tsx
 

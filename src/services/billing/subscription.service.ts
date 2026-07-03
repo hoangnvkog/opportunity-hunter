@@ -1,11 +1,7 @@
-import Stripe from "stripe";
 import { SubscriptionsRepository } from "@/lib/db/repositories/subscriptions.repository";
 import { UsageLimitsRepository } from "@/lib/db/repositories/usage-limits.repository";
 import { getBaseUrl } from "@/lib/utils";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-05-27.dahlia",
-});
+import { getStripeClient } from "@/lib/stripe";
 
 export class SubscriptionService {
   private subscriptionsRepo: SubscriptionsRepository;
@@ -28,7 +24,7 @@ export class SubscriptionService {
   }
 
   async createCustomer(userId: string, email: string): Promise<string> {
-    const customer = await stripe.customers.create({
+    const customer = await getStripeClient().customers.create({
       metadata: {
         user_id: userId,
       },
@@ -54,7 +50,7 @@ export class SubscriptionService {
     }
 
     // Create a Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripeClient().checkout.sessions.create({
       customer: subscription.stripe_customer_id ?? undefined, // nullable on insert
       payment_method_types: ["card"],
       line_items: [
@@ -79,7 +75,7 @@ export class SubscriptionService {
   }
 
   async cancelSubscription(subscriptionId: string): Promise<void> {
-    await stripe.subscriptions.cancel(subscriptionId);
+    await getStripeClient().subscriptions.cancel(subscriptionId);
 
     // Update local subscription record
     await this.subscriptionsRepo.update(subscriptionId, {

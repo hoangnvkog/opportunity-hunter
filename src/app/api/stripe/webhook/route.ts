@@ -1,11 +1,8 @@
-import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { SubscriptionsRepository } from "@/lib/db/repositories/subscriptions.repository";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-05-27.dahlia",
-});
+import { getStripeClient } from "@/lib/stripe";
+import type Stripe from "stripe";
 
 export async function POST(request: Request) {
   const buf = await request.text();
@@ -14,7 +11,7 @@ export async function POST(request: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = getStripeClient().webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err) {
     console.error(`⚠️  Webhook signature verification failed.`, err);
     return NextResponse.json(

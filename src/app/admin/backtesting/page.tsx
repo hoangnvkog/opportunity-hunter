@@ -5,7 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { OpportunityBacktestsRepository } from "@/lib/db/repositories/opportunity-backtests.repository";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { AccuracyDistributionChart } from "@/components/backtesting/accuracy-distribution-chart";
 import { AlertTriangle, CheckCircle2, Clock, Target } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -117,24 +117,7 @@ export default async function AdminBacktestingPage() {
             <CardTitle>Accuracy Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            {chartData.some((d) => d.count > 0) ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartData}>
-                  <XAxis dataKey="name" fontSize={12} />
-                  <YAxis fontSize={12} />
-                  <Tooltip />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-sm text-center py-10">
-                No evaluated backtests yet. Run the evaluation batch to populate this chart.
-              </p>
-            )}
+            <AccuracyDistributionChart data={chartData} />
           </CardContent>
         </Card>
 

@@ -6,11 +6,12 @@
 import { NextResponse } from "next/server";
 import { getCommitteeWithVotes } from "@/lib/services/committee.service";
 
-export async function GET(request: Request, ctx: { params: { id: string } }) {
+export async function GET(request: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await ctx.params;
     const url = new URL(request.url);
     const format = (url.searchParams.get("format") ?? "md").toLowerCase();
-    const data = await getCommitteeWithVotes(ctx.params.id);
+    const data = await getCommitteeWithVotes(id);
     if (!data) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }

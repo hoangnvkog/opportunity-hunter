@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth/server";
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-05-27.dahlia",
-});
+import { getStripeClient } from "@/lib/stripe";
 
 export async function POST() {
   const user = await getUser();
@@ -28,7 +24,7 @@ export async function POST() {
     );
   }
 
-  await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+  await getStripeClient().subscriptions.cancel(sub.stripe_subscription_id);
 
   await supabase
     .from("subscriptions")

@@ -5,9 +5,10 @@
 import { NextResponse } from "next/server";
 import { getCommitteeWithVotes } from "@/lib/services/committee.service";
 
-export async function GET(_request: Request, ctx: { params: { id: string } }) {
+export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const data = await getCommitteeWithVotes(ctx.params.id);
+    const { id } = await ctx.params;
+    const data = await getCommitteeWithVotes(id);
     if (!data) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }

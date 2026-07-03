@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase/client";
 import { getUserAlertsAction, markAllAlertsReadAction } from "@/actions/alerts.actions";

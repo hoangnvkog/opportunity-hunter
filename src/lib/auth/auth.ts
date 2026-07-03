@@ -2,7 +2,7 @@
  * Client-side authentication utilities
  */
 
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client-browser";
 
 export interface AuthError {
   message: string;

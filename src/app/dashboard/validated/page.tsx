@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ValidatedOpportunitiesTable } from "@/components/validation/validated-opportunities-table";
 import { getUser } from "@/lib/auth/server";

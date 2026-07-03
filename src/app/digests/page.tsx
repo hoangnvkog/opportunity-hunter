@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUser } from "@/lib/auth/server";

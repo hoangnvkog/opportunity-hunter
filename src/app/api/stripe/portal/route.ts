@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth/server";
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-05-27.dahlia",
-});
+import { getStripeClient } from "@/lib/stripe";
 
 export async function POST() {
   const user = await getUser();
@@ -28,7 +24,7 @@ export async function POST() {
     );
   }
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripeClient().billingPortal.sessions.create({
     customer: sub.stripe_customer_id,
     return_url: `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/settings/billing`,
   });

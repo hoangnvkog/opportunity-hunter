@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
 import { ClusterMetrics } from "@/components/dashboard/cluster-metrics";

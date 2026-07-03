@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/services/auth/auth.service";
 import { SavedOpportunitiesService } from "@/services/saved-opportunities/saved-opportunities.service";
