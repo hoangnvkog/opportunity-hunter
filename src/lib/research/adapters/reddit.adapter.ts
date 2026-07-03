@@ -115,7 +115,7 @@ export class RedditAdapter extends BaseResearchSourceAdapter implements Research
         }
       });
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

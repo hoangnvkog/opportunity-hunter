@@ -14,8 +14,6 @@ import {
   getBacktestById,
   getOpportunityBacktests,
   getAccuracyDistribution,
-  calculateAccuracy,
-  calculatePredictionDelta,
 } from "@/services/backtesting/backtesting.service";
 
 export interface BacktestResult {

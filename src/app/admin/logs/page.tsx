@@ -1,5 +1,4 @@
 import { SystemLogsRepository } from "@/lib/db/repositories/system-logs.repository";
-import { MonitoringService } from "@/services/admin/monitoring.service";
 import { LogTable } from "@/components/admin/LogTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Info, AlertCircle, Bug } from "lucide-react";
@@ -19,14 +18,10 @@ export default async function AdminLogsPage({
   const limit = 50;
   const offset = (page - 1) * limit;
 
-  const [logsRepo, monitoringService] = await Promise.all([
-    SystemLogsRepository.create(),
-    MonitoringService.create()
-  ]);
+  const logsRepo = await SystemLogsRepository.create();
 
-  const [{ logs, total }, health] = await Promise.all([
+  const [{ logs, total }] = await Promise.all([
     logsRepo.findAll({ level, search, limit, offset }),
-    monitoringService.getSystemHealth()
   ]);
 
   const levelCounts = await logsRepo.countByLevel();

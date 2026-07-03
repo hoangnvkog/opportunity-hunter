@@ -8,7 +8,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getOpportunityBacktests } from "@/services/backtesting/backtesting.service";
-import { getBacktestById } from "@/services/backtesting/backtesting.service";
 import { Target, TrendingUp, CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface BacktestSectionProps {

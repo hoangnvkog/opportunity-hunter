@@ -24,20 +24,19 @@ export default async function AdminEvidencePage() {
   // Group by opportunity
   const byOpportunity = evidence.reduce<Record<string, { count: number; avgConfidence: number; oppName: string }>>(
     (acc, e) => {
-      const oppId = e.opportunity_id;
-      if (!acc[oppId]) {
-        const opp = opportunityMap.get(oppId);
-        acc[oppId] = { count: 0, avgConfidence: 0, oppName: opp?.title || oppId };
+      if (!acc[e.opportunity_id]) {
+        const opp = opportunityMap.get(e.opportunity_id);
+        acc[e.opportunity_id] = { count: 0, avgConfidence: 0, oppName: opp?.title || e.opportunity_id };
       }
-      acc[oppId].count++;
-      acc[oppId].avgConfidence += e.confidence;
+      acc[e.opportunity_id].count++;
+      acc[e.opportunity_id].avgConfidence += e.confidence;
       return acc;
     },
     {},
   );
 
   // Calculate averages
-  for (const [oppId, data] of Object.entries(byOpportunity)) {
+  for (const [, data] of Object.entries(byOpportunity)) {
     data.avgConfidence = Math.round((data.avgConfidence / data.count) * 100) / 100;
   }
 

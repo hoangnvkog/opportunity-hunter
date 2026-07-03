@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ExternalLink, Download } from "lucide-react";
 import type { BacktestCard } from "@/types/backtesting";
 import Link from "next/link";
 
@@ -47,7 +47,7 @@ function DeltaIndicator({ delta }: { delta: number | null }) {
 }
 
 export function BacktestTable({ initialBacktests }: BacktestTableProps) {
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder] = useState<"asc" | "desc">("desc");
 
   const sorted = [...initialBacktests].sort((a, b) => {
     const diff = new Date(b.evaluation_date).getTime() - new Date(a.evaluation_date).getTime();

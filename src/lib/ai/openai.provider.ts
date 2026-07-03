@@ -24,9 +24,7 @@ import {
   StartupScoreSchema,
   InvestmentMemoSchema,
   VentureReportSchema,
-  BacktestEvaluationSchema,
   CommitteeVoteResponseSchema,
-  VentureProjectSchema,
 } from "./schemas";
 import type {
   RawPostInput,

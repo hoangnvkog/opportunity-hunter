@@ -10,7 +10,7 @@ import type {
   EvidenceType,
 } from "@/types/evidence";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
-import { RepositoryError, translateError } from "@/lib/db/errors";
+import { translateError } from "@/lib/db/errors";
 
 const ENTITY = "opportunity_evidence";
 

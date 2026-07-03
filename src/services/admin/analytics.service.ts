@@ -153,9 +153,7 @@ export class AnalyticsService {
   }
 
   async getPipelineMetrics(): Promise<PipelineMetrics> {
-    const [rawPosts, painPoints, clusters, opps, ideas] = await Promise.all([
-      this.rawPostsRepo.count(),
-      this.painPointsRepo.count(),
+    const [clusters, opps, ideas] = await Promise.all([
       this.clustersRepo.count(),
       this.oppsRepo.count(),
       this.ideasRepo.count(),
@@ -189,9 +187,6 @@ export class AnalyticsService {
 
   async getAiCostMetrics(): Promise<AiCostMetrics> {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      .toISOString()
-      .slice(0, 10);
     const startOfWeek = daysAgo(7);
     const startOfDay = daysAgo(0).slice(0, 10) + "T00:00:00Z";
     const today = new Date().toISOString();
@@ -248,7 +243,7 @@ export class AnalyticsService {
     const [
       profiles,
       subscriptions,
-      userMetrics,
+      ,
       aiCost,
       opps,
       health,

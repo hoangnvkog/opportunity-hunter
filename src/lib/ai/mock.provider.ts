@@ -395,7 +395,7 @@ export class MockProvider implements AIProvider {
     const severity = input.context.opportunity.severity ?? 0.5;
     const buyingIntent = input.context.opportunity.buying_intent ?? 0.5;
     
-    return input.agents.map((agent, idx) => {
+    return input.agents.map((agent) => {
       // Each agent biases differently:
       // Market Analyst: +10 if score high
       // Technical: -5 (conservative)

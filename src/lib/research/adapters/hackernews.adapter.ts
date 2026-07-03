@@ -84,7 +84,7 @@ export class HackerNewsAdapter extends BaseResearchSourceAdapter implements Rese
     try {
       const response = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json?limit=1');
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

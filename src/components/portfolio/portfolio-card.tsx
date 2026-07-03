@@ -3,7 +3,6 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -25,7 +24,7 @@ interface PortfolioCardPropsBase {
 }
 type PortfolioCardProps = PortfolioCardPropsBase;
 
-export function PortfolioCard({ portfolioItem, opportunityId }: PortfolioCardProps) {
+export function PortfolioCard({ portfolioItem }: PortfolioCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(portfolioItem?.notes || '');
   const [status, setStatus] = useState<PortfolioStatus>(portfolioItem?.status || 'WATCHLIST');

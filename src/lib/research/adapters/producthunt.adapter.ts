@@ -107,7 +107,7 @@ export class ProductHuntAdapter extends BaseResearchSourceAdapter implements Res
         }
       });
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

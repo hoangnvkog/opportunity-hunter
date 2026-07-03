@@ -24,7 +24,7 @@ function buildProvider(providerType?: AIProviderType) {
 
 export async function evaluateOpportunity(
   opportunityId: string,
-  providerType?: AIProviderType,
+  _providerType?: AIProviderType,
 ): Promise<{ processed: number; inserted: number; skipped: number }> {
   const backtestsRepo = await OpportunityBacktestsRepository.create();
   const scoresRepo = await StartupScoresRepository.create();
@@ -243,10 +243,6 @@ export function calculateAccuracy(predicted_score: number, actual_score: number)
 
 export function calculatePredictionDelta(predicted_score: number, actual_score: number): number {
   return Math.round((predicted_score - actual_score) * 100) / 100;
-}
-
-function emitAnalytics(payload: Record<string, unknown>): void {
-  console.info("[analytics] backtesting", JSON.stringify(payload));
 }
 
 async function triggerModelDegradationAlertIfNeeded(

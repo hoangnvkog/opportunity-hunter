@@ -99,7 +99,7 @@ export class GithubAdapter extends BaseResearchSourceAdapter implements Research
         }
       });
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
