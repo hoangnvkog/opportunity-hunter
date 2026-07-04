@@ -11,15 +11,13 @@ import {
   getVentureScoreDashboardStats,
   listLatestScores,
   listTopScores,
-  listAAA,
 } from "@/services/venture-score/venture-score.service";
 
 export default async function VentureScoreDashboardPage() {
-  const [stats, latestScores, topScores, aaaScores] = await Promise.all([
+  const [stats, latestScores, topScores] = await Promise.all([
     getVentureScoreDashboardStats(),
     listLatestScores(20),
     listTopScores(10),
-    listAAA(),
   ]);
 
   const gradeColors: Record<string, string> = {
