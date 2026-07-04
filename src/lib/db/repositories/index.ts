@@ -53,3 +53,4 @@ export { FinancialModelsRepository } from "./financial-models.repository";
 export { FinancialProjectionsRepository } from "./financial-projections.repository";
 export { UnitEconomicsRepository } from "./unit-economics.repository";
 export { BreakEvenRepository } from "./break-even.repository";
+export { VentureScoresRepository } from "./venture-scores.repository";
