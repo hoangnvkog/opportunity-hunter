@@ -54,3 +54,5 @@ export { FinancialProjectionsRepository } from "./financial-projections.reposito
 export { UnitEconomicsRepository } from "./unit-economics.repository";
 export { BreakEvenRepository } from "./break-even.repository";
 export { VentureScoresRepository } from "./venture-scores.repository";
+export { InvestmentCommitteesRepository } from "@/services/investment-committee/investment-committees.repository";
+export { CommitteeVotesRepository } from "@/services/investment-committee/committee-votes.repository";

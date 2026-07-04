@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { OpportunityScoreCard } from "@/components/opportunity/opportunity-score-card";
 import { OpportunityOverviewCard } from "@/components/opportunity/opportunity-overview-card";
@@ -17,6 +18,7 @@ import { findInsightByOpportunityIdAction } from "@/actions/insights.actions";
 import { getEvidenceAction } from "@/actions/evidence.actions";
 import { getOpportunityScoreAction } from "@/actions/startup-score.actions";
 import { getOpportunityMemoAction } from "@/actions/investment-memo.actions";
+import { CommitteeSection } from "./CommitteeSection";
 import { PortfolioCard } from "@/components/portfolio/portfolio-card";
 import { getPortfolioByOpportunity } from "@/lib/services/portfolio.service";
 
@@ -112,6 +114,10 @@ export default async function OpportunityDetailPage({
         )}
 
         <BacktestSection opportunityId={id} />
+
+        <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-lg" />}>
+          <CommitteeSection opportunityId={id} />
+        </Suspense>
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Startup Ideas</h2>
