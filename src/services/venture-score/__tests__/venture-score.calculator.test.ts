@@ -36,7 +36,7 @@ function fullComponents() {
     competition: { available: true, score: 60 },
     portfolio: { available: false, similarCount: 0, avgPerformance: 0 },
     backtesting: { available: false, accuracy: 50 },
-  } as Parameters<typeof calculateOverallScore>[0];
+  } as unknown as Parameters<typeof calculateOverallScore>[0];
 }
 
 describe("Venture Score Calculator", () => {
@@ -50,7 +50,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback score when all modules are missing", () => {
       const score = calculateOverallScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateOverallScore>[0]);
+      } as unknown as Parameters<typeof calculateOverallScore>[0]);
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
     });
@@ -100,7 +100,7 @@ describe("Venture Score Calculator", () => {
       const high = calculateConfidence(fullComponents());
       const low = calculateConfidence({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateConfidence>[0]);
+      } as unknown as Parameters<typeof calculateConfidence>[0]);
       expect(high).toBeGreaterThan(low);
     });
 
@@ -123,7 +123,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing financial", () => {
       const r = calculateROIScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateROIScore>[0]);
+      } as unknown as Parameters<typeof calculateROIScore>[0]);
       expect(r).toBe(30);
     });
 
@@ -152,7 +152,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing modules", () => {
       const s = calculateExecutionScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateExecutionScore>[0]);
+      } as unknown as Parameters<typeof calculateExecutionScore>[0]);
       expect(s).toBeGreaterThanOrEqual(0);
     });
   });
@@ -161,7 +161,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing research", () => {
       const s = calculateInnovationScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateInnovationScore>[0]);
+      } as unknown as Parameters<typeof calculateInnovationScore>[0]);
       expect(s).toBeGreaterThanOrEqual(0);
     });
   });
@@ -170,7 +170,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing financial", () => {
       const s = calculateFinancialScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateFinancialScore>[0]);
+      } as unknown as Parameters<typeof calculateFinancialScore>[0]);
       expect(s).toBe(30);
     });
   });
@@ -179,7 +179,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing validation", () => {
       const s = calculateValidationScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateValidationScore>[0]);
+      } as unknown as Parameters<typeof calculateValidationScore>[0]);
       expect(s).toBe(50);
     });
 
@@ -193,7 +193,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing forecast", () => {
       const s = calculateForecastScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateForecastScore>[0]);
+      } as unknown as Parameters<typeof calculateForecastScore>[0]);
       expect(s).toBe(50);
     });
   });
@@ -202,7 +202,7 @@ describe("Venture Score Calculator", () => {
     it("returns fallback for missing research", () => {
       const s = calculateResearchScore({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof calculateResearchScore>[0]);
+      } as unknown as Parameters<typeof calculateResearchScore>[0]);
       expect(s).toBe(40);
     });
   });
@@ -238,14 +238,14 @@ describe("Venture Score Calculator", () => {
     it("generates weaknesses for missing modules", () => {
       const { weaknesses } = generateExplanations({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof generateExplanations>[0]);
+      } as unknown as Parameters<typeof generateExplanations>[0]);
       expect(weaknesses.length).toBeGreaterThan(0);
     });
 
     it("lists missing financial as weakness", () => {
       const { weaknesses } = generateExplanations({
         opportunity: { id: "opp-1" },
-      } as Parameters<typeof generateExplanations>[0]);
+      } as unknown as Parameters<typeof generateExplanations>[0]);
       expect(weaknesses.some((w) => w.toLowerCase().includes("financial"))).toBe(true);
     });
   });
