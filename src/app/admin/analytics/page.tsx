@@ -3,9 +3,6 @@ import { MetricCard } from "@/components/admin/MetricCard";
 import { UsageChart } from "@/components/admin/UsageChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Users,
-  Activity,
-  TrendingUp,
   Brain,
   Rss,
 } from "lucide-react";
@@ -36,25 +33,25 @@ export default async function AdminAnalyticsPage() {
         <MetricCard
           title="Total Users"
           value={userMetrics.totalUsers}
-          icon={Users}
+          icon="Users"
           subtitle="All registered users"
         />
         <MetricCard
           title="DAU"
           value={userMetrics.dau}
-          icon={Activity}
+          icon="Activity"
           subtitle="Daily Active Users"
         />
         <MetricCard
           title="WAU"
           value={userMetrics.wau}
-          icon={TrendingUp}
+          icon="TrendingUp"
           subtitle="Weekly Active Users"
         />
         <MetricCard
           title="MAU"
           value={userMetrics.mau}
-          icon={Users}
+          icon="Users"
           subtitle="Monthly Active Users"
         />
       </div>

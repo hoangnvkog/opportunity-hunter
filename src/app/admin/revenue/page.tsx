@@ -2,7 +2,7 @@ import { RevenueService } from "@/services/admin/revenue.service";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, CreditCard, Users } from "lucide-react";
+import { CreditCard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -26,25 +26,25 @@ export default async function AdminRevenuePage() {
         <MetricCard
           title="MRR"
           value={`$${metrics.mrr.toLocaleString()}`}
-          icon={DollarSign}
+          icon="DollarSign"
           subtitle="Monthly Recurring Revenue"
         />
         <MetricCard
           title="ARR"
           value={`$${(metrics.arr / 1000).toFixed(1)}k`}
-          icon={TrendingUp}
+          icon="TrendingUp"
           subtitle="Annual Recurring Revenue"
         />
         <MetricCard
           title="Active Subscriptions"
           value={metrics.activeSubscriptions}
-          icon={CreditCard}
+          icon="CreditCard"
           subtitle={`${metrics.trialing} trialing`}
         />
         <MetricCard
           title="Conversion Rate"
           value={`${metrics.conversionRate}%`}
-          icon={Users}
+          icon="Users"
           subtitle={`${metrics.canceledThisMonth} canceled this month`}
         />
       </div>

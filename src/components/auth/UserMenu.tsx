@@ -18,19 +18,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function UserMenu() {
   const router = useRouter();
-  const supabase = getSupabaseBrowserClient();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ name: string | null; avatar_url: string | null } | null>(null);
+  const [supabase, setSupabase] = useState<ReturnType<typeof getSupabaseBrowserClient> | null>(null);
 
   useEffect(() => {
+    const client = getSupabaseBrowserClient();
+    setSupabase(client);
+
     async function getUser() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await client.auth.getUser();
       setUser(user);
 
       if (user) {
-        const { data: profileData } = await supabase
+        const { data: profileData } = await client
           .from("profiles")
           .select("name, avatar_url")
           .eq("id", user.id)
@@ -39,9 +42,10 @@ export function UserMenu() {
       }
     }
     getUser();
-  }, [supabase]);
+  }, []);
 
   async function handleSignOut() {
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

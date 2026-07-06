@@ -8,10 +8,6 @@ import { RevenueChart } from "@/components/admin/RevenueChart";
 import { UsageChart } from "@/components/admin/UsageChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Users,
-  DollarSign,
-  Brain,
-  Briefcase,
   AlertCircle,
   Activity,
 } from "lucide-react";
@@ -76,25 +72,25 @@ export default async function AdminPage() {
         <MetricCard
           title="Total Users"
           value={summary.totalUsers}
-          icon={Users}
+          icon="Users"
           subtitle={`${summary.totalSubscriptions} subscriptions`}
         />
         <MetricCard
           title="Monthly Revenue"
           value={`$${summary.mrr.toLocaleString()}`}
-          icon={DollarSign}
+          icon="DollarSign"
           subtitle={`$${(summary.arr / 1000).toFixed(1)}k ARR`}
         />
         <MetricCard
           title="AI Cost (Month)"
           value={`$${summary.aiCostThisMonth.toFixed(4)}`}
-          icon={Brain}
+          icon="Brain"
           subtitle="OpenAI + Gemini usage"
         />
         <MetricCard
           title="Opportunities"
           value={summary.opportunitiesTotal}
-          icon={Briefcase}
+          icon="Briefcase"
           subtitle="Total generated"
         />
       </div>

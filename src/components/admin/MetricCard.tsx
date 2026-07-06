@@ -2,13 +2,32 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import {
+  Users, Activity, TrendingUp, Brain, Rss, DollarSign,
+  Briefcase, AlertCircle, BarChart3, FileText, Target,
+  Zap, Shield, Search, Globe, Clock, PieChart, Settings,
+  TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Star,
+  CheckCircle, XCircle, Eye, BookOpen, Lightbulb, Flame,
+  Layers, Database, Cpu, BarChart2, LineChart, Calendar,
+  CreditCard
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Users, Activity, TrendingUp, Brain, Rss, DollarSign,
+  Briefcase, AlertCircle, BarChart3, FileText, Target,
+  Zap, Shield, Search, Globe, Clock, PieChart, Settings,
+  TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Star,
+  CheckCircle, XCircle, Eye, BookOpen, Lightbulb, Flame,
+  Layers, Database, Cpu, BarChart2, LineChart, Calendar,
+  CreditCard,
+};
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: LucideIcon;
+  icon: string;
   trend?: {
     value: number;
     positive: boolean;
@@ -20,10 +39,11 @@ export function MetricCard({
   title,
   value,
   subtitle,
-  icon: Icon,
+  icon,
   trend,
   className,
 }: MetricCardProps) {
+  const Icon = ICON_MAP[icon] || Activity;
   return (
     <Card className={cn("", className)}>
       <CardContent className="p-6">
