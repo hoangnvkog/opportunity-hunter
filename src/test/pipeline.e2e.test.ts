@@ -37,6 +37,18 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/lib/supabase", () => ({
+  getSupabaseServiceClient: vi.fn(() => ({
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+    }),
+  })),
   getSupabaseServerClient: vi.fn().mockResolvedValue({
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
