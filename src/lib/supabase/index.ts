@@ -1,24 +1,30 @@
 /**
  * Supabase module barrel.
  *
- * IMPORTANT - environment-aware split:
+ * IMPORTANT - environment-aware split (the ONLY way to import
+ * Supabase clients in this repo):
  *
- * - Browser / Client Components → import from "./client" only.
- * - App Router server code (server components, route handlers, server
- *   actions that need cookies()) → import directly from "./server".
- * - CLI / background workers / cron jobs / pipelines → import from
- *   THIS barrel or directly from "./service-client".
+ *   - Browser / Client Components ("use client")   → import from
+ *     "./client"  (never through this barrel)
  *
- * This barrel deliberately does NOT re-export "./server", which depends
- * on `next/headers`. Re-exporting it from a barrel that CLI scripts
- * pull would force every CLI run to evaluate `next/headers`, which
- * fails outside the Next.js runtime ("Client Component module").
+ *   - App Router server code (server components, route handlers,
+ *     server actions that need cookies()) → import directly from
+ *     "./server"  (never through this barrel)
  *
- * CLI / pipeline code MUST use getSupabaseServiceClient().
- * App Router code MUST use getSupabaseServerClient() from ./server.
+ *   - CLI scripts, cron jobs, pipeline runners, background workers
+ *     → import from THIS barrel or directly from "./service-client"
+ *
+ * The barrel ONLY re-exports the service-client (Next.js-runtime-free).
+ *
+ * This file deliberately does NOT re-export:
+ *   - "./server" (pulls next/headers → "Client Component module" error
+ *     in CLI)
+ *   - "./client" (browser-only; not useful in Node CLI and just adds
+ *     wasted work)
+ *   - "server-only" (synchronous RuntimeError outside Next.js)
+ *
+ * If a consumer needs `getSupabaseServerClient()` or
+ * `getSupabaseBrowserClient()` they MUST import the matching file
+ * directly. Doing so keeps the dependency graph honest.
  */
-export {
-  getSupabaseBrowserClient,
-  type AppSupabaseClient,
-} from "./client";
 export { getSupabaseServiceClient } from "./service-client";
