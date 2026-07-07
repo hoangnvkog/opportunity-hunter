@@ -1,7 +1,7 @@
 /**
  * Sprint 66: Venture Score Calculator Tests
  *
- * Pure function tests — no mocks, no DB.
+ * Pure function tests — no mocks, no DB, no casts.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -21,47 +21,55 @@ import {
   generateExplanations,
   buildComponentsFromData,
 } from "../venture-score.calculator";
+import type { VentureScoreComponents } from "@/types/venture-score";
 
 // ---------------------------------------------------------------------------
-// Helper: full components fixture
+// Fixtures: every field is required and explicitly typed.
 // ---------------------------------------------------------------------------
-function fullComponents() {
-  return {
-    opportunity: { id: "opp-1" },
-    validation: { available: true, score: 80, confidence: 75 },
-    forecast: { available: true, score: 70, trend: 0.15 },
-    financial: { available: true, overallScore: 65, ltvCacRatio: 4, breakEvenMonths: 18 },
-    research: { available: true, completeness: 80, sources: 5 },
-    insights: { available: true, quality: 75 },
-    competition: { available: true, score: 60 },
-    portfolio: { available: false, similarCount: 0, avgPerformance: 0 },
-    backtesting: { available: false, accuracy: 50 },
-  } as unknown as Parameters<typeof calculateOverallScore>[0];
-}
+
+const FULL_COMPONENTS: VentureScoreComponents = {
+  validation: { available: true, score: 80, confidence: 75 },
+  forecast: { available: true, score: 70, trend: 0.15 },
+  financial: { available: true, overallScore: 65, ltvCacRatio: 4, breakEvenMonths: 18 },
+  research: { available: true, completeness: 80, sources: 5 },
+  insights: { available: true, quality: 75 },
+  competition: { available: true, score: 60 },
+  portfolio: { available: false, similarCount: 0, avgPerformance: 0 },
+  backtesting: { available: false, accuracy: 50 },
+};
+
+const EMPTY_COMPONENTS: VentureScoreComponents = {
+  validation: { available: false, score: 0, confidence: 0 },
+  forecast: { available: false, score: 0, trend: 0 },
+  financial: { available: false, overallScore: 0, ltvCacRatio: 0, breakEvenMonths: 0 },
+  research: { available: false, completeness: 0, sources: 0 },
+  insights: { available: false, quality: 0 },
+  competition: { available: false, score: 0 },
+  portfolio: { available: false, similarCount: 0, avgPerformance: 0 },
+  backtesting: { available: false, accuracy: 0 },
+};
 
 describe("Venture Score Calculator", () => {
   describe("calculateOverallScore", () => {
     it("returns a number between 0 and 100 with all modules available", () => {
-      const score = calculateOverallScore(fullComponents());
+      const score = calculateOverallScore(FULL_COMPONENTS);
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
     });
 
     it("returns fallback score when all modules are missing", () => {
-      const score = calculateOverallScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateOverallScore>[0]);
+      const score = calculateOverallScore(EMPTY_COMPONENTS);
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
     });
 
     it("higher validation score increases overall", () => {
       const high = calculateOverallScore({
-        ...fullComponents(),
+        ...FULL_COMPONENTS,
         validation: { available: true, score: 95, confidence: 90 },
       });
       const low = calculateOverallScore({
-        ...fullComponents(),
+        ...FULL_COMPONENTS,
         validation: { available: true, score: 20, confidence: 30 },
       });
       expect(high).toBeGreaterThan(low);
@@ -97,15 +105,13 @@ describe("Venture Score Calculator", () => {
 
   describe("calculateConfidence", () => {
     it("returns higher confidence when more modules available", () => {
-      const high = calculateConfidence(fullComponents());
-      const low = calculateConfidence({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateConfidence>[0]);
+      const high = calculateConfidence(FULL_COMPONENTS);
+      const low = calculateConfidence(EMPTY_COMPONENTS);
       expect(high).toBeGreaterThan(low);
     });
 
     it("returns 0-100 range", () => {
-      const c = calculateConfidence(fullComponents());
+      const c = calculateConfidence(FULL_COMPONENTS);
       expect(c).toBeGreaterThanOrEqual(0);
       expect(c).toBeLessThanOrEqual(100);
     });
@@ -113,7 +119,7 @@ describe("Venture Score Calculator", () => {
 
   describe("calculateRiskScore", () => {
     it("higher is better (lower risk)", () => {
-      const r = calculateRiskScore(fullComponents());
+      const r = calculateRiskScore(FULL_COMPONENTS);
       expect(r).toBeGreaterThanOrEqual(0);
       expect(r).toBeLessThanOrEqual(100);
     });
@@ -121,19 +127,17 @@ describe("Venture Score Calculator", () => {
 
   describe("calculateROIScore", () => {
     it("returns fallback for missing financial", () => {
-      const r = calculateROIScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateROIScore>[0]);
+      const r = calculateROIScore(EMPTY_COMPONENTS);
       expect(r).toBe(30);
     });
 
     it("rewards high LTV/CAC ratio", () => {
       const high = calculateROIScore({
-        ...fullComponents(),
+        ...FULL_COMPONENTS,
         financial: { available: true, overallScore: 70, ltvCacRatio: 8, breakEvenMonths: 12 },
       });
       const low = calculateROIScore({
-        ...fullComponents(),
+        ...FULL_COMPONENTS,
         financial: { available: true, overallScore: 40, ltvCacRatio: 1, breakEvenMonths: 48 },
       });
       expect(high).toBeGreaterThan(low);
@@ -142,7 +146,7 @@ describe("Venture Score Calculator", () => {
 
   describe("calculateMarketScore", () => {
     it("uses research + validation + competition", () => {
-      const s = calculateMarketScore(fullComponents());
+      const s = calculateMarketScore(FULL_COMPONENTS);
       expect(s).toBeGreaterThanOrEqual(0);
       expect(s).toBeLessThanOrEqual(100);
     });
@@ -150,59 +154,47 @@ describe("Venture Score Calculator", () => {
 
   describe("calculateExecutionScore", () => {
     it("returns fallback for missing modules", () => {
-      const s = calculateExecutionScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateExecutionScore>[0]);
+      const s = calculateExecutionScore(EMPTY_COMPONENTS);
       expect(s).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe("calculateInnovationScore", () => {
     it("returns fallback for missing research", () => {
-      const s = calculateInnovationScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateInnovationScore>[0]);
+      const s = calculateInnovationScore(EMPTY_COMPONENTS);
       expect(s).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe("calculateFinancialScore", () => {
     it("returns fallback for missing financial", () => {
-      const s = calculateFinancialScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateFinancialScore>[0]);
+      const s = calculateFinancialScore(EMPTY_COMPONENTS);
       expect(s).toBe(30);
     });
   });
 
   describe("calculateValidationScore", () => {
     it("returns fallback for missing validation", () => {
-      const s = calculateValidationScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateValidationScore>[0]);
+      const s = calculateValidationScore(EMPTY_COMPONENTS);
       expect(s).toBe(50);
     });
 
     it("returns validation score when available", () => {
-      const s = calculateValidationScore(fullComponents());
+      const s = calculateValidationScore(FULL_COMPONENTS);
       expect(s).toBe(80);
     });
   });
 
   describe("calculateForecastScore", () => {
     it("returns fallback for missing forecast", () => {
-      const s = calculateForecastScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateForecastScore>[0]);
+      const s = calculateForecastScore(EMPTY_COMPONENTS);
       expect(s).toBe(50);
     });
   });
 
   describe("calculateResearchScore", () => {
     it("returns fallback for missing research", () => {
-      const s = calculateResearchScore({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof calculateResearchScore>[0]);
+      const s = calculateResearchScore(EMPTY_COMPONENTS);
       expect(s).toBe(40);
     });
   });
@@ -231,21 +223,17 @@ describe("Venture Score Calculator", () => {
 
   describe("generateExplanations", () => {
     it("generates strengths for good scores", () => {
-      const { strengths } = generateExplanations(fullComponents());
+      const { strengths } = generateExplanations(FULL_COMPONENTS);
       expect(strengths.length).toBeGreaterThan(0);
     });
 
     it("generates weaknesses for missing modules", () => {
-      const { weaknesses } = generateExplanations({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof generateExplanations>[0]);
+      const { weaknesses } = generateExplanations(EMPTY_COMPONENTS);
       expect(weaknesses.length).toBeGreaterThan(0);
     });
 
     it("lists missing financial as weakness", () => {
-      const { weaknesses } = generateExplanations({
-        opportunity: { id: "opp-1" },
-      } as unknown as Parameters<typeof generateExplanations>[0]);
+      const { weaknesses } = generateExplanations(EMPTY_COMPONENTS);
       expect(weaknesses.some((w) => w.toLowerCase().includes("financial"))).toBe(true);
     });
   });
