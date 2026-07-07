@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { Database } from "@/types/database.types";
 import type { Uuid } from "@/types";
 
@@ -9,8 +10,7 @@ export class WatchlistsRepository {
   constructor(private client: SupabaseClient<Database>) {}
 
   static async create() {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new WatchlistsRepository(await getSupabaseServerClient());
+    return new WatchlistsRepository(getSupabaseServiceClient());
   }
 
   /**
@@ -48,7 +48,7 @@ export class WatchlistsRepository {
       min_frequency?: number | null;
       min_severity?: number | null;
       min_buying_intent?: number | null;
-    }
+    },
   ) {
     const { data: watchlist, error } = await this.client
       .from("watchlists")

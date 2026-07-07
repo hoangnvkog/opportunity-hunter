@@ -9,6 +9,7 @@ import type {
   VentureCanvasInsert,
   VentureCanvasRow,
 } from "@/types/venture-studio";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -20,10 +21,7 @@ export class VentureCanvasRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<VentureCanvasRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new VentureCanvasRepository(
-      await getSupabaseServerClient(),
-    );
+    return new VentureCanvasRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single venture canvas record. */
@@ -39,7 +37,9 @@ export class VentureCanvasRepository {
   }
 
   /** Find canvas for a venture project. */
-  async findByProject(ventureProjectId: string): Promise<VentureCanvasRow | null> {
+  async findByProject(
+    ventureProjectId: string,
+  ): Promise<VentureCanvasRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")

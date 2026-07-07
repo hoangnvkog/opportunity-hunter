@@ -74,7 +74,7 @@ create policy "ic_owner_r"
 create policy "ic_admin_all"
   on investment_committees for all
   using (
-    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from profiles where profiles.id = auth.uid() and role = 'admin')
   );
 
 -- =====================================================================
@@ -130,7 +130,7 @@ create policy "cv_admin_all"
   using (
     exists (
       select 1 from profiles
-      join investment_committees ic on ic.committee_id = committee_votes.committee_id
-      where id = auth.uid() and role = 'admin'
+      join investment_committees ic on ic.id = committee_votes.committee_id
+      where profiles.id = auth.uid() and role = 'admin'
     )
   );

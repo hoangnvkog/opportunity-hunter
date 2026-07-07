@@ -11,6 +11,7 @@ import type {
   VentureReportCardData,
   VentureReportStats,
 } from "@/types/venture-report";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -25,10 +26,7 @@ export class VentureReportsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<VentureReportsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new VentureReportsRepository(
-      await getSupabaseServerClient(),
-    );
+    return new VentureReportsRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single venture report record. */
@@ -44,7 +42,9 @@ export class VentureReportsRepository {
   }
 
   /** Insert multiple venture report records. */
-  async createMany(records: VentureReportInsert[]): Promise<VentureReportRow[]> {
+  async createMany(
+    records: VentureReportInsert[],
+  ): Promise<VentureReportRow[]> {
     if (records.length === 0) return [];
     const { data, error } = await this.client
       .from(ENTITY)
@@ -56,7 +56,9 @@ export class VentureReportsRepository {
   }
 
   /** Find latest venture report for an opportunity. */
-  async findByOpportunity(opportunityId: string): Promise<VentureReportRow | null> {
+  async findByOpportunity(
+    opportunityId: string,
+  ): Promise<VentureReportRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -75,13 +77,15 @@ export class VentureReportsRepository {
   }
 
   /** List venture report rows with pagination. */
-  async list(opts: {
-    limit?: number;
-    offset?: number;
-    minConfidence?: number;
-    orderBy?: "confidence" | "created_at" | "report_version";
-    ascending?: boolean;
-  } = {}): Promise<VentureReportRow[]> {
+  async list(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minConfidence?: number;
+      orderBy?: "confidence" | "created_at" | "report_version";
+      ascending?: boolean;
+    } = {},
+  ): Promise<VentureReportRow[]> {
     const {
       limit = 50,
       offset = 0,
@@ -117,9 +121,7 @@ export class VentureReportsRepository {
 
   /** Average confidence across all records. */
   async averageConfidence(): Promise<number> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("confidence");
+    const { data, error } = await this.client.from(ENTITY).select("confidence");
 
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
@@ -170,17 +172,17 @@ export class VentureReportsRepository {
    * List venture report records joined with opportunity + cluster + startup_score details.
    * Powers the dashboard table.
    */
-  async listCards(opts: {
-    limit?: number;
-    offset?: number;
-    minConfidence?: number;
-  } = {}): Promise<VentureReportCardData[]> {
+  async listCards(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minConfidence?: number;
+    } = {},
+  ): Promise<VentureReportCardData[]> {
     const { limit = 50, offset = 0, minConfidence } = opts;
 
-    let query = this.client
-      .from(ENTITY)
-      .select(
-        `
+    let query = this.client.from(ENTITY).select(
+      `
         *,
         opportunity:opportunities(
           id,
@@ -189,7 +191,7 @@ export class VentureReportsRepository {
         ),
         startup_score:startup_scores(overall_score, recommendation)
       `,
-      );
+    );
 
     if (minConfidence !== undefined) {
       query = query.gte("confidence", minConfidence);
@@ -208,7 +210,10 @@ export class VentureReportsRepository {
         title: string;
         pain_cluster?: { name: string } | null;
       } | null;
-      startup_score?: { overall_score: number; recommendation: string | null } | null;
+      startup_score?: {
+        overall_score: number;
+        recommendation: string | null;
+      } | null;
     };
 
     const rows = (data ?? []) as RawRow[];
@@ -252,8 +257,8 @@ export class VentureReportsRepository {
       (r) => r.confidence >= INVESTMENT_GRADE_CONFIDENCE_THRESHOLD,
     ).length;
 
-    const strongBuy = rows.filter(
-      (r) => r.recommendation?.toUpperCase().startsWith("STRONG BUY"),
+    const strongBuy = rows.filter((r) =>
+      r.recommendation?.toUpperCase().startsWith("STRONG BUY"),
     ).length;
 
     const latestDate = rows.reduce(
@@ -274,11 +279,14 @@ export class VentureReportsRepository {
    * Confidence distribution: count of records bucketed by confidence range.
    */
   async getConfidenceDistribution(): Promise<
-    Array<{ bucket: string; count: number; minConfidence: number; maxConfidence: number }>
+    Array<{
+      bucket: string;
+      count: number;
+      minConfidence: number;
+      maxConfidence: number;
+    }>
   > {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("confidence");
+    const { data, error } = await this.client.from(ENTITY).select("confidence");
     if (error) throw translateError(ENTITY, error);
     const confidences = ((data ?? []) as Array<{ confidence: number }>).map(
       (r) => r.confidence,
@@ -328,9 +336,9 @@ export class VentureReportsRepository {
   /**
    * History: group reports by date and compute avg confidence per day.
    */
-  async getHistory(days: number = 30): Promise<
-    Array<{ date: string; count: number; avgConfidence: number }>
-  > {
+  async getHistory(
+    days: number = 30,
+  ): Promise<Array<{ date: string; count: number; avgConfidence: number }>> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("created_at, confidence")
@@ -343,7 +351,10 @@ export class VentureReportsRepository {
     if (error) throw translateError(ENTITY, error);
 
     const byDate = new Map<string, { count: number; sum: number }>();
-    for (const row of (data ?? []) as Array<{ created_at: string; confidence: number }>) {
+    for (const row of (data ?? []) as Array<{
+      created_at: string;
+      confidence: number;
+    }>) {
       const date = row.created_at.slice(0, 10);
       const entry = byDate.get(date) ?? { count: 0, sum: 0 };
       entry.count++;

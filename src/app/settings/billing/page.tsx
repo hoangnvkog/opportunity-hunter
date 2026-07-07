@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/server";
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { listUserDigestsAction } from "@/actions/weekly-digest.actions";
 import { BillingClient } from "./BillingClient";

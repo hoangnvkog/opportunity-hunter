@@ -15,6 +15,7 @@ import type {
   BacktestAccuracyDistribution,
   BacktestStatus,
 } from "@/types/backtesting";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -26,10 +27,7 @@ export class OpportunityBacktestsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<OpportunityBacktestsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunityBacktestsRepository(
-      await getSupabaseServerClient(),
-    );
+    return new OpportunityBacktestsRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single backtest record. */
@@ -98,12 +96,8 @@ export class OpportunityBacktestsRepository {
   }
 
   /** List backtests with optional filters and pagination. */
-  async list(
-    filters: BacktestSearchFilters = {},
-  ): Promise<BacktestRow[]> {
-    let query = this.client
-      .from(ENTITY)
-      .select("*");
+  async list(filters: BacktestSearchFilters = {}): Promise<BacktestRow[]> {
+    let query = this.client.from(ENTITY).select("*");
 
     if (filters.status) {
       query = query.eq("status", filters.status);
@@ -126,7 +120,11 @@ export class OpportunityBacktestsRepository {
     query = query.order(orderBy, { ascending });
 
     if (filters.limit) query = query.limit(filters.limit);
-    if (filters.offset) query = query.range(filters.offset, (filters.offset + (filters.limit ?? 50)) - 1);
+    if (filters.offset)
+      query = query.range(
+        filters.offset,
+        filters.offset + (filters.limit ?? 50) - 1,
+      );
 
     const { data, error } = await query;
     if (error) throw translateError(ENTITY, error);
@@ -135,7 +133,9 @@ export class OpportunityBacktestsRepository {
 
   /** Count total backtests (optionally filtered). */
   async count(filters: { status?: BacktestStatus } = {}): Promise<number> {
-    let query = this.client.from(ENTITY).select("id", { count: "exact", head: true });
+    let query = this.client
+      .from(ENTITY)
+      .select("id", { count: "exact", head: true });
     if (filters.status) query = query.eq("status", filters.status);
     const { count, error } = await query;
     if (error) throw translateError(ENTITY, error);
@@ -187,8 +187,7 @@ export class OpportunityBacktestsRepository {
     const avgDelta =
       evaluated.length > 0
         ? evaluated.reduce(
-            (sum, r) =>
-              sum + Math.abs(Number(r.prediction_delta ?? 0)),
+            (sum, r) => sum + Math.abs(Number(r.prediction_delta ?? 0)),
             0,
           ) / evaluated.length
         : null;
@@ -208,18 +207,15 @@ export class OpportunityBacktestsRepository {
       total: rows.length,
       evaluated: evaluated.length,
       pending: rows.filter((r) => r.status === "pending").length,
-      averageAccuracy: avgAccuracy !== null ? Math.round(avgAccuracy * 100) / 100 : null,
+      averageAccuracy:
+        avgAccuracy !== null ? Math.round(avgAccuracy * 100) / 100 : null,
       averageDelta: avgDelta !== null ? Math.round(avgDelta * 100) / 100 : null,
       successfulPredictions,
       failedPredictions,
       bestAccuracy:
-        accuracyValues.length > 0
-          ? Math.max(...accuracyValues)
-          : null,
+        accuracyValues.length > 0 ? Math.max(...accuracyValues) : null,
       worstAccuracy:
-        accuracyValues.length > 0
-          ? Math.min(...accuracyValues)
-          : null,
+        accuracyValues.length > 0 ? Math.min(...accuracyValues) : null,
       latestEvaluationDate:
         evaluated.length > 0
           ? evaluated.sort(
@@ -279,15 +275,13 @@ export class OpportunityBacktestsRepository {
       return {
         id: row.id as string,
         opportunity_id: row.opportunity_id as string,
-        opportunity_title:
-          (opp?.title as string) ?? "(unknown opportunity)",
+        opportunity_title: (opp?.title as string) ?? "(unknown opportunity)",
         cluster_name: null,
         predicted_score: Number(row.predicted_score),
-        actual_score: row.actual_score !== null ? Number(row.actual_score) : null,
+        actual_score:
+          row.actual_score !== null ? Number(row.actual_score) : null,
         prediction_delta:
-          row.prediction_delta !== null
-            ? Number(row.prediction_delta)
-            : null,
+          row.prediction_delta !== null ? Number(row.prediction_delta) : null,
         accuracy: row.accuracy !== null ? Number(row.accuracy) : null,
         status: row.status as BacktestStatus,
         evaluation_date: row.evaluation_date as string,

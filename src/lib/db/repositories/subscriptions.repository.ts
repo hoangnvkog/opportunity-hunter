@@ -1,4 +1,5 @@
 import type { SubscriptionInsert, SubscriptionRow } from "@/types/subscription";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { RepositoryError, translateError } from "@/lib/db/errors";
 
@@ -12,8 +13,7 @@ export class SubscriptionsRepository {
   }
 
   static async create(): Promise<SubscriptionsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new SubscriptionsRepository(await getSupabaseServerClient());
+    return new SubscriptionsRepository(getSupabaseServiceClient());
   }
 
   async insert(values: SubscriptionInsert): Promise<SubscriptionRow> {
@@ -51,7 +51,9 @@ export class SubscriptionsRepository {
     return data;
   }
 
-  async findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<SubscriptionRow | null> {
+  async findByStripeSubscriptionId(
+    stripeSubscriptionId: string,
+  ): Promise<SubscriptionRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -68,7 +70,10 @@ export class SubscriptionsRepository {
     return data;
   }
 
-  async update(id: string, values: Partial<SubscriptionInsert>): Promise<SubscriptionRow> {
+  async update(
+    id: string,
+    values: Partial<SubscriptionInsert>,
+  ): Promise<SubscriptionRow> {
     const { data, error } = await this.client
       .from(ENTITY)
       .update(values)

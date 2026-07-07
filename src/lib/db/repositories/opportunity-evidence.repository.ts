@@ -9,6 +9,7 @@ import type {
   OpportunityEvidenceInsert,
   EvidenceType,
 } from "@/types/evidence";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/errors";
 
@@ -20,10 +21,7 @@ export class OpportunityEvidenceRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<OpportunityEvidenceRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunityEvidenceRepository(
-      await getSupabaseServerClient(),
-    );
+    return new OpportunityEvidenceRepository(getSupabaseServiceClient());
   }
 
   /** Insert multiple evidence records. */
@@ -93,9 +91,7 @@ export class OpportunityEvidenceRepository {
   }
 
   /** Average confidence across all evidence, or for a single opportunity. */
-  async averageConfidence(
-    opportunityId?: string,
-  ): Promise<number> {
+  async averageConfidence(opportunityId?: string): Promise<number> {
     let query = this.client.from(ENTITY).select("*");
 
     if (opportunityId) {

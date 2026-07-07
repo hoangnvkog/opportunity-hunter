@@ -1,4 +1,5 @@
 import type { UsageLimitRow } from "@/types/subscription";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/errors";
 
@@ -12,8 +13,7 @@ export class UsageLimitsRepository {
   }
 
   static async create(): Promise<UsageLimitsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new UsageLimitsRepository(await getSupabaseServerClient());
+    return new UsageLimitsRepository(getSupabaseServiceClient());
   }
 
   async findCurrentMonth(userId: string): Promise<UsageLimitRow | null> {
@@ -55,15 +55,13 @@ export class UsageLimitsRepository {
         throw translateError(ENTITY, error);
       }
     } else {
-      const { error } = await this.client
-        .from(ENTITY)
-        .insert({
-          user_id: userId,
-          month,
-          opportunities_used: amount,
-          insights_used: 0,
-          emails_sent: 0,
-        });
+      const { error } = await this.client.from(ENTITY).insert({
+        user_id: userId,
+        month,
+        opportunities_used: amount,
+        insights_used: 0,
+        emails_sent: 0,
+      });
 
       if (error) {
         throw translateError(ENTITY, error);
@@ -90,15 +88,13 @@ export class UsageLimitsRepository {
         throw translateError(ENTITY, error);
       }
     } else {
-      const { error } = await this.client
-        .from(ENTITY)
-        .insert({
-          user_id: userId,
-          month,
-          opportunities_used: 0,
-          insights_used: amount,
-          emails_sent: 0,
-        });
+      const { error } = await this.client.from(ENTITY).insert({
+        user_id: userId,
+        month,
+        opportunities_used: 0,
+        insights_used: amount,
+        emails_sent: 0,
+      });
 
       if (error) {
         throw translateError(ENTITY, error);
@@ -125,15 +121,13 @@ export class UsageLimitsRepository {
         throw translateError(ENTITY, error);
       }
     } else {
-      const { error } = await this.client
-        .from(ENTITY)
-        .insert({
-          user_id: userId,
-          month,
-          opportunities_used: 0,
-          insights_used: 0,
-          emails_sent: amount,
-        });
+      const { error } = await this.client.from(ENTITY).insert({
+        user_id: userId,
+        month,
+        opportunities_used: 0,
+        insights_used: 0,
+        emails_sent: amount,
+      });
 
       if (error) {
         throw translateError(ENTITY, error);

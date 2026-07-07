@@ -382,10 +382,10 @@ async function triggerVCGradeAlertIfNeeded(
     const { MatchingService } = await import("@/services/matching/matching.service");
     const { AlertsRepository } = await import("@/lib/db/repositories/alerts.repository");
     const { EmailService } = await import("@/services/email/email.service");
-    const { getSupabaseServerClient } = await import("@/lib/supabase/server");
+    const { getSupabaseServiceClient } = await import("@/lib/supabase");
     const { OpportunitiesRepository } = await import("@/lib/db/repositories/opportunities.repository");
 
-    const client = await getSupabaseServerClient();
+    const client = getSupabaseServiceClient();
     const matchingService = new MatchingService(client);
     const alertsRepo = new AlertsRepository(client);
     const opportunityRepo = await OpportunitiesRepository.create();

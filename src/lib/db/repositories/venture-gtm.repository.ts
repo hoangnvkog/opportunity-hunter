@@ -5,10 +5,8 @@
  * Stores AI-generated Go-to-Market strategy for a venture project.
  */
 
-import type {
-  VentureGtmInsert,
-  VentureGtmRow,
-} from "@/types/venture-studio";
+import type { VentureGtmInsert, VentureGtmRow } from "@/types/venture-studio";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -20,10 +18,7 @@ export class VentureGtmRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<VentureGtmRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new VentureGtmRepository(
-      await getSupabaseServerClient(),
-    );
+    return new VentureGtmRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single venture GTM record. */

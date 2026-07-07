@@ -8,7 +8,7 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { getSupabaseServerClient } = await import("@/lib/supabase");
+  const { getSupabaseServerClient } = await import("@/lib/supabase/server");
   const supabase = await getSupabaseServerClient();
 
   const { data: sub } = await supabase

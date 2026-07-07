@@ -9,25 +9,29 @@ import type {
   OpportunityForecastInsert,
   OpportunityForecastUpdate,
 } from "@/types/forecast";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/errors";
 
 const ENTITY = "opportunity_forecasts";
 
-export type { OpportunityForecastRow, OpportunityForecastInsert, OpportunityForecastUpdate };
+export type {
+  OpportunityForecastRow,
+  OpportunityForecastInsert,
+  OpportunityForecastUpdate,
+};
 
 export class OpportunityForecastsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<OpportunityForecastsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunityForecastsRepository(
-      await getSupabaseServerClient(),
-    );
+    return new OpportunityForecastsRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single forecast record. */
-  async create(record: OpportunityForecastInsert): Promise<OpportunityForecastRow> {
+  async create(
+    record: OpportunityForecastInsert,
+  ): Promise<OpportunityForecastRow> {
     const { data, error } = await this.client
       .from(ENTITY)
       .insert(record)
@@ -39,7 +43,9 @@ export class OpportunityForecastsRepository {
   }
 
   /** Insert multiple forecast records. */
-  async createMany(records: OpportunityForecastInsert[]): Promise<OpportunityForecastRow[]> {
+  async createMany(
+    records: OpportunityForecastInsert[],
+  ): Promise<OpportunityForecastRow[]> {
     if (records.length === 0) return [];
     const { data, error } = await this.client
       .from(ENTITY)
@@ -51,7 +57,9 @@ export class OpportunityForecastsRepository {
   }
 
   /** Find forecast by opportunity ID. */
-  async findByOpportunity(opportunityId: string): Promise<OpportunityForecastRow | null> {
+  async findByOpportunity(
+    opportunityId: string,
+  ): Promise<OpportunityForecastRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -65,13 +73,19 @@ export class OpportunityForecastsRepository {
   }
 
   /** List all forecasts with pagination and sorting. */
-  async list(opts: {
-    limit?: number;
-    offset?: number;
-    minScore?: number;
-    orderBy?: "forecast_score" | "growth_probability" | "momentum" | "created_at";
-    ascending?: boolean;
-  } = {}): Promise<OpportunityForecastRow[]> {
+  async list(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minScore?: number;
+      orderBy?:
+        | "forecast_score"
+        | "growth_probability"
+        | "momentum"
+        | "created_at";
+      ascending?: boolean;
+    } = {},
+  ): Promise<OpportunityForecastRow[]> {
     const {
       limit = 50,
       offset = 0,
@@ -80,9 +94,7 @@ export class OpportunityForecastsRepository {
       ascending = false,
     } = opts;
 
-    let query = this.client
-      .from(ENTITY)
-      .select("*");
+    let query = this.client.from(ENTITY).select("*");
 
     if (minScore !== undefined) {
       query = query.gte("forecast_score", minScore);
@@ -98,7 +110,9 @@ export class OpportunityForecastsRepository {
   }
 
   /** Get top forecasts by score. */
-  async listTopForecasts(limit: number = 10): Promise<OpportunityForecastRow[]> {
+  async listTopForecasts(
+    limit: number = 10,
+  ): Promise<OpportunityForecastRow[]> {
     return this.list({ limit, orderBy: "forecast_score", ascending: false });
   }
 
@@ -156,9 +170,7 @@ export class OpportunityForecastsRepository {
 
   /** Average confidence across all forecasts. */
   async averageConfidence(): Promise<number> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("confidence");
+    const { data, error } = await this.client.from(ENTITY).select("confidence");
 
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
@@ -169,9 +181,7 @@ export class OpportunityForecastsRepository {
 
   /** Average momentum across all forecasts. */
   async averageMomentum(): Promise<number> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("momentum");
+    const { data, error } = await this.client.from(ENTITY).select("momentum");
 
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
@@ -202,21 +212,15 @@ export class OpportunityForecastsRepository {
     averageMomentum: number;
     topForecastScore: number;
   }> {
-    const [
-      total,
-      avgScore,
-      avgGrowth,
-      avgConfidence,
-      avgMomentum,
-      topScore,
-    ] = await Promise.all([
-      this.count(),
-      this.averageForecastScore(),
-      this.averageGrowthProbability(),
-      this.averageConfidence(),
-      this.averageMomentum(),
-      this.topForecastScore(),
-    ]);
+    const [total, avgScore, avgGrowth, avgConfidence, avgMomentum, topScore] =
+      await Promise.all([
+        this.count(),
+        this.averageForecastScore(),
+        this.averageGrowthProbability(),
+        this.averageConfidence(),
+        this.averageMomentum(),
+        this.topForecastScore(),
+      ]);
 
     return {
       total,

@@ -50,8 +50,8 @@ export async function processForecastAlerts(
 ): Promise<ForecastAlertResult> {
   const forecastRepo = await OpportunityForecastsRepository.create();
   const opportunityRepo = await OpportunitiesRepository.create();
-  const { getSupabaseServerClient } = await import("@/lib/supabase/server");
-  const client = await getSupabaseServerClient();
+  const { getSupabaseServiceClient } = await import("@/lib/supabase");
+  const client = getSupabaseServiceClient();
   const { MatchingService } = await import("@/services/matching/matching.service");
   const { EmailService } = await import("@/services/email/email.service");
   const matchingService = new MatchingService(client);

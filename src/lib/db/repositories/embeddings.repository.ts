@@ -1,6 +1,10 @@
-import type { EmbeddingRow, EmbeddingInsert, EmbeddingSearchResult } from "@/types/embeddings";
+import type {
+  EmbeddingRow,
+  EmbeddingInsert,
+  EmbeddingSearchResult,
+} from "@/types/embeddings";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { Uuid } from "@/types/database.types";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { AnySupabaseClient } from "./_base";
 
 export class EmbeddingsRepository {
@@ -11,7 +15,7 @@ export class EmbeddingsRepository {
   }
 
   static async create(): Promise<EmbeddingsRepository> {
-    const client = await getSupabaseServerClient();
+    const client = getSupabaseServiceClient();
     return new EmbeddingsRepository(client);
   }
 
@@ -38,7 +42,7 @@ export class EmbeddingsRepository {
         data.map((item) => ({
           pain_point_id: item.pain_point_id,
           embedding: item.embedding,
-        }))
+        })),
       )
       .select();
 
@@ -82,7 +86,7 @@ export class EmbeddingsRepository {
   async similaritySearch(
     queryEmbedding: number[],
     limit: number = 10,
-    threshold: number = 0.7
+    threshold: number = 0.7,
   ): Promise<EmbeddingSearchResult[]> {
     const { data, error } = await this.client.rpc("find_similar_pain_points", {
       query_embedding: queryEmbedding,

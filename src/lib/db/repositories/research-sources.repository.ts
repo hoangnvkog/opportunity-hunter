@@ -4,22 +4,26 @@
  * Repository for research_sources table.
  */
 
-import { createClient } from "@/lib/supabase/server";
-import type { ResearchSourceRow, ResearchSourceInsert } from "@/types/research-job";
+import { getSupabaseServiceClient } from "@/lib/supabase";
+import type {
+  ResearchSourceRow,
+  ResearchSourceInsert,
+} from "@/types/research-job";
 
 export class ResearchSourcesRepository {
   /**
    * Find all enabled sources ordered by priority.
    */
   async findEnabled(): Promise<ResearchSourceRow[]> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("research_sources")
       .select()
       .eq("enabled", true)
       .order("priority", { ascending: false });
 
-    if (error) throw new Error(`Failed to fetch research sources: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to fetch research sources: ${error.message}`);
     return data ?? [];
   }
 
@@ -27,7 +31,7 @@ export class ResearchSourcesRepository {
    * Find source by name.
    */
   async findByName(name: string): Promise<ResearchSourceRow | null> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("research_sources")
       .select()
@@ -41,8 +45,11 @@ export class ResearchSourcesRepository {
   /**
    * Update source (e.g., last_sync, enabled, priority, rate_limit).
    */
-  async update(id: string, updates: Partial<ResearchSourceInsert>): Promise<ResearchSourceRow> {
-    const supabase = await createClient();
+  async update(
+    id: string,
+    updates: Partial<ResearchSourceInsert>,
+  ): Promise<ResearchSourceRow> {
+    const supabase = getSupabaseServiceClient();
     const { data: row, error } = await supabase
       .from("research_sources")
       .update(updates)
@@ -50,7 +57,8 @@ export class ResearchSourcesRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update research source: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to update research source: ${error.message}`);
     return row;
   }
 }

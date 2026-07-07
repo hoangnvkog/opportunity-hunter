@@ -10,6 +10,7 @@ import type {
   StartupScoreRow,
   StartupScoreCardData,
 } from "@/types/startup-score";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -24,10 +25,7 @@ export class StartupScoresRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<StartupScoresRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new StartupScoresRepository(
-      await getSupabaseServerClient(),
-    );
+    return new StartupScoresRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single startup score record. */
@@ -55,7 +53,9 @@ export class StartupScoresRepository {
   }
 
   /** Find startup score record for an opportunity. */
-  async findByOpportunity(opportunityId: string): Promise<StartupScoreRow | null> {
+  async findByOpportunity(
+    opportunityId: string,
+  ): Promise<StartupScoreRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -87,17 +87,15 @@ export class StartupScoresRepository {
   }
 
   /** List startup score rows with pagination. */
-  async list(opts: {
-    limit?: number;
-    offset?: number;
-    minScore?: number;
-    orderBy?:
-      | "overall_score"
-      | "confidence"
-      | "created_at"
-      | "tam_score";
-    ascending?: boolean;
-  } = {}): Promise<StartupScoreRow[]> {
+  async list(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minScore?: number;
+      orderBy?: "overall_score" | "confidence" | "created_at" | "tam_score";
+      ascending?: boolean;
+    } = {},
+  ): Promise<StartupScoreRow[]> {
     const {
       limit = 50,
       offset = 0,
@@ -164,9 +162,7 @@ export class StartupScoresRepository {
 
   /** Average confidence across all records. */
   async averageConfidence(): Promise<number> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("confidence");
+    const { data, error } = await this.client.from(ENTITY).select("confidence");
 
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
@@ -205,17 +201,17 @@ export class StartupScoresRepository {
    * List startup score records joined with opportunity + cluster details.
    * Powers the dashboard table.
    */
-  async listCards(opts: {
-    limit?: number;
-    offset?: number;
-    minScore?: number;
-  } = {}): Promise<StartupScoreCardData[]> {
+  async listCards(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minScore?: number;
+    } = {},
+  ): Promise<StartupScoreCardData[]> {
     const { limit = 50, offset = 0, minScore } = opts;
 
-    let query = this.client
-      .from(ENTITY)
-      .select(
-        `
+    let query = this.client.from(ENTITY).select(
+      `
         *,
         opportunity:opportunities(
           id,
@@ -223,7 +219,7 @@ export class StartupScoresRepository {
           pain_cluster:pain_clusters(name)
         )
       `,
-      );
+    );
 
     if (minScore !== undefined) {
       query = query.gte("overall_score", minScore);
@@ -317,7 +313,9 @@ export class StartupScoresRepository {
       ).length,
       averageConfidence: round2(sum("confidence") / rows.length),
       averageTamScore: round2(sum("tam_score") / rows.length),
-      averageMarketTimingScore: round2(sum("market_timing_score") / rows.length),
+      averageMarketTimingScore: round2(
+        sum("market_timing_score") / rows.length,
+      ),
       averageCompetitionScore: round2(sum("competition_score") / rows.length),
       averageMoatScore: round2(sum("moat_score") / rows.length),
       averageDistributionScore: round2(sum("distribution_score") / rows.length),
@@ -363,7 +361,11 @@ export class StartupScoresRepository {
         dimension: "distribution_score",
         label: "Distribution",
       },
-      { key: "execution_score", dimension: "execution_score", label: "Execution" },
+      {
+        key: "execution_score",
+        dimension: "execution_score",
+        label: "Execution",
+      },
       {
         key: "capital_efficiency_score",
         dimension: "capital_efficiency_score",
@@ -427,9 +429,7 @@ export class StartupScoresRepository {
     ];
 
     for (const score of scores) {
-      const b = buckets.find(
-        (b) => score >= b.minScore && score <= b.maxScore,
-      );
+      const b = buckets.find((b) => score >= b.minScore && score <= b.maxScore);
       if (b) b.count++;
     }
 

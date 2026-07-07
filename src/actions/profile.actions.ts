@@ -1,7 +1,7 @@
 "use server";
 
 import { getUser } from "@/lib/auth/server";
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function getProfile() {
   try {

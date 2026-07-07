@@ -1,4 +1,5 @@
 import type { AiUsageLogRow, AiUsageLogInsert } from "@/types/admin";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/errors";
 
@@ -12,8 +13,7 @@ export class AiUsageRepository {
   }
 
   static async create(): Promise<AiUsageRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new AiUsageRepository(await getSupabaseServerClient());
+    return new AiUsageRepository(getSupabaseServiceClient());
   }
 
   async insert(log: AiUsageLogInsert): Promise<AiUsageLogRow> {
@@ -43,10 +43,7 @@ export class AiUsageRepository {
     return data ?? [];
   }
 
-  async getTotalCost(
-    startDate?: string,
-    endDate?: string
-  ): Promise<number> {
+  async getTotalCost(startDate?: string, endDate?: string): Promise<number> {
     let query = this.client.from(ENTITY).select("estimated_cost");
 
     if (startDate) {
@@ -61,10 +58,16 @@ export class AiUsageRepository {
     if (error) {
       throw translateError(ENTITY, error);
     }
-    return (data ?? []).reduce((sum, row) => sum + Number(row.estimated_cost), 0);
+    return (data ?? []).reduce(
+      (sum, row) => sum + Number(row.estimated_cost),
+      0,
+    );
   }
 
-  async getDailyCost(startDate: string, endDate: string): Promise<{ date: string; cost: number }[]> {
+  async getDailyCost(
+    startDate: string,
+    endDate: string,
+  ): Promise<{ date: string; cost: number }[]> {
     // Use a view or RPC; fallback: select raw and group in JS for simplicity
     const { data, error } = await this.client
       .from(ENTITY)
@@ -87,16 +90,20 @@ export class AiUsageRepository {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  async getMonthlyStats(year: number, month: number): Promise<{
+  async getMonthlyStats(
+    year: number,
+    month: number,
+  ): Promise<{
     totalCost: number;
     inputTokens: number;
     outputTokens: number;
     requests: number;
   }> {
     const start = `${year}-${String(month).padStart(2, "0")}-01`;
-    const end = month === 12
-      ? `${year + 1}-01-01`
-      : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+    const end =
+      month === 12
+        ? `${year + 1}-01-01`
+        : `${year}-${String(month + 1).padStart(2, "0")}-01`;
 
     const { data, error } = await this.client
       .from(ENTITY)
@@ -118,12 +125,18 @@ export class AiUsageRepository {
       outputTokens += row.output_tokens;
     }
 
-    return { totalCost, inputTokens, outputTokens, requests: data?.length ?? 0 };
+    return {
+      totalCost,
+      inputTokens,
+      outputTokens,
+      requests: data?.length ?? 0,
+    };
   }
 
-  async getProviderBreakdown(startDate: string, endDate: string): Promise<
-    { provider: string; cost: number; requests: number }[]
-  > {
+  async getProviderBreakdown(
+    startDate: string,
+    endDate: string,
+  ): Promise<{ provider: string; cost: number; requests: number }[]> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("provider, estimated_cost")

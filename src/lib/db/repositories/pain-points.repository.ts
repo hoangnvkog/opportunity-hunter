@@ -8,7 +8,12 @@ import type {
   PainPointUpdate,
   Uuid,
 } from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "pain_points";
@@ -25,8 +30,7 @@ export class PainPointsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<PainPointsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new PainPointsRepository(await getSupabaseServerClient());
+    return new PainPointsRepository(getSupabaseServiceClient());
   }
 
   async findById(id: Uuid): Promise<PainPointRow | null> {
@@ -61,8 +65,7 @@ export class PainPointsRepository {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (minSeverity !== undefined)
-      query = query.gte("severity", minSeverity);
+    if (minSeverity !== undefined) query = query.gte("severity", minSeverity);
     if (minFrequency !== undefined)
       query = query.gte("frequency", minFrequency);
     if (minBuyingIntent !== undefined)

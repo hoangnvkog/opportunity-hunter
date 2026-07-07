@@ -10,6 +10,7 @@ import type {
   MarketIntelligenceRow,
   MarketIntelligenceCardData,
 } from "@/types/market-intelligence";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -21,10 +22,7 @@ export class MarketIntelligenceRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<MarketIntelligenceRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new MarketIntelligenceRepository(
-      await getSupabaseServerClient(),
-    );
+    return new MarketIntelligenceRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single market intelligence record. */
@@ -88,13 +86,15 @@ export class MarketIntelligenceRepository {
   }
 
   /** List intelligence rows with pagination. */
-  async list(opts: {
-    limit?: number;
-    offset?: number;
-    minScore?: number;
-    orderBy?: "overall_score" | "confidence" | "created_at";
-    ascending?: boolean;
-  } = {}): Promise<MarketIntelligenceRow[]> {
+  async list(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minScore?: number;
+      orderBy?: "overall_score" | "confidence" | "created_at";
+      ascending?: boolean;
+    } = {},
+  ): Promise<MarketIntelligenceRow[]> {
     const {
       limit = 50,
       offset = 0,
@@ -161,9 +161,7 @@ export class MarketIntelligenceRepository {
 
   /** Average confidence across all records. */
   async averageConfidence(): Promise<number> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("confidence");
+    const { data, error } = await this.client.from(ENTITY).select("confidence");
 
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
@@ -189,17 +187,17 @@ export class MarketIntelligenceRepository {
    * List market intelligence records joined with opportunity + cluster
    * details. Powers the dashboard table.
    */
-  async listCards(opts: {
-    limit?: number;
-    offset?: number;
-    minScore?: number;
-  } = {}): Promise<MarketIntelligenceCardData[]> {
+  async listCards(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minScore?: number;
+    } = {},
+  ): Promise<MarketIntelligenceCardData[]> {
     const { limit = 50, offset = 0, minScore } = opts;
 
-    let query = this.client
-      .from(ENTITY)
-      .select(
-        `
+    let query = this.client.from(ENTITY).select(
+      `
         *,
         opportunity:opportunities(
           id,
@@ -207,7 +205,7 @@ export class MarketIntelligenceRepository {
           pain_cluster:pain_clusters(name)
         )
       `,
-      );
+    );
 
     if (minScore !== undefined) {
       query = query.gte("overall_score", minScore);
@@ -263,9 +261,7 @@ export class MarketIntelligenceRepository {
     averageGoogleTrendsScore: number;
     averageJobsScore: number;
   }> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("*");
+    const { data, error } = await this.client.from(ENTITY).select("*");
 
     if (error) throw translateError(ENTITY, error);
     const rows = (data ?? []) as MarketIntelligenceRow[];
@@ -297,7 +293,9 @@ export class MarketIntelligenceRepository {
       averageGithubScore: round2(sum("github_score") / rows.length),
       averageProductHuntScore: round2(sum("product_hunt_score") / rows.length),
       averageNewsScore: round2(sum("news_score") / rows.length),
-      averageGoogleTrendsScore: round2(sum("google_trends_score") / rows.length),
+      averageGoogleTrendsScore: round2(
+        sum("google_trends_score") / rows.length,
+      ),
       averageJobsScore: round2(sum("jobs_score") / rows.length),
     };
   }
@@ -306,7 +304,9 @@ export class MarketIntelligenceRepository {
    * Signal distribution: count of records bucketed by overall_score range.
    * Powers the admin "Signal distribution" chart.
    */
-  async getSignalDistribution(): Promise<Array<{ bucket: string; count: number; minScore: number; maxScore: number }>> {
+  async getSignalDistribution(): Promise<
+    Array<{ bucket: string; count: number; minScore: number; maxScore: number }>
+  > {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("overall_score");
@@ -335,14 +335,19 @@ export class MarketIntelligenceRepository {
   /**
    * Time series of intelligence records by day, for the admin history chart.
    */
-  async getHistory(days: number = 30): Promise<Array<{ date: string; count: number; avgScore: number }>> {
+  async getHistory(
+    days: number = 30,
+  ): Promise<Array<{ date: string; count: number; avgScore: number }>> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("created_at, overall_score")
       .order("created_at", { ascending: true });
 
     if (error) throw translateError(ENTITY, error);
-    const rows = (data ?? []) as Array<{ created_at: string; overall_score: number }>;
+    const rows = (data ?? []) as Array<{
+      created_at: string;
+      overall_score: number;
+    }>;
 
     // Group by YYYY-MM-DD
     const byDate = new Map<string, { count: number; sumScore: number }>();
@@ -367,14 +372,19 @@ export class MarketIntelligenceRepository {
   /**
    * Confidence over time series for the admin chart.
    */
-  async getConfidenceHistory(days: number = 30): Promise<Array<{ date: string; avgConfidence: number }>> {
+  async getConfidenceHistory(
+    days: number = 30,
+  ): Promise<Array<{ date: string; avgConfidence: number }>> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("created_at, confidence")
       .order("created_at", { ascending: true });
 
     if (error) throw translateError(ENTITY, error);
-    const rows = (data ?? []) as Array<{ created_at: string; confidence: number }>;
+    const rows = (data ?? []) as Array<{
+      created_at: string;
+      confidence: number;
+    }>;
 
     const byDate = new Map<string, { count: number; sumConfidence: number }>();
     for (const row of rows) {

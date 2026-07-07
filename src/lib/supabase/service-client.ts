@@ -7,7 +7,7 @@
 
 import type { Database } from "@/types";
 import { getPublicEnv } from "@/lib/env";
-import { getServerEnv } from "@/lib/env.server";
+import { getServiceEnv } from "@/lib/env.service";
 import { createClient as createRawClient } from "@supabase/supabase-js";
 import type { AppSupabaseClient } from "./client";
 
@@ -28,11 +28,11 @@ export function getSupabaseServiceClient(): AppSupabaseClient {
   if (serviceClient) return serviceClient;
 
   const publicEnv = getPublicEnv();
-  const serverEnv = getServerEnv();
+  const serviceEnv = getServiceEnv();
 
   serviceClient = createRawClient<Database>(
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
-    serverEnv.SUPABASE_SERVICE_ROLE_KEY,
+    serviceEnv.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
         autoRefreshToken: false,

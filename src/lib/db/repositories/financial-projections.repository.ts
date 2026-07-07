@@ -8,6 +8,7 @@ import type {
   FinancialProjectionRow,
   FinancialProjectionInsert,
 } from "@/types/financial";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -19,12 +20,13 @@ export class FinancialProjectionsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<FinancialProjectionsRepository> {
-    const { createClient } = await import("@/lib/supabase/server");
-    const client = await createClient();
+    const client = getSupabaseServiceClient();
     return new FinancialProjectionsRepository(client);
   }
 
-  async create(data: FinancialProjectionInsert): Promise<FinancialProjectionRow> {
+  async create(
+    data: FinancialProjectionInsert,
+  ): Promise<FinancialProjectionRow> {
     const { data: row, error } = await this.client
       .from(ENTITY)
       .insert(data)
@@ -35,7 +37,9 @@ export class FinancialProjectionsRepository {
     return row as FinancialProjectionRow;
   }
 
-  async createMany(items: FinancialProjectionInsert[]): Promise<FinancialProjectionRow[]> {
+  async createMany(
+    items: FinancialProjectionInsert[],
+  ): Promise<FinancialProjectionRow[]> {
     if (items.length === 0) return [];
     const { data, error } = await this.client
       .from(ENTITY)
@@ -46,7 +50,9 @@ export class FinancialProjectionsRepository {
     return (data ?? []) as FinancialProjectionRow[];
   }
 
-  async findByModel(financialModelId: string): Promise<FinancialProjectionRow[]> {
+  async findByModel(
+    financialModelId: string,
+  ): Promise<FinancialProjectionRow[]> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select()
@@ -57,7 +63,10 @@ export class FinancialProjectionsRepository {
     return (data ?? []) as FinancialProjectionRow[];
   }
 
-  async findByModelAndYear(financialModelId: string, year: number): Promise<FinancialProjectionRow | null> {
+  async findByModelAndYear(
+    financialModelId: string,
+    year: number,
+  ): Promise<FinancialProjectionRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select()

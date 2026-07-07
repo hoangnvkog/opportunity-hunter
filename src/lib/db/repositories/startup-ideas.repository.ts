@@ -5,13 +5,18 @@
  */
 
 import type { StartupIdeaCardData } from "@/types/dashboard";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type {
   StartupIdeaInsert,
   StartupIdeaRow,
   StartupIdeaUpdate,
   Uuid,
 } from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "startup_ideas";
@@ -26,8 +31,7 @@ export class StartupIdeasRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<StartupIdeasRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new StartupIdeasRepository(await getSupabaseServerClient());
+    return new StartupIdeasRepository(getSupabaseServiceClient());
   }
 
   async findById(id: Uuid): Promise<StartupIdeaRow | null> {
@@ -55,7 +59,8 @@ export class StartupIdeasRepository {
       .select("*")
       .range(offset, offset + limit - 1);
 
-    if (opportunityId !== undefined) query = query.eq("opportunity_id", opportunityId);
+    if (opportunityId !== undefined)
+      query = query.eq("opportunity_id", opportunityId);
 
     const { data, error } = await query;
 
@@ -103,7 +108,8 @@ export class StartupIdeasRepository {
   async listLatest(limit = 10): Promise<StartupIdeaCardData[]> {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select(`
+      .select(
+        `
         id,
         problem,
         solution,
@@ -117,7 +123,8 @@ export class StartupIdeasRepository {
             description
           )
         )
-      `)
+      `,
+      )
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -153,12 +160,15 @@ export class StartupIdeasRepository {
     });
   }
 
-  async search(filters: import("@/types/filters").StartupIdeaFilters): Promise<StartupIdeaCardData[]> {
+  async search(
+    filters: import("@/types/filters").StartupIdeaFilters,
+  ): Promise<StartupIdeaCardData[]> {
     const { search, limit = 10 } = filters;
 
     let query = this.client
       .from(ENTITY)
-      .select(`
+      .select(
+        `
         id,
         problem,
         solution,
@@ -172,7 +182,8 @@ export class StartupIdeasRepository {
             description
           )
         )
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
 
     // Text search on problem, solution, or cluster name
@@ -223,7 +234,7 @@ export class StartupIdeasRepository {
         (idea) =>
           idea.problem.toLowerCase().includes(searchLower) ||
           idea.solution.toLowerCase().includes(searchLower) ||
-          idea.cluster_name.toLowerCase().includes(searchLower)
+          idea.cluster_name.toLowerCase().includes(searchLower),
       );
     }
 
@@ -241,7 +252,8 @@ export class StartupIdeasRepository {
   ): Promise<import("@/types/startup-idea-detail").StartupIdeaDetail | null> {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select(`
+      .select(
+        `
         id,
         problem,
         solution,
@@ -258,7 +270,8 @@ export class StartupIdeasRepository {
             description
           )
         )
-      `)
+      `,
+      )
       .eq("id", id)
       .maybeSingle();
 

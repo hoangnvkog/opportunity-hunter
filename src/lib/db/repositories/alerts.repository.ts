@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { Database } from "@/types/database.types";
 import type { Uuid } from "@/types";
 
@@ -9,8 +10,7 @@ export class AlertsRepository {
   constructor(private client: SupabaseClient<Database>) {}
 
   static async create() {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new AlertsRepository(await getSupabaseServerClient());
+    return new AlertsRepository(getSupabaseServiceClient());
   }
 
   /**
@@ -37,7 +37,8 @@ export class AlertsRepository {
   async listByUser(userId: Uuid) {
     const { data: alerts, error } = await this.client
       .from("alerts")
-      .select(`
+      .select(
+        `
         *,
         watchlist:watchlists(name),
         opportunity:opportunities(
@@ -46,7 +47,8 @@ export class AlertsRepository {
           score,
           cluster:pain_clusters(name)
         )
-      `)
+      `,
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 

@@ -4,7 +4,7 @@
  * Repository for research_logs table.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { ResearchLogRow, ResearchLogInsert } from "@/types/research-job";
 
 export class ResearchLogsRepository {
@@ -12,14 +12,15 @@ export class ResearchLogsRepository {
    * Create a new research log record.
    */
   async create(data: ResearchLogInsert): Promise<ResearchLogRow> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data: row, error } = await supabase
       .from("research_logs")
       .insert(data)
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create research log: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to create research log: ${error.message}`);
     return row;
   }
 
@@ -27,14 +28,15 @@ export class ResearchLogsRepository {
    * Find logs by job ID.
    */
   async findByJobId(jobId: string): Promise<ResearchLogRow[]> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("research_logs")
       .select()
       .eq("job_id", jobId)
       .order("created_at", { ascending: true });
 
-    if (error) throw new Error(`Failed to fetch research logs: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to fetch research logs: ${error.message}`);
     return data ?? [];
   }
 }

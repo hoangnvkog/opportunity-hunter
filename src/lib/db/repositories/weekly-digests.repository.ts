@@ -15,6 +15,7 @@
  */
 
 import { translateError, NotFoundError } from "@/lib/db/errors";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import type {
   WeeklyDigestInsert,
@@ -28,8 +29,7 @@ export class WeeklyDigestsRepository {
   constructor(private client: AnySupabaseClient) {}
 
   static async create(): Promise<WeeklyDigestsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new WeeklyDigestsRepository(await getSupabaseServerClient());
+    return new WeeklyDigestsRepository(getSupabaseServiceClient());
   }
 
   /**
@@ -59,7 +59,8 @@ export class WeeklyDigestsRepository {
       throw translateError(ENTITY, error);
     }
 
-    if (!row) throw new NotFoundError(ENTITY, `${data.user_id}/${data.week_start}`);
+    if (!row)
+      throw new NotFoundError(ENTITY, `${data.user_id}/${data.week_start}`);
     return row as WeeklyDigestRow;
   }
 
@@ -106,7 +107,10 @@ export class WeeklyDigestsRepository {
    * Look up a single digest for a user + week (used by idempotent
    * `create` and for `/digests/[id]` deep-links if we add them later).
    */
-  async findByWeek(userId: Uuid, weekStart: string): Promise<WeeklyDigestRow | null> {
+  async findByWeek(
+    userId: Uuid,
+    weekStart: string,
+  ): Promise<WeeklyDigestRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")

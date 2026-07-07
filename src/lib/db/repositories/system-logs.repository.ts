@@ -1,4 +1,5 @@
 import type { SystemLogRow, SystemLogInsert, LogLevel } from "@/types/admin";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/errors";
 
@@ -12,8 +13,7 @@ export class SystemLogsRepository {
   }
 
   static async create(): Promise<SystemLogsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new SystemLogsRepository(await getSupabaseServerClient());
+    return new SystemLogsRepository(getSupabaseServiceClient());
   }
 
   async insert(log: SystemLogInsert): Promise<SystemLogRow> {
@@ -29,15 +29,15 @@ export class SystemLogsRepository {
     return data;
   }
 
-  async findAll(options: {
-    level?: LogLevel;
-    limit?: number;
-    offset?: number;
-    search?: string;
-  } = {}): Promise<{ logs: SystemLogRow[]; total: number }> {
-    let query = this.client
-      .from(ENTITY)
-      .select("*", { count: "exact" });
+  async findAll(
+    options: {
+      level?: LogLevel;
+      limit?: number;
+      offset?: number;
+      search?: string;
+    } = {},
+  ): Promise<{ logs: SystemLogRow[]; total: number }> {
+    let query = this.client.from(ENTITY).select("*", { count: "exact" });
 
     if (options.level) {
       query = query.eq("level", options.level);
@@ -49,7 +49,10 @@ export class SystemLogsRepository {
 
     query = query
       .order("created_at", { ascending: false })
-      .range(options.offset ?? 0, (options.offset ?? 0) + (options.limit ?? 50) - 1);
+      .range(
+        options.offset ?? 0,
+        (options.offset ?? 0) + (options.limit ?? 50) - 1,
+      );
 
     const { data, error } = await query;
 
@@ -61,15 +64,18 @@ export class SystemLogsRepository {
   }
 
   async countByLevel(): Promise<Record<LogLevel, number>> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("level");
+    const { data, error } = await this.client.from(ENTITY).select("level");
 
     if (error) {
       throw translateError(ENTITY, error);
     }
 
-    const counts: Record<LogLevel, number> = { info: 0, warn: 0, error: 0, debug: 0 };
+    const counts: Record<LogLevel, number> = {
+      info: 0,
+      warn: 0,
+      error: 0,
+      debug: 0,
+    };
     for (const row of data ?? []) {
       if (row.level in counts) {
         counts[row.level as LogLevel]++;
@@ -100,7 +106,9 @@ export class SystemLogsRepository {
   }
 
   async deleteOlderThan(days: number): Promise<number> {
-    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1000,
+    ).toISOString();
     const { error, count } = await this.client
       .from(ENTITY)
       .delete()

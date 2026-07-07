@@ -3,7 +3,12 @@
  */
 
 import type { ProfileInsert, ProfileRow, ProfileUpdate, Uuid } from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "profiles";
@@ -12,8 +17,7 @@ export class ProfilesRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<ProfilesRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new ProfilesRepository(await getSupabaseServerClient());
+    return new ProfilesRepository(getSupabaseServiceClient());
   }
 
   async findById(id: Uuid): Promise<ProfileRow | null> {

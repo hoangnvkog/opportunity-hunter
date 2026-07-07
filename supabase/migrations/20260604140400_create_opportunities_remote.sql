@@ -1,20 +1,26 @@
 -- ============================================================================
--- Replacement migration for opportunities table
--- This migration reflects the ACTUAL remote schema (source of truth)
--- DO NOT apply if tables already exist - this is for documentation/future use
+-- Migration: Create opportunities table + opportunity_pain_points junction
 -- ============================================================================
 
--- opportunities table (as it exists in remote)
--- NOTE: This table already exists in the remote database with these columns:
--- - id (uuid, PK)
--- - cluster_id (uuid, FK -> pain_clusters.id)
--- - title (text) -- NEW - not in old migration
--- - description (text) -- NEW - not in old migration
--- - score (integer)
--- - frequency (integer)
--- - severity (numeric)
--- - buying_intent (numeric)
--- - created_at (timestamptz)
+CREATE TABLE IF NOT EXISTS public.opportunities (
+  id             uuid primary key default gen_random_uuid(),
+  cluster_id     uuid not null references public.pain_clusters(id) on delete cascade,
+  title          text not null,
+  description    text not null,
+  score          integer not null default 0,
+  frequency      integer not null default 0,
+  severity       numeric not null default 0,
+  buying_intent  numeric not null default 0,
+  created_at     timestamptz not null default now()
+);
+
+CREATE INDEX IF NOT EXISTS opportunities_cluster_id_idx ON public.opportunities (cluster_id);
+CREATE INDEX IF NOT EXISTS opportunities_score_idx ON public.opportunities (score desc);
+
+ALTER TABLE public.opportunities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "service_role_full_access_opportunities"
+  ON public.opportunities FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- opportunity_pain_points junction table (many-to-many)
 CREATE TABLE IF NOT EXISTS public.opportunity_pain_points (

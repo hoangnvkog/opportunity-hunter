@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth/server";
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { WeeklyDigestService } from "@/services/digests/weekly-digest.service";
 
 /**

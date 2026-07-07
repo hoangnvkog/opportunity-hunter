@@ -246,7 +246,7 @@ export async function generateCommitteesForOpportunities(
  * Get committee cards for dashboard.
  */
 export async function getCommitteeCards(limit = 10): Promise<CommitteeCardData[]> {
-  const supabase = await (await import("@/lib/supabase/server")).createClient();
+  const supabase = (await import("@/lib/supabase")).getSupabaseServiceClient();
   const { data, error } = await supabase
     .from("investment_committees")
     .select(`

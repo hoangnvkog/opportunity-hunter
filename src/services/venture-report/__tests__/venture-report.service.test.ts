@@ -87,11 +87,8 @@ vi.mock("@/services/email/email.service", () => ({
   },
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  getSupabaseServerClient: vi.fn().mockResolvedValue({}),
-}));
-
 vi.mock("@/lib/supabase", () => ({
+  getSupabaseServiceClient: vi.fn().mockReturnValue({}),
   getSupabaseServerClient: vi.fn().mockResolvedValue({}),
 }));
 

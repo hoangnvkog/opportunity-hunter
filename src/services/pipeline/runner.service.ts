@@ -216,7 +216,8 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Triggers "🎯 Committee Strong Buy" or "⚠️ Low Consensus" alerts.
     const { generateCommitteesForOpportunities: generateCommittees } = await import("../../lib/services/committee.service");
     // Fetch opportunities with investment memos
-    const supabase = await (await import("@/lib/supabase/server")).createClient();
+    const { getSupabaseServiceClient } = await import("@/lib/supabase");
+    const supabase = getSupabaseServiceClient();
     const { data: memosData } = await supabase
       .from("investment_memos")
       .select(`

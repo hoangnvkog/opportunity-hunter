@@ -9,6 +9,7 @@ import type {
   OpportunityValidationRow,
   OpportunityValidationInsert,
 } from "@/types/validation";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { RepositoryError, translateError } from "@/lib/db/errors";
 
@@ -26,14 +27,13 @@ export class OpportunityValidationsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<OpportunityValidationsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunityValidationsRepository(
-      await getSupabaseServerClient(),
-    );
+    return new OpportunityValidationsRepository(getSupabaseServiceClient());
   }
 
   /** Insert a new validation record. */
-  async create(input: OpportunityValidationInsert): Promise<OpportunityValidationRow> {
+  async create(
+    input: OpportunityValidationInsert,
+  ): Promise<OpportunityValidationRow> {
     const { data, error } = await this.client
       .from(ENTITY)
       .insert(input)
@@ -59,8 +59,7 @@ export class OpportunityValidationsRepository {
       .single();
 
     if (error) throw translateError(ENTITY, error);
-    if (!data)
-      throw new RepositoryError(`${ENTITY} upsert returned no row`);
+    if (!data) throw new RepositoryError(`${ENTITY} upsert returned no row`);
     return data;
   }
 
@@ -82,7 +81,9 @@ export class OpportunityValidationsRepository {
    * List validations ordered by validation_score DESC.
    * Optionally filter by minimum score.
    */
-  async list(opts: ListValidationsOptions = {}): Promise<OpportunityValidationRow[]> {
+  async list(
+    opts: ListValidationsOptions = {},
+  ): Promise<OpportunityValidationRow[]> {
     const { limit = 50, offset = 0, minScore } = opts;
 
     let query = this.client
@@ -91,8 +92,7 @@ export class OpportunityValidationsRepository {
       .order("validation_score", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (minScore !== undefined)
-      query = query.gte("validation_score", minScore);
+    if (minScore !== undefined) query = query.gte("validation_score", minScore);
 
     const { data, error } = await query;
     if (error) throw translateError(ENTITY, error);

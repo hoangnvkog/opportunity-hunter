@@ -6,13 +6,18 @@
  */
 
 import type { OpportunityCardData } from "@/types/dashboard";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type {
   OpportunityInsert,
   OpportunityRow,
   OpportunityUpdate,
   Uuid,
 } from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "opportunities";
@@ -66,8 +71,7 @@ export class OpportunitiesRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<OpportunitiesRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunitiesRepository(await getSupabaseServerClient());
+    return new OpportunitiesRepository(getSupabaseServiceClient());
   }
 
   async findByIds(ids: Uuid[]): Promise<OpportunityRow[]> {
@@ -120,7 +124,9 @@ export class OpportunitiesRepository {
   async listTop(limit = 10): Promise<OpportunityCardData[]> {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select("id, score, frequency, severity, buying_intent, source_diversity, recency_score, pain_clusters!inner(name, description)")
+      .select(
+        "id, score, frequency, severity, buying_intent, source_diversity, recency_score, pain_clusters!inner(name, description)",
+      )
       .order("score", { ascending: false })
       .limit(limit);
 
@@ -143,7 +149,9 @@ export class OpportunitiesRepository {
         frequency: r.frequency,
         severity: r.severity,
         buying_intent: r.buying_intent,
-        source_diversity: r.source_diversity ? parseFloat(r.source_diversity) : 0,
+        source_diversity: r.source_diversity
+          ? parseFloat(r.source_diversity)
+          : 0,
         recency_score: r.recency_score ? parseFloat(r.recency_score) : 0,
         cluster_name: r.pain_clusters.name,
         cluster_description: r.pain_clusters.description,
@@ -160,9 +168,7 @@ export class OpportunitiesRepository {
     return count ?? 0;
   }
 
-  async listTopWithCluster(
-    limit = 50,
-  ): Promise<OpportunityWithCluster[]> {
+  async listTopWithCluster(limit = 50): Promise<OpportunityWithCluster[]> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*, pain_clusters!inner(id, name, description)")
@@ -198,9 +204,7 @@ export class OpportunitiesRepository {
     return (data ?? []) as unknown as OpportunityWithCluster[];
   }
 
-  async findByIdWithCluster(
-    id: Uuid,
-  ): Promise<OpportunityWithCluster | null> {
+  async findByIdWithCluster(id: Uuid): Promise<OpportunityWithCluster | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*, pain_clusters!inner(id, name, description)")
@@ -312,24 +316,39 @@ export class OpportunitiesRepository {
     return data;
   }
 
-  async search(filters: import("@/types/filters").OpportunityFilters): Promise<OpportunityCardData[]> {
-    const { search, minScore, minFrequency, minSeverity, minBuyingIntent, limit = 10 } = filters;
+  async search(
+    filters: import("@/types/filters").OpportunityFilters,
+  ): Promise<OpportunityCardData[]> {
+    const {
+      search,
+      minScore,
+      minFrequency,
+      minSeverity,
+      minBuyingIntent,
+      limit = 10,
+    } = filters;
 
     let query = this.client
       .from(ENTITY)
-      .select("id, score, frequency, severity, buying_intent, source_diversity, recency_score, pain_clusters!inner(name, description)")
+      .select(
+        "id, score, frequency, severity, buying_intent, source_diversity, recency_score, pain_clusters!inner(name, description)",
+      )
       .order("score", { ascending: false });
 
     // Text search on cluster name or description
     if (search && search.trim()) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`, { referencedTable: "pain_clusters" });
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`, {
+        referencedTable: "pain_clusters",
+      });
     }
 
     // Numeric filters
     if (minScore !== undefined) query = query.gte("score", minScore);
-    if (minFrequency !== undefined) query = query.gte("frequency", minFrequency);
+    if (minFrequency !== undefined)
+      query = query.gte("frequency", minFrequency);
     if (minSeverity !== undefined) query = query.gte("severity", minSeverity);
-    if (minBuyingIntent !== undefined) query = query.gte("buying_intent", minBuyingIntent);
+    if (minBuyingIntent !== undefined)
+      query = query.gte("buying_intent", minBuyingIntent);
 
     query = query.limit(limit);
 
@@ -353,7 +372,9 @@ export class OpportunitiesRepository {
         frequency: r.frequency,
         severity: r.severity,
         buying_intent: r.buying_intent,
-        source_diversity: r.source_diversity ? parseFloat(r.source_diversity) : 0,
+        source_diversity: r.source_diversity
+          ? parseFloat(r.source_diversity)
+          : 0,
         recency_score: r.recency_score ? parseFloat(r.recency_score) : 0,
         cluster_name: r.pain_clusters.name,
         cluster_description: r.pain_clusters.description,

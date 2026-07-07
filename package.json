@@ -14,14 +14,14 @@
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts",
     "db:reset": "supabase db reset",
     "db:seed": "psql \"$SUPABASE_DB_URL\" -f supabase/seed/00_reset.sql && for f in supabase/seed/0[1-6]*.sql; do psql \"$SUPABASE_DB_URL\" -f \"$f\"; done",
-    "reddit": "tsx src/scripts/reddit.ts",
-    "pain-points": "tsx src/scripts/pain-points.ts",
-    "clusters": "tsx src/scripts/clusters.ts",
-    "opportunities": "tsx src/scripts/opportunities.ts",
-    "startup-ideas": "tsx src/scripts/startup-ideas.ts",
-    "pipeline": "tsx src/scripts/pipeline.ts",
-    "job:reddit": "tsx src/jobs/reddit.job.ts",
-    "job:pipeline": "tsx src/jobs/pipeline.job.ts"
+    "reddit": "tsx --env-file-if-exists=.env.local src/scripts/reddit.ts",
+    "pain-points": "tsx --env-file-if-exists=.env.local src/scripts/pain-points.ts",
+    "clusters": "tsx --env-file-if-exists=.env.local src/scripts/clusters.ts",
+    "opportunities": "tsx --env-file-if-exists=.env.local src/scripts/opportunities.ts",
+    "startup-ideas": "tsx --env-file-if-exists=.env.local src/scripts/startup-ideas.ts",
+    "pipeline": "tsx --env-file-if-exists=.env.local src/scripts/pipeline.ts",
+    "job:reddit": "tsx --env-file-if-exists=.env.local src/jobs/reddit.job.ts",
+    "job:pipeline": "tsx --env-file-if-exists=.env.local src/jobs/pipeline.job.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

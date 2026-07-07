@@ -10,16 +10,14 @@
  */
 
 import { translateError, NotFoundError } from "@/lib/db/errors";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import type {
   OpportunityInsightFilters,
   OpportunityInsightInsert,
   OpportunityInsightRow,
 } from "@/types/opportunity-insight";
-import type {
-  CompetitionLevel,
-  Urgency,
-} from "@/types/opportunity-insight";
+import type { CompetitionLevel, Urgency } from "@/types/opportunity-insight";
 import type { Uuid } from "@/types";
 
 const ENTITY = "opportunity_insights";
@@ -28,8 +26,7 @@ export class OpportunityInsightsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<OpportunityInsightsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new OpportunityInsightsRepository(await getSupabaseServerClient());
+    return new OpportunityInsightsRepository(getSupabaseServiceClient());
   }
 
   /**
@@ -59,7 +56,9 @@ export class OpportunityInsightsRepository {
   /**
    * Look up the single insight for an opportunity (or null).
    */
-  async findByOpportunityId(opportunityId: Uuid): Promise<OpportunityInsightRow | null> {
+  async findByOpportunityId(
+    opportunityId: Uuid,
+  ): Promise<OpportunityInsightRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -76,26 +75,32 @@ export class OpportunityInsightsRepository {
    * Returns null when no insight exists yet.
    */
   async findCardByOpportunityId(opportunityId: Uuid): Promise<
-    (OpportunityInsightRow & {
-      opportunity_title: string;
-      opportunity_score: number;
-    }) | null
+    | (OpportunityInsightRow & {
+        opportunity_title: string;
+        opportunity_score: number;
+      })
+    | null
   > {
     const { data, error } = await this.client
       .from(ENTITY)
-      .select("*, opportunity:opportunities(id, score, pain_clusters!inner(name))")
+      .select(
+        "*, opportunity:opportunities(id, score, pain_clusters!inner(name))",
+      )
       .eq("opportunity_id", opportunityId)
       .maybeSingle();
 
     if (error) throw translateError(ENTITY, error);
     if (!data) return null;
 
-    const opportunity = (data as unknown as {
-      opportunity?: { score: number; pain_clusters: { name: string } };
-    }).opportunity;
+    const opportunity = (
+      data as unknown as {
+        opportunity?: { score: number; pain_clusters: { name: string } };
+      }
+    ).opportunity;
     return {
       ...(data as OpportunityInsightRow),
-      opportunity_title: opportunity?.pain_clusters?.name ?? "Untitled opportunity",
+      opportunity_title:
+        opportunity?.pain_clusters?.name ?? "Untitled opportunity",
       opportunity_score: opportunity?.score ?? 0,
     };
   }
@@ -104,12 +109,14 @@ export class OpportunityInsightsRepository {
    * List insights for the `/insights` history page.
    * Supports filtering on competition_level/urgency/minConfidence and sorting.
    */
-  async listLatest(
-    filters: OpportunityInsightFilters = {},
-  ): Promise<Array<OpportunityInsightRow & {
-    opportunity_title: string;
-    opportunity_score: number;
-  }>> {
+  async listLatest(filters: OpportunityInsightFilters = {}): Promise<
+    Array<
+      OpportunityInsightRow & {
+        opportunity_title: string;
+        opportunity_score: number;
+      }
+    >
+  > {
     const {
       competition_level,
       urgency,
@@ -139,13 +146,18 @@ export class OpportunityInsightsRepository {
     const { data, error } = await query;
     if (error) throw translateError(ENTITY, error);
 
-    return ((data ?? []) as unknown as Array<
-      OpportunityInsightRow & {
-        opportunity: { score: number; pain_clusters: { name: string } };
-      }
-    >).map((row) => {
-      const opp = (row as unknown as { opportunity?: { score: number; pain_clusters: { name: string } } })
-        .opportunity;
+    return (
+      (data ?? []) as unknown as Array<
+        OpportunityInsightRow & {
+          opportunity: { score: number; pain_clusters: { name: string } };
+        }
+      >
+    ).map((row) => {
+      const opp = (
+        row as unknown as {
+          opportunity?: { score: number; pain_clusters: { name: string } };
+        }
+      ).opportunity;
       return {
         ...row,
         opportunity_title: opp?.pain_clusters?.name ?? "Untitled opportunity",
@@ -157,12 +169,14 @@ export class OpportunityInsightsRepository {
   /**
    * Light-weight list of the most recent N insights (dashboard widget).
    */
-  async listRecentCards(
-    limit = 5,
-  ): Promise<Array<OpportunityInsightRow & {
-    opportunity_title: string;
-    opportunity_score: number;
-  }>> {
+  async listRecentCards(limit = 5): Promise<
+    Array<
+      OpportunityInsightRow & {
+        opportunity_title: string;
+        opportunity_score: number;
+      }
+    >
+  > {
     return this.listLatest({ sort: "created_at", order: "desc", limit });
   }
 
@@ -170,13 +184,17 @@ export class OpportunityInsightsRepository {
    * Count insights after filters (used by history pagination).
    */
   async count(
-    filters: Pick<OpportunityInsightFilters, "competition_level" | "urgency" | "minConfidence"> = {},
+    filters: Pick<
+      OpportunityInsightFilters,
+      "competition_level" | "urgency" | "minConfidence"
+    > = {},
   ): Promise<number> {
     let query = this.client
       .from(ENTITY)
       .select("*", { count: "exact", head: true });
 
-    if (filters.competition_level) query = query.eq("competition_level", filters.competition_level);
+    if (filters.competition_level)
+      query = query.eq("competition_level", filters.competition_level);
     if (filters.urgency) query = query.eq("urgency", filters.urgency);
     if (filters.minConfidence !== undefined) {
       query = query.gte("confidence_score", filters.minConfidence);
@@ -204,13 +222,19 @@ export class OpportunityInsightsRepository {
    * Aggregate counts by a single dimension, useful for filter UI labels.
    */
   async countByCompetition(): Promise<Record<CompetitionLevel, number>> {
-    const result: Record<CompetitionLevel, number> = { Low: 0, Medium: 0, High: 0 };
+    const result: Record<CompetitionLevel, number> = {
+      Low: 0,
+      Medium: 0,
+      High: 0,
+    };
     const { data, error } = await this.client
       .from(ENTITY)
       .select("competition_level");
 
     if (error) throw translateError(ENTITY, error);
-    for (const row of (data ?? []) as Array<{ competition_level: CompetitionLevel }>) {
+    for (const row of (data ?? []) as Array<{
+      competition_level: CompetitionLevel;
+    }>) {
       result[row.competition_level] += 1;
     }
     return result;
@@ -218,9 +242,7 @@ export class OpportunityInsightsRepository {
 
   async countByUrgency(): Promise<Record<Urgency, number>> {
     const result: Record<Urgency, number> = { Low: 0, Medium: 0, High: 0 };
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("urgency");
+    const { data, error } = await this.client.from(ENTITY).select("urgency");
 
     if (error) throw translateError(ENTITY, error);
     for (const row of (data ?? []) as Array<{ urgency: Urgency }>) {

@@ -11,6 +11,7 @@ import type {
   VentureProjectCardData,
   VentureStudioStats,
 } from "@/types/venture-studio";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -22,10 +23,7 @@ export class VentureProjectsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<VentureProjectsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new VentureProjectsRepository(
-      await getSupabaseServerClient(),
-    );
+    return new VentureProjectsRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single venture project record. */
@@ -41,7 +39,9 @@ export class VentureProjectsRepository {
   }
 
   /** Insert multiple venture project records. */
-  async createMany(records: VentureProjectInsert[]): Promise<VentureProjectRow[]> {
+  async createMany(
+    records: VentureProjectInsert[],
+  ): Promise<VentureProjectRow[]> {
     if (records.length === 0) return [];
     const { data, error } = await this.client
       .from(ENTITY)
@@ -65,7 +65,9 @@ export class VentureProjectsRepository {
   }
 
   /** Find latest venture project for an opportunity. */
-  async findByOpportunity(opportunityId: string): Promise<VentureProjectRow | null> {
+  async findByOpportunity(
+    opportunityId: string,
+  ): Promise<VentureProjectRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("*")
@@ -108,23 +110,22 @@ export class VentureProjectsRepository {
 
   /** Delete a venture project record. */
   async delete(id: string): Promise<void> {
-    const { error } = await this.client
-      .from(ENTITY)
-      .delete()
-      .eq("id", id);
+    const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 
     if (error) throw translateError(ENTITY, error);
   }
 
   /** List venture projects with pagination. */
-  async list(opts: {
-    limit?: number;
-    offset?: number;
-    status?: string;
-    minScore?: number;
-    orderBy?: "overall_score" | "created_at" | "name";
-    ascending?: boolean;
-  } = {}): Promise<VentureProjectRow[]> {
+  async list(
+    opts: {
+      limit?: number;
+      offset?: number;
+      status?: string;
+      minScore?: number;
+      orderBy?: "overall_score" | "created_at" | "name";
+      ascending?: boolean;
+    } = {},
+  ): Promise<VentureProjectRow[]> {
     const {
       limit = 50,
       offset = 0,
@@ -205,9 +206,7 @@ export class VentureProjectsRepository {
       };
     }
 
-    const readyToBuild = rows.filter(
-      (r) => r.status === "ready",
-    ).length;
+    const readyToBuild = rows.filter((r) => r.status === "ready").length;
 
     const sumScore = rows.reduce((acc, r) => acc + (r.overall_score ?? 0), 0);
     const averageScore = Math.round((sumScore / rows.length) * 100) / 100;
@@ -224,17 +223,17 @@ export class VentureProjectsRepository {
    * List project cards (project + canvas + mvp joined).
    * Powers the dashboard table.
    */
-  async listCards(opts: {
-    limit?: number;
-    offset?: number;
-    status?: string;
-  } = {}): Promise<VentureProjectCardData[]> {
+  async listCards(
+    opts: {
+      limit?: number;
+      offset?: number;
+      status?: string;
+    } = {},
+  ): Promise<VentureProjectCardData[]> {
     const { limit = 50, offset = 0, status } = opts;
 
-    let query = this.client
-      .from(ENTITY)
-      .select(
-        `
+    let query = this.client.from(ENTITY).select(
+      `
         id,
         opportunity_id,
         startup_idea_id,
@@ -244,7 +243,7 @@ export class VentureProjectsRepository {
         overall_score,
         created_at
       `,
-      );
+    );
 
     if (status !== undefined) {
       query = query.eq("status", status);

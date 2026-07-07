@@ -39,6 +39,4 @@ CREATE POLICY "System can update weekly digests"
   FOR UPDATE
   USING (auth.uid() = user_id);
 
--- Add weekly digest toggle to notification_settings (default on)
-ALTER TABLE notification_settings
-  ADD COLUMN weekly_digest_enabled boolean NOT NULL DEFAULT true;
+-- Note: weekly_digest_enabled column added in migration 20260623000000_email_notifications.sql

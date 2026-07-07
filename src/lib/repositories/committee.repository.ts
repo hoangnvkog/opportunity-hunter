@@ -5,7 +5,7 @@
  * Repository pattern: owns IDs, handles database I/O.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type {
   InvestmentCommitteeRow,
   InvestmentCommitteeInsert,
@@ -18,8 +18,10 @@ export class CommitteeRepository {
   /**
    * Create a new investment committee record.
    */
-  async create(data: InvestmentCommitteeInsert): Promise<InvestmentCommitteeRow> {
-    const supabase = await createClient();
+  async create(
+    data: InvestmentCommitteeInsert,
+  ): Promise<InvestmentCommitteeRow> {
+    const supabase = getSupabaseServiceClient();
     const { data: row, error } = await supabase
       .from("investment_committees")
       .insert(data)
@@ -34,7 +36,7 @@ export class CommitteeRepository {
    * Find committee by ID.
    */
   async findById(id: Uuid): Promise<InvestmentCommitteeRow | null> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("investment_committees")
       .select()
@@ -48,8 +50,10 @@ export class CommitteeRepository {
   /**
    * Find committee by opportunity_id.
    */
-  async findByOpportunityId(opportunityId: Uuid): Promise<InvestmentCommitteeRow | null> {
-    const supabase = await createClient();
+  async findByOpportunityId(
+    opportunityId: Uuid,
+  ): Promise<InvestmentCommitteeRow | null> {
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("investment_committees")
       .select()
@@ -71,7 +75,7 @@ export class CommitteeRepository {
     limit?: number;
     offset?: number;
   }): Promise<InvestmentCommitteeRow[]> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     let query = supabase
       .from("investment_committees")
       .select()
@@ -87,7 +91,10 @@ export class CommitteeRepository {
       query = query.limit(filters.limit);
     }
     if (filters?.offset) {
-      query = query.range(filters.offset, filters.offset + (filters.limit ?? 50) - 1);
+      query = query.range(
+        filters.offset,
+        filters.offset + (filters.limit ?? 50) - 1,
+      );
     }
 
     const { data, error } = await query;
@@ -99,7 +106,7 @@ export class CommitteeRepository {
    * Count committees.
    */
   async count(filters?: { finalDecision?: string }): Promise<number> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     let query = supabase
       .from("investment_committees")
       .select("*", { count: "exact", head: true });
@@ -117,7 +124,7 @@ export class CommitteeRepository {
    * Delete committee by ID (cascade deletes votes).
    */
   async delete(id: Uuid): Promise<void> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { error } = await supabase
       .from("investment_committees")
       .delete()
@@ -134,7 +141,7 @@ export class CommitteeVotesRepository {
   async insertBatch(votes: CommitteeVoteInsert[]): Promise<CommitteeVoteRow[]> {
     if (votes.length === 0) return [];
 
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("committee_votes")
       .insert(votes)
@@ -148,7 +155,7 @@ export class CommitteeVotesRepository {
    * Find all votes for a committee.
    */
   async findByCommitteeId(committeeId: Uuid): Promise<CommitteeVoteRow[]> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { data, error } = await supabase
       .from("committee_votes")
       .select()
@@ -163,7 +170,7 @@ export class CommitteeVotesRepository {
    * Count votes by agent name.
    */
   async countByAgent(agentName: string): Promise<number> {
-    const supabase = await createClient();
+    const supabase = getSupabaseServiceClient();
     const { count, error } = await supabase
       .from("committee_votes")
       .select("*", { count: "exact", head: true })

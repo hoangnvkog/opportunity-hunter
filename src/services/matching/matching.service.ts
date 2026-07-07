@@ -1,5 +1,5 @@
 import { WatchlistsRepository } from "@/lib/db/repositories/watchlists.repository";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { OpportunityRow } from "@/types/database.types";
 import type { WatchlistRow } from "@/types/watchlist";
 
@@ -9,15 +9,15 @@ import type { WatchlistRow } from "@/types/watchlist";
 export class MatchingService {
   private repo: WatchlistsRepository;
 
-  private client: Awaited<ReturnType<typeof getSupabaseServerClient>>;
+  private client: ReturnType<typeof getSupabaseServiceClient>;
 
-  constructor(client: Awaited<ReturnType<typeof getSupabaseServerClient>>) {
+  constructor(client: ReturnType<typeof getSupabaseServiceClient>) {
     this.client = client;
     this.repo = new WatchlistsRepository(client);
   }
 
   static async create() {
-    const client = await getSupabaseServerClient();
+    const client = getSupabaseServiceClient();
     return new MatchingService(client);
   }
 

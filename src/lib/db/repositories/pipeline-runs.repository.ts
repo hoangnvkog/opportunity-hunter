@@ -1,5 +1,8 @@
-import type { PipelineRunHistory, PipelineRunInsert } from "@/types/pipeline-run-history";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import type {
+  PipelineRunHistory,
+  PipelineRunInsert,
+} from "@/types/pipeline-run-history";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "./_base";
 import { translateError } from "@/lib/db/errors";
 
@@ -13,7 +16,7 @@ export class PipelineRunsRepository {
   }
 
   static async create(): Promise<PipelineRunsRepository> {
-    const client = await getSupabaseServerClient();
+    const client = getSupabaseServiceClient();
     return new PipelineRunsRepository(client);
   }
 
@@ -85,11 +88,14 @@ export class PipelineRunsRepository {
     return data ?? [];
   }
 
-  async update(id: string, patch: {
-    finished_at?: string;
-    status?: string;
-    error_message?: string | null;
-  }): Promise<PipelineRunHistory | null> {
+  async update(
+    id: string,
+    patch: {
+      finished_at?: string;
+      status?: string;
+      error_message?: string | null;
+    },
+  ): Promise<PipelineRunHistory | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .update(patch)
@@ -116,7 +122,10 @@ export class PipelineRunsRepository {
     return data;
   }
 
-  async list(options?: { limit?: number; offset?: number }): Promise<{ runs: PipelineRunHistory[]; total: number }> {
+  async list(options?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<{ runs: PipelineRunHistory[]; total: number }> {
     const limit = options?.limit ?? 20;
     const offset = options?.offset ?? 0;
 

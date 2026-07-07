@@ -1,6 +1,6 @@
 // Sprint 60: Portfolio Intelligence Engine - Alert Notifications
 
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseServiceClient } from '@/lib/supabase';
 import type { PortfolioItemRow } from '@/types/portfolio';
 import type { Database } from '@/types/database.types';
 
@@ -30,7 +30,7 @@ export interface PortfolioAlert {
 // ==========================================
 
 export async function checkHealthDrops(): Promise<PortfolioAlert[]> {
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
   const alerts: PortfolioAlert[] = [];
 
   const { data: items } = await supabase
@@ -65,7 +65,7 @@ export async function checkHealthDrops(): Promise<PortfolioAlert[]> {
 // ==========================================
 
 export async function checkHealthRises(): Promise<PortfolioAlert[]> {
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
   const alerts: PortfolioAlert[] = [];
 
   const { data: items } = await supabase
@@ -98,7 +98,7 @@ export async function checkHealthRises(): Promise<PortfolioAlert[]> {
 // ==========================================
 
 export async function checkCriticalOpportunities(): Promise<PortfolioAlert[]> {
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
   const alerts: PortfolioAlert[] = [];
 
   const { data: items } = await supabase
@@ -131,7 +131,7 @@ export async function checkCriticalOpportunities(): Promise<PortfolioAlert[]> {
 // ==========================================
 
 export async function checkStaleReviews(): Promise<PortfolioAlert[]> {
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
   const alerts: PortfolioAlert[] = [];
 
   const thirtyDaysAgo = new Date();
@@ -190,7 +190,7 @@ export async function getAllPortfolioAlerts(): Promise<PortfolioAlert[]> {
 // We insert minimal fields; extra metadata would need a schema migration
 
 export async function createAlertNotification(alert: PortfolioAlert, watchlistId: string): Promise<void> {
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
 
   await supabase.from('alerts').insert({
     user_id: '', // Will be set by RLS/auth context

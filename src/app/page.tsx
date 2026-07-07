@@ -1,11 +1,13 @@
+/**
+ * Root landing page.
+ *
+ * Redirects to the authenticated dashboard. /dashboard in turn performs
+ * its own auth gating (redirect to /login when not signed in).
+ */
+import { redirect } from "next/navigation";
+
 export const dynamic = "force-dynamic";
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-blue-500 flex items-center justify-center">
-      <h1 className="text-8xl font-bold text-white">
-        TAILWIND WORKING
-      </h1>
-    </div>
-  );
+export default function Home(): never {
+  redirect("/dashboard");
 }

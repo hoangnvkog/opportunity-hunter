@@ -2,13 +2,13 @@
  * Sources repository.
  */
 
-import type {
-  SourceInsert,
-  SourceRow,
-  SourceUpdate,
-  Uuid,
-} from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import type { SourceInsert, SourceRow, SourceUpdate, Uuid } from "@/types";
+import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "sources";
@@ -17,8 +17,7 @@ export class SourcesRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<SourcesRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new SourcesRepository(await getSupabaseServerClient());
+    return new SourcesRepository(getSupabaseServiceClient());
   }
 
   async findById(id: Uuid): Promise<SourceRow | null> {

@@ -42,6 +42,7 @@ CREATE POLICY "System can update email notifications"
 CREATE TABLE notification_settings (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email_enabled boolean NOT NULL DEFAULT true,
+  weekly_digest_enabled boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

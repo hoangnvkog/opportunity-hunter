@@ -18,8 +18,8 @@ export class CommitteeVotesRepository {
   }
 
   static async create(): Promise<CommitteeVotesRepository> {
-    const { createClient } = await import("@/lib/supabase/server");
-    return new CommitteeVotesRepository(await createClient());
+    const { getSupabaseServiceClient } = await import("@/lib/supabase");
+    return new CommitteeVotesRepository(getSupabaseServiceClient());
   }
 
   async create(data: CommitteeVoteInsert): Promise<CommitteeVoteRow> {

@@ -9,6 +9,7 @@ import type {
   FinancialModelInsert,
   FinancialModelCardData,
 } from "@/types/financial";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -20,8 +21,7 @@ export class FinancialModelsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<FinancialModelsRepository> {
-    const { createClient } = await import("@/lib/supabase/server");
-    const client = await createClient();
+    const client = getSupabaseServiceClient();
     return new FinancialModelsRepository(client);
   }
 
@@ -47,7 +47,9 @@ export class FinancialModelsRepository {
     return (data as FinancialModelRow) ?? null;
   }
 
-  async findByVentureProject(ventureProjectId: string): Promise<FinancialModelRow | null> {
+  async findByVentureProject(
+    ventureProjectId: string,
+  ): Promise<FinancialModelRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select()
@@ -60,7 +62,10 @@ export class FinancialModelsRepository {
     return (data as FinancialModelRow) ?? null;
   }
 
-  async update(id: string, data: Partial<FinancialModelInsert>): Promise<FinancialModelRow> {
+  async update(
+    id: string,
+    data: Partial<FinancialModelInsert>,
+  ): Promise<FinancialModelRow> {
     const { data: row, error } = await this.client
       .from(ENTITY)
       .update(data)
@@ -73,21 +78,25 @@ export class FinancialModelsRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.client
-      .from(ENTITY)
-      .delete()
-      .eq("id", id);
+    const { error } = await this.client.from(ENTITY).delete().eq("id", id);
 
     if (error) throw translateError(ENTITY, error);
   }
 
-  async list(options: {
-    limit?: number;
-    ventureProjectId?: string;
-    orderBy?: string;
-    ascending?: boolean;
-  } = {}): Promise<FinancialModelRow[]> {
-    const { limit = 50, ventureProjectId, orderBy = "created_at", ascending = false } = options;
+  async list(
+    options: {
+      limit?: number;
+      ventureProjectId?: string;
+      orderBy?: string;
+      ascending?: boolean;
+    } = {},
+  ): Promise<FinancialModelRow[]> {
+    const {
+      limit = 50,
+      ventureProjectId,
+      orderBy = "created_at",
+      ascending = false,
+    } = options;
 
     let query = this.client
       .from(ENTITY)
@@ -123,24 +132,29 @@ export class FinancialModelsRepository {
 
     const counts: Record<string, number> = {};
     for (const row of (data ?? []) as { venture_project_id: string }[]) {
-      counts[row.venture_project_id] = (counts[row.venture_project_id] ?? 0) + 1;
+      counts[row.venture_project_id] =
+        (counts[row.venture_project_id] ?? 0) + 1;
     }
     return counts;
   }
 
-  async listCards(options: { limit?: number } = {}): Promise<FinancialModelCardData[]> {
+  async listCards(
+    options: { limit?: number } = {},
+  ): Promise<FinancialModelCardData[]> {
     const { limit = 50 } = options;
 
     const { data, error } = await this.client
       .from(ENTITY)
-      .select(`
+      .select(
+        `
         id,
         venture_project_id,
         currency,
         projection_years,
         created_at,
         venture_projects(name)
-      `)
+      `,
+      )
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -150,7 +164,8 @@ export class FinancialModelsRepository {
       id: row.id as string,
       venture_project_id: row.venture_project_id as string,
       venture_project_name:
-        (row.venture_projects as Record<string, unknown> | null)?.name as string ?? "Unknown",
+        ((row.venture_projects as Record<string, unknown> | null)
+          ?.name as string) ?? "Unknown",
       currency: row.currency as string,
       projection_years: row.projection_years as number,
       created_at: row.created_at as string,

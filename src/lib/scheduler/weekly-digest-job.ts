@@ -10,7 +10,7 @@
  * invocations within the same week don't pile up duplicate sends.
  */
 
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { WeeklyDigestService } from "@/services/digests/weekly-digest.service";
 
 let isRunning = false;
@@ -105,5 +105,5 @@ async function listEligibleUserIds(): Promise<string[]> {
     return [];
   }
 
-  return (data ?? []).map((row) => row.user_id);
+  return (data ?? []).map((row: { user_id: string }) => row.user_id);
 }

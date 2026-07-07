@@ -4,10 +4,8 @@
  * CRUD operations for break_even_analysis table.
  */
 
-import type {
-  BreakEvenRow,
-  BreakEvenInsert,
-} from "@/types/financial";
+import type { BreakEvenRow, BreakEvenInsert } from "@/types/financial";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -19,8 +17,7 @@ export class BreakEvenRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<BreakEvenRepository> {
-    const { createClient } = await import("@/lib/supabase/server");
-    const client = await createClient();
+    const client = getSupabaseServiceClient();
     return new BreakEvenRepository(client);
   }
 

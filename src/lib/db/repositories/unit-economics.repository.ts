@@ -4,10 +4,8 @@
  * CRUD operations for unit_economics table.
  */
 
-import type {
-  UnitEconomicsRow,
-  UnitEconomicsInsert,
-} from "@/types/financial";
+import type { UnitEconomicsRow, UnitEconomicsInsert } from "@/types/financial";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -19,8 +17,7 @@ export class UnitEconomicsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<UnitEconomicsRepository> {
-    const { createClient } = await import("@/lib/supabase/server");
-    const client = await createClient();
+    const client = getSupabaseServiceClient();
     return new UnitEconomicsRepository(client);
   }
 
@@ -35,7 +32,9 @@ export class UnitEconomicsRepository {
     return row as UnitEconomicsRow;
   }
 
-  async findByModel(financialModelId: string): Promise<UnitEconomicsRow | null> {
+  async findByModel(
+    financialModelId: string,
+  ): Promise<UnitEconomicsRow | null> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select()

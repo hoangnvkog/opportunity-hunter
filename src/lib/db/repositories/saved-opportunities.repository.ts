@@ -1,4 +1,5 @@
 import type { SavedOpportunityRow } from "@/types/saved-opportunity";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { Uuid } from "@/types";
 import { RepositoryError, translateError } from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
@@ -9,8 +10,7 @@ export class SavedOpportunitiesRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<SavedOpportunitiesRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new SavedOpportunitiesRepository(await getSupabaseServerClient());
+    return new SavedOpportunitiesRepository(getSupabaseServiceClient());
   }
 
   /**

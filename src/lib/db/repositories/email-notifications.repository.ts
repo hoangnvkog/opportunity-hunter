@@ -1,4 +1,5 @@
 import { translateError, NotFoundError } from "@/lib/db/errors";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import type { Uuid } from "@/types";
 
@@ -11,8 +12,7 @@ export class EmailNotificationsRepository {
   constructor(private client: AnySupabaseClient) {}
 
   static async create() {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new EmailNotificationsRepository(await getSupabaseServerClient());
+    return new EmailNotificationsRepository(getSupabaseServiceClient());
   }
 
   /**
@@ -37,7 +37,8 @@ export class EmailNotificationsRepository {
       }
       throw translateError(ENTITY, error);
     }
-    if (!notification) throw new NotFoundError(ENTITY, `${data.user_id}/${data.alert_id}`);
+    if (!notification)
+      throw new NotFoundError(ENTITY, `${data.user_id}/${data.alert_id}`);
     return notification;
   }
 
@@ -185,8 +186,7 @@ export class NotificationSettingsRepository {
   constructor(private client: AnySupabaseClient) {}
 
   static async create() {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new NotificationSettingsRepository(await getSupabaseServerClient());
+    return new NotificationSettingsRepository(getSupabaseServiceClient());
   }
 
   /**
@@ -213,7 +213,8 @@ export class NotificationSettingsRepository {
       .select()
       .single();
 
-    if (inserted.error) throw translateError("notification_settings", inserted.error);
+    if (inserted.error)
+      throw translateError("notification_settings", inserted.error);
     return inserted.data;
   }
 

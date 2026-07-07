@@ -10,7 +10,12 @@ import type {
   PainClusterUpdate,
   Uuid,
 } from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "pain_clusters";
@@ -19,8 +24,7 @@ export class PainClustersRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<PainClustersRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new PainClustersRepository(await getSupabaseServerClient());
+    return new PainClustersRepository(getSupabaseServiceClient());
   }
 
   async findById(id: Uuid): Promise<PainClusterRow | null> {
@@ -52,9 +56,7 @@ export class PainClustersRepository {
   }
 
   async listAll(): Promise<PainClusterRow[]> {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("*");
+    const { data, error } = await this.client.from(ENTITY).select("*");
 
     if (error) throw translateError(ENTITY, error);
     return data ?? [];
@@ -77,11 +79,14 @@ export class PainClustersRepository {
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
 
-    const clusterSizes = data.map((cluster: { cluster_size: number }) => 
-      cluster.cluster_size
+    const clusterSizes = data.map(
+      (cluster: { cluster_size: number }) => cluster.cluster_size,
     );
-    
-    const total = clusterSizes.reduce((sum: number, size: number) => sum + size, 0);
+
+    const total = clusterSizes.reduce(
+      (sum: number, size: number) => sum + size,
+      0,
+    );
     return clusterSizes.length > 0 ? total / clusterSizes.length : 0;
   }
 
@@ -93,10 +98,10 @@ export class PainClustersRepository {
     if (error) throw translateError(ENTITY, error);
     if (!data || data.length === 0) return 0;
 
-    const clusterSizes = data.map((cluster: { cluster_size: number }) => 
-      cluster.cluster_size
+    const clusterSizes = data.map(
+      (cluster: { cluster_size: number }) => cluster.cluster_size,
     );
-    
+
     return clusterSizes.length > 0 ? Math.max(...clusterSizes) : 0;
   }
 

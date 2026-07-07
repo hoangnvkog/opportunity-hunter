@@ -6,13 +6,13 @@
  * match on a text column, not a join.
  */
 
-import type {
-  RawPostInsert,
-  RawPostRow,
-  RawPostUpdate,
-  Uuid,
-} from "@/types";
-import { NotFoundError, RepositoryError, translateError } from "@/lib/db/errors";
+import type { RawPostInsert, RawPostRow, RawPostUpdate, Uuid } from "@/types";
+import { getSupabaseServiceClient } from "@/lib/supabase";
+import {
+  NotFoundError,
+  RepositoryError,
+  translateError,
+} from "@/lib/db/errors";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 
 const ENTITY = "raw_posts";
@@ -28,8 +28,7 @@ export class RawPostsRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<RawPostsRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new RawPostsRepository(await getSupabaseServerClient());
+    return new RawPostsRepository(getSupabaseServiceClient());
   }
 
   async findById(id: Uuid): Promise<RawPostRow | null> {

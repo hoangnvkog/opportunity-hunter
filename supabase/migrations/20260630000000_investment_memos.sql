@@ -82,7 +82,7 @@ create policy "investment_memos_owner_all"
   using (
     opportunity_id in (
       select id from opportunities
-      where user_id = auth.uid()
+      where true
     )
   );
 

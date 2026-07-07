@@ -13,6 +13,7 @@ import type {
   InvestmentMemoStats,
   InvestmentMemoSearchFilters,
 } from "@/types/investment-memo";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -27,10 +28,7 @@ export class InvestmentMemosRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<InvestmentMemosRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new InvestmentMemosRepository(
-      await getSupabaseServerClient(),
-    );
+    return new InvestmentMemosRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single investment memo record. */
@@ -93,14 +91,16 @@ export class InvestmentMemosRepository {
   }
 
   /** List investment memo rows with pagination. */
-  async list(opts: {
-    limit?: number;
-    offset?: number;
-    minConfidence?: number;
-    recommendation?: string;
-    orderBy?: "confidence" | "created_at" | "memo_version";
-    ascending?: boolean;
-  } = {}): Promise<InvestmentMemoRow[]> {
+  async list(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minConfidence?: number;
+      recommendation?: string;
+      orderBy?: "confidence" | "created_at" | "memo_version";
+      ascending?: boolean;
+    } = {},
+  ): Promise<InvestmentMemoRow[]> {
     const {
       limit = 50,
       offset = 0,
@@ -179,18 +179,18 @@ export class InvestmentMemosRepository {
    * List joined card data for the dashboard table.
    * Joins: opportunity (title + cluster), startup_score (overall_score).
    */
-  async listCards(opts: {
-    limit?: number;
-    offset?: number;
-    minConfidence?: number;
-    recommendation?: string;
-  } = {}): Promise<InvestmentMemoCardData[]> {
+  async listCards(
+    opts: {
+      limit?: number;
+      offset?: number;
+      minConfidence?: number;
+      recommendation?: string;
+    } = {},
+  ): Promise<InvestmentMemoCardData[]> {
     const { limit = 50, offset = 0, minConfidence, recommendation } = opts;
 
-    let query = this.client
-      .from(ENTITY)
-      .select(
-        `
+    let query = this.client.from(ENTITY).select(
+      `
         *,
         opportunity:opportunities(
           id,
@@ -199,7 +199,7 @@ export class InvestmentMemosRepository {
         ),
         startup_score:startup_scores(overall_score)
       `,
-      );
+    );
 
     if (minConfidence !== undefined) {
       query = query.gte("confidence", minConfidence);
@@ -284,11 +284,14 @@ export class InvestmentMemosRepository {
    * Confidence distribution: count of records bucketed by confidence range.
    */
   async getConfidenceDistribution(): Promise<
-    Array<{ bucket: string; count: number; minConfidence: number; maxConfidence: number }>
+    Array<{
+      bucket: string;
+      count: number;
+      minConfidence: number;
+      maxConfidence: number;
+    }>
   > {
-    const { data, error } = await this.client
-      .from(ENTITY)
-      .select("confidence");
+    const { data, error } = await this.client.from(ENTITY).select("confidence");
     if (error) throw translateError(ENTITY, error);
     const confidences = ((data ?? []) as Array<{ confidence: number }>).map(
       (r) => r.confidence,
@@ -361,9 +364,9 @@ export class InvestmentMemosRepository {
   /**
    * History: group memos by date and compute avg confidence per day.
    */
-  async getHistory(days: number = 30): Promise<
-    Array<{ date: string; count: number; avgConfidence: number }>
-  > {
+  async getHistory(
+    days: number = 30,
+  ): Promise<Array<{ date: string; count: number; avgConfidence: number }>> {
     const { data, error } = await this.client
       .from(ENTITY)
       .select("created_at, confidence")
@@ -376,7 +379,10 @@ export class InvestmentMemosRepository {
     if (error) throw translateError(ENTITY, error);
 
     const byDate = new Map<string, { count: number; sum: number }>();
-    for (const row of (data ?? []) as Array<{ created_at: string; confidence: number }>) {
+    for (const row of (data ?? []) as Array<{
+      created_at: string;
+      confidence: number;
+    }>) {
       const date = row.created_at.slice(0, 10);
       const entry = byDate.get(date) ?? { count: 0, sum: 0 };
       entry.count++;
@@ -466,7 +472,9 @@ export class InvestmentMemosRepository {
       investmentDecision,
     } = filters;
 
-    let q = this.client.from(ENTITY).select("id", { count: "exact", head: true });
+    let q = this.client
+      .from(ENTITY)
+      .select("id", { count: "exact", head: true });
 
     if (recommendation) {
       q = q.ilike("recommendation", recommendation);

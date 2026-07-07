@@ -5,10 +5,8 @@
  * Stores AI-generated MVP plan for a venture project.
  */
 
-import type {
-  VentureMvpInsert,
-  VentureMvpRow,
-} from "@/types/venture-studio";
+import type { VentureMvpInsert, VentureMvpRow } from "@/types/venture-studio";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import type { AnySupabaseClient } from "@/lib/db/repositories/_base";
 import { translateError } from "@/lib/db/repositories/_base";
 
@@ -20,10 +18,7 @@ export class VentureMvpRepository {
   constructor(private readonly client: AnySupabaseClient) {}
 
   static async create(): Promise<VentureMvpRepository> {
-    const { getSupabaseServerClient } = await import("@/lib/supabase");
-    return new VentureMvpRepository(
-      await getSupabaseServerClient(),
-    );
+    return new VentureMvpRepository(getSupabaseServiceClient());
   }
 
   /** Insert a single venture MVP record. */
