@@ -20,11 +20,9 @@ export function UserMenu() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<{ name: string | null; avatar_url: string | null } | null>(null);
-  const [supabase, setSupabase] = useState<ReturnType<typeof getSupabaseBrowserClient> | null>(null);
 
   useEffect(() => {
     const client = getSupabaseBrowserClient();
-    setSupabase(client);
 
     async function getUser() {
       const {
@@ -45,8 +43,7 @@ export function UserMenu() {
   }, []);
 
   async function handleSignOut() {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    await getSupabaseBrowserClient().auth.signOut();
     router.push("/login");
     router.refresh();
   }

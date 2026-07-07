@@ -2,7 +2,6 @@ import { RevenueService } from "@/services/admin/revenue.service";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
