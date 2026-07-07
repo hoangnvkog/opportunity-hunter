@@ -88,7 +88,7 @@ describe("extractPainPointsFromPosts", () => {
       raw_post_id: "post-1",
       description: "Slow website performance",
       category: "technical",
-      severity: "0.800",
+      severity: 80,
       buying_intent: "0.700",
     });
   });

@@ -52,7 +52,7 @@ export async function extractPainPointsFromPosts(limit = 50): Promise<{
               raw_post_id: post.id,
               description: painPoint.pain,
               category: painPoint.category,
-              severity: painPoint.severity.toFixed(3),
+              severity: Math.round(painPoint.severity * 100),
               buying_intent: painPoint.buying_intent.toFixed(3),
             });
             totalInserted++;

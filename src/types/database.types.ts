@@ -157,7 +157,7 @@ export type PainPointRow = {
   raw_post_id: Uuid;
   description: string;
   category: string;
-  severity: Decimal3;
+  severity: number;
   frequency: number;
   buying_intent: Decimal3;
   clustered: boolean;
@@ -382,7 +382,7 @@ export type PainPointInsert = {
   raw_post_id: Uuid;
   description: string;
   category: string;
-  severity: Decimal3;
+  severity: number;
   frequency?: number;
   buying_intent: Decimal3;
   clustered?: boolean;
