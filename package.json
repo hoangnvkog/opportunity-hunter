@@ -21,7 +21,8 @@
     "startup-ideas": "tsx --env-file-if-exists=.env.local src/scripts/startup-ideas.ts",
     "pipeline": "tsx --env-file-if-exists=.env.local src/scripts/pipeline.ts",
     "job:reddit": "tsx --env-file-if-exists=.env.local src/jobs/reddit.job.ts",
-    "job:pipeline": "tsx --env-file-if-exists=.env.local src/jobs/pipeline.job.ts"
+    "job:pipeline": "tsx --env-file-if-exists=.env.local src/jobs/pipeline.job.ts",
+    "check:cli-imports": "tsx src/scripts/check-cli-imports.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
