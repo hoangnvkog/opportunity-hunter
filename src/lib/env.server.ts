@@ -9,7 +9,16 @@
  * jobs, server actions, or the seed script.
  */
 
-import "server-only";
+/**
+ * Runtime guard — same protection as `import "server-only"` but works
+ * outside Next.js (CLI scripts, cron jobs, tsx).
+ */
+if (typeof window !== "undefined") {
+  throw new Error(
+    "env.server.ts can only be used on the server. " +
+      "Importing this from a client component is a bug.",
+  );
+}
 import { z } from "zod";
 
 const ServerEnvSchema = z.object({
