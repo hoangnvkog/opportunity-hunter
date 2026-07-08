@@ -10,7 +10,7 @@
  * invocations within the same week don't pile up duplicate sends.
  */
 
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceClient } from "@/lib/supabase/service-client";
 import { WeeklyDigestService } from "@/services/digests/weekly-digest.service";
 
 let isRunning = false;
@@ -94,7 +94,7 @@ export function isWeeklyDigestRunning(): boolean {
  * can fan-out across all users without needing each user to be signed in.
  */
 async function listEligibleUserIds(): Promise<string[]> {
-  const client = await getSupabaseServerClient();
+  const client = getSupabaseServiceClient();
   const { data, error } = await client
     .from("notification_settings")
     .select("user_id, weekly_digest_enabled")
