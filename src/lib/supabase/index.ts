@@ -1,30 +1,37 @@
 /**
- * Supabase module barrel.
+ * Supabase module barrel — DELIBERATELY THIN.
  *
- * IMPORTANT - environment-aware split (the ONLY way to import
- * Supabase clients in this repo):
+ * This file exists ONLY to give pipeline / CLI / background-job code a
+ * single, safe entry point that cannot accidentally drag in Next.js
+ * runtime modules. It re-exports exactly ONE client:
  *
- *   - Browser / Client Components ("use client")   → import from
- *     "./client"  (never through this barrel)
+ *   ./service   → `getSupabaseServiceClient()`  (service role key, no RLS)
  *
- *   - App Router server code (server components, route handlers,
- *     server actions that need cookies()) → import directly from
- *     "./server"  (never through this barrel)
+ * It DOES NOT re-export:
  *
- *   - CLI scripts, cron jobs, pipeline runners, background workers
- *     → import from THIS barrel or directly from "./service-client"
+ *   ./server    — pulls `next/headers`; importing it from a CLI tool
+ *                  produces `This module cannot be imported from a
+ *                  Client Component module`. App Router code must
+ *                  import `./server` directly when it actually needs
+ *                  the cookie-based client.
  *
- * The barrel ONLY re-exports the service-client (Next.js-runtime-free).
+ *   ./browser   — uses anon key + window check. Useless in a Node
+ *                  CLI and would just add dead weight to the bundle.
  *
- * This file deliberately does NOT re-export:
- *   - "./server" (pulls next/headers → "Client Component module" error
- *     in CLI)
- *   - "./client" (browser-only; not useful in Node CLI and just adds
- *     wasted work)
- *   - "server-only" (synchronous RuntimeError outside Next.js)
+ *   `server-only` — synchronous RuntimeError outside Next.js.
  *
- * If a consumer needs `getSupabaseServerClient()` or
- * `getSupabaseBrowserClient()` they MUST import the matching file
- * directly. Doing so keeps the dependency graph honest.
+ * Read this as:
+ *
+ *   - Pipeline / CLI / background workers → import from THIS file or
+ *                                          directly from `./service`.
+ *   - App Router server code             → import directly from
+ *                                          `./server`.
+ *   - Client Components                   → import directly from
+ *                                          `./browser`.
+ *
+ * Keeping the barrel thin is the single most important thing here:
+ * a verbose barrel makes it trivial for a future contributor to
+ * re-export `./server` by accident and undo Sprint 66.
  */
-export { getSupabaseServiceClient } from "./service-client";
+export { getSupabaseServiceClient } from "./service";
+export type { AppSupabaseClient } from "./browser";

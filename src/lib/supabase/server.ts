@@ -1,8 +1,18 @@
 /**
  * Supabase server client (App Router with cookie auth).
  *
- * This module imports from "next/headers" and must NOT be imported
- * by Client Components. Use ./client.ts for browser code.
+ * IMPORTS `next/headers` — must NEVER be imported by:
+ *   - CLI scripts
+ *   - Cron jobs
+ *   - Background workers
+ *   - Pipeline repositories
+ *   - Anything running under tsx / a standalone Node process
+ *
+ * If the pipeline accidentally pulls this file in, you will get
+ * `This module cannot be imported from a Client Component module`
+ * at runtime. Keep it on the App Router side of the boundary.
+ *
+ * Browser code should use `./browser` instead.
  */
 
 import type { CookieOptions } from "@supabase/ssr";
@@ -13,9 +23,6 @@ import { cookies } from "next/headers";
 import type { Database } from "@/types";
 import { getPublicEnv } from "@/lib/env";
 
-/**
- * Supabase client typed against our `Database` schema.
- */
 export type AppSupabaseClient = SupabaseClient<Database>;
 
 /**
@@ -46,8 +53,8 @@ export async function getSupabaseServerClient(): Promise<AppSupabaseClient> {
               cookieStore.set(name, value, options);
             }
           } catch {
-            // setAll from a Server Component is a no-op. This is fine —
-            // middleware refreshes the session.
+            // setAll from a Server Component is a no-op. Middleware
+            // refreshes the session — this branch is expected.
           }
         },
       },
@@ -55,5 +62,9 @@ export async function getSupabaseServerClient(): Promise<AppSupabaseClient> {
   ) as unknown as AppSupabaseClient;
 }
 
-// Legacy alias — some files use createClient() instead of getSupabaseServerClient()
+/**
+ * Legacy alias kept for backward compatibility.
+ *
+ * Prefer `getSupabaseServerClient()` in new code.
+ */
 export const createClient = getSupabaseServerClient;

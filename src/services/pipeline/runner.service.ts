@@ -70,8 +70,10 @@ export interface PipelineRunResult {
 export async function runPipeline(): Promise<PipelineRunResult> {
   try {
     // Stage 1: Ingest posts from all sources
+    console.log(">>> Stage 1 START: fetchAllSources");
     const rawPosts = await fetchAllSources(25);
     const sourcesCount = new Set(rawPosts.map((post) => post.source)).size;
+    console.log(">>> Stage 1 END: fetchAllSources");
 
     if (rawPosts.length === 0) {
       console.warn("No posts fetched from any source. Pipeline cannot continue.");
@@ -81,7 +83,9 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     console.log(`Fetched ${rawPosts.length} posts from ${sourcesCount} sources`);
 
     // Insert posts into database
+    console.log(">>> Stage 1b START: RawPostsRepository.create");
     const repository = await RawPostsRepository.create();
+    console.log(">>> Stage 1b END: RawPostsRepository.create");
 
     // Check for existing URLs to prevent duplicates
     const existingPosts = await repository.list({ limit: 1000 });
@@ -100,7 +104,9 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     }
     
     // Stage 2: Extract pain points
+    console.log(">>> Stage 2 START: extractPainPointsFromPosts");
     const painPoints = await extractPainPointsFromPosts(50);
+    console.log(">>> Stage 2 END: extractPainPointsFromPosts");
 
     if (painPoints.inserted === 0) {
       console.log("No new pain points extracted (all duplicates or no posts)");
@@ -109,7 +115,9 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Stage 3: Generate embeddings for pain points (optional - requires OpenAI provider)
     let embeddingsResult = { processed: 0, skipped: 0, inserted: 0 };
     try {
+      console.log(">>> Stage 3 START: generateEmbeddingsFromDatabase");
       embeddingsResult = await generateEmbeddingsFromDatabase(1000);
+      console.log(">>> Stage 3 END: generateEmbeddingsFromDatabase");
       
       if (embeddingsResult.inserted === 0) {
         console.log("No new embeddings generated (all pain points already have embeddings or provider not supported)");
@@ -122,50 +130,65 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     }
 
     // Stage 4: Cluster pain points
+    console.log(">>> Stage 4 START: clusterPainPointsFromDatabase");
     const clusters = await clusterPainPointsFromDatabase(100);
+    console.log(">>> Stage 4 END: clusterPainPointsFromDatabase");
 
     if (clusters.inserted === 0) {
       console.log("No new clusters created (all duplicates or no pain points)");
     }
 
     // Stage 5: Generate opportunities
+    console.log(">>> Stage 5 START: generateOpportunitiesFromDatabase");
     const opportunities = await generateOpportunitiesFromDatabase(50);
+    console.log(">>> Stage 5 END: generateOpportunitiesFromDatabase");
 
     if (opportunities.inserted === 0) {
       console.log("No new opportunities generated (all duplicates or no clusters)");
     }
 
     // Stage 6: Validate opportunities (deterministic scoring)
+    console.log(">>> Stage 6 START: validateOpportunitiesFromDatabase");
     const validationResult = await validateOpportunitiesFromDatabase(100);
+    console.log(">>> Stage 6 END: validateOpportunitiesFromDatabase");
     console.log(
       `Validated ${validationResult.validated} opportunities ` +
       `(${validationResult.skipped} skipped, ${validationResult.inserted} inserted)`,
     );
 
     // Stage 7: Generate startup ideas (only from validated opportunities with score >= 70)
+    console.log(">>> Stage 7 START: generateStartupIdeasFromDatabase");
     const ideas = await generateStartupIdeasFromDatabase(50);
+    console.log(">>> Stage 7 END: generateStartupIdeasFromDatabase");
 
     if (ideas.inserted === 0) {
       console.log("No new startup ideas generated (all duplicates or no opportunities)");
     }
 
     // Stage 8: Generate market evidence (only from validated opportunities with score >= 70)
+    console.log(">>> Stage 8 START: generateEvidenceBatch");
     const evidenceResult = await generateEvidenceBatch(50);
+    console.log(">>> Stage 8 END: generateEvidenceBatch");
     console.log(
       `Generated market evidence: ${evidenceResult.inserted} records ` +
       `(${evidenceResult.skipped} skipped, ${evidenceResult.generated} total generated)`,
     );
 
     // Stage 9: Generate forecasts (only from validated opportunities with score >= 70)
+    console.log(">>> Stage 9 START: generateForecastBatch");
     const forecastResult = await generateForecastBatch(50);
+    console.log(">>> Stage 9 END: generateForecastBatch");
     console.log(
       `Generated forecasts: ${forecastResult.inserted} records ` +
       `(${forecastResult.skipped} skipped, ${forecastResult.generated} total generated)`,
     );
 
     // Stage 10: Trigger forecast alerts for breakout opportunities (forecast_score > 90)
+    console.log(">>> Stage 10 START: processForecastAlerts");
     const { processForecastAlerts } = await import("../forecasts/forecast-alerts.service");
+    console.log(">>> Stage 10 imported forecast-alerts.service");
     const forecastAlertResult = await processForecastAlerts();
+    console.log(">>> Stage 10 END: processForecastAlerts");
     console.log(
       `Forecast alerts: ${forecastAlertResult.alertsCreated} created ` +
       `(${forecastAlertResult.triggered} triggered, ${forecastAlertResult.emailsQueued} emails queued)`,
@@ -174,8 +197,11 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Stage 11: Generate market intelligence (only for opportunities with
     // validation_score >= 70 AND forecast_score >= 70).
     // Triggers "🔥 Massive Market Signal" alert when overall_score > 90.
+    console.log(">>> Stage 11 START: generateMarketIntelligenceBatch");
     const { generateBatch: generateMarketIntelligenceBatch } = await import("../market-intelligence/market-intelligence.service");
+    console.log(">>> Stage 11 imported market-intelligence.service");
     const intelligenceResult = await generateMarketIntelligenceBatch(50);
+    console.log(">>> Stage 11 END: generateMarketIntelligenceBatch");
     console.log(
       `Generated market intelligence: ${intelligenceResult.inserted} records ` +
       `(${intelligenceResult.skipped} skipped, ${intelligenceResult.generated} total generated)`,
@@ -184,8 +210,11 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Stage 12: Generate VC-style startup scores (only for opportunities
     // with validation >= 70 AND forecast >= 70 AND market_intelligence >= 70).
     // Triggers "⭐ Investment Grade Startup" alert when overall_score >= 90.
+    console.log(">>> Stage 12 START: generateStartupScoreBatch");
     const { generateBatch: generateStartupScoreBatch } = await import("../startup-score/startup-score.service");
+    console.log(">>> Stage 12 imported startup-score.service");
     const startupScoreResult = await generateStartupScoreBatch(50);
+    console.log(">>> Stage 12 END: generateStartupScoreBatch");
     console.log(
       `Generated startup scores: ${startupScoreResult.inserted} records ` +
       `(${startupScoreResult.skipped} skipped, ${startupScoreResult.generated} total generated)`,
@@ -194,8 +223,11 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Stage 13: Generate Venture Research Reports (only for opportunities
     // with startup_score overall_score >= 80).
     // Triggers "🚀 VC Grade Opportunity" alert when recommendation == "STRONG BUY".
+    console.log(">>> Stage 13 START: generateVentureReportBatch");
     const { generateBatch: generateVentureReportBatch } = await import("../venture-report/venture-report.service");
+    console.log(">>> Stage 13 imported venture-report.service");
     const ventureReportResult = await generateVentureReportBatch(50);
+    console.log(">>> Stage 13 END: generateVentureReportBatch");
     console.log(
       `Generated venture reports: ${ventureReportResult.inserted} records ` +
       `(${ventureReportResult.skipped} skipped, ${ventureReportResult.generated} total generated)`,
@@ -204,8 +236,11 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Stage 14: Generate Investment Memos (only for opportunities
     // with startup_score overall_score >= 85 AND a venture_report).
     // Triggers "💰 Investor Ready Startup" alert when recommendation == "STRONG BUY".
+    console.log(">>> Stage 14 START: generateInvestmentMemoBatch");
     const { generateBatch: generateInvestmentMemoBatch } = await import("../investment-memo/investment-memo.service");
+    console.log(">>> Stage 14 imported investment-memo.service");
     const investmentMemoResult = await generateInvestmentMemoBatch(50);
+    console.log(">>> Stage 14 END: generateInvestmentMemoBatch");
     console.log(
       `Generated investment memos: ${investmentMemoResult.inserted} records ` +
       `(${investmentMemoResult.skipped} skipped, ${investmentMemoResult.generated} total generated)`,
@@ -214,7 +249,9 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     // Stage 15: Run AI Investment Committee (only for opportunities
     // with an investment_memo). Five independent AI "VC partners" vote.
     // Triggers "🎯 Committee Strong Buy" or "⚠️ Low Consensus" alerts.
+    console.log(">>> Stage 15 START: generateCommittees");
     const { generateCommitteesForOpportunities: generateCommittees } = await import("../../lib/services/committee.service");
+    console.log(">>> Stage 15 imported committee.service");
     // Fetch opportunities with investment memos
     const { getSupabaseServiceClient } = await import("@/lib/supabase");
     const supabase = getSupabaseServiceClient();
@@ -249,6 +286,7 @@ export async function runPipeline(): Promise<PipelineRunResult> {
     }));
     
     const committeeResult = await generateCommittees(committeeInputs);
+    console.log(">>> Stage 15 END: generateCommittees");
     console.log(
       `Generated committee decisions: ${committeeResult.inserted} records ` +
       `(${committeeResult.skipped} skipped, ${committeeResult.generated} total generated)`,
@@ -274,39 +312,13 @@ export async function runPipeline(): Promise<PipelineRunResult> {
       committeeDecisions: committeeResult.inserted,
     };
   } catch (error) {
-    // Determine which stage failed and provide meaningful error
-    const message = error instanceof Error ? error.message : String(error);
-    
-    if (message.includes("reddit") || message.includes("Reddit")) {
-      throw new Error(`Pipeline failed at stage 1 (Reddit ingestion): ${message}`);
-    } else if (message.includes("pain_point") || message.includes("pain point")) {
-      throw new Error(`Pipeline failed at stage 2 (pain point extraction): ${message}`);
-    } else if (message.includes("embedding")) {
-      throw new Error(`Pipeline failed at stage 3 (embeddings generation): ${message}`);
-    } else if (message.includes("cluster")) {
-      throw new Error(`Pipeline failed at stage 4 (clustering): ${message}`);
-    } else if (message.includes("opportunit")) {
-      throw new Error(`Pipeline failed at stage 5 (opportunity generation): ${message}`);
-    } else if (message.includes("validat")) {
-      throw new Error(`Pipeline failed at stage 6 (opportunity validation): ${message}`);
-    } else if (message.includes("idea") || message.includes("startup")) {
-      throw new Error(`Pipeline failed at stage 7 (startup idea generation): ${message}`);
-    } else if (message.includes("evidence") || message.includes("market_evidence")) {
-      throw new Error(`Pipeline failed at stage 8 (market evidence generation): ${message}`);
-    } else if (message.includes("forecast")) {
-      throw new Error(`Pipeline failed at stage 9 (forecasting): ${message}`);
-    } else if (message.includes("intelligence") || message.includes("market_intelligence")) {
-      throw new Error(`Pipeline failed at stage 11 (market intelligence generation): ${message}`);
-    } else if (message.includes("startup") || message.includes("scoreStartup")) {
-      throw new Error(`Pipeline failed at stage 12 (startup scoring): ${message}`);
-    } else if (message.includes("venture") || message.includes("venture_report")) {
-      throw new Error(`Pipeline failed at stage 13 (venture report generation): ${message}`);
-    } else if (message.includes("memo") || message.includes("investment_memo")) {
-      throw new Error(`Pipeline failed at stage 14 (investment memo generation): ${message}`);
-    } else if (message.includes("committee") || message.includes("investment_committee")) {
-      throw new Error(`Pipeline failed at stage 15 (committee generation): ${message}`);
-    } else {
-      throw new Error(`Pipeline failed: ${message}`);
+    console.error("========== ORIGINAL ERROR ==========");
+    console.error(error);
+
+    if (error instanceof Error) {
+      console.error(error.stack);
     }
+
+    throw error;
   }
 }

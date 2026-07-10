@@ -10,7 +10,7 @@
  * invocations within the same week don't pile up duplicate sends.
  */
 
-import { getSupabaseServiceClient } from "@/lib/supabase/service-client";
+import { getSupabaseServiceClient } from "@/lib/supabase/service";
 import { WeeklyDigestService } from "@/services/digests/weekly-digest.service";
 
 let isRunning = false;

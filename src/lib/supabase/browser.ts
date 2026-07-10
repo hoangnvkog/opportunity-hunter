@@ -1,8 +1,10 @@
 /**
- * Supabase browser client.
+ * Browser Supabase client.
  *
- * Safe to import from Client Components ("use client").
- * Does NOT import from "next/headers" or any server-only module.
+ * Safe to import from Client Components ("use client") and from any
+ * browser-side code. Uses the anon key; subject to RLS. No server
+ * imports, no `next/headers`, no cookies. If cookie-based auth is
+ * needed, use `./server` from an App Router context instead.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -13,13 +15,19 @@ import { getPublicEnv } from "@/lib/env";
 
 /**
  * Supabase client typed against our `Database` schema.
+ *
+ * Shared across ./browser, ./server, and ./service so all three
+ * are assignment-compatible from a TypeScript POV.
  */
 export type AppSupabaseClient = SupabaseClient<Database>;
 
 let browserClient: AppSupabaseClient | null = null;
 
 /**
- * Singleton browser Supabase client. Safe to call from "use client" components.
+ * Singleton browser Supabase client.
+ *
+ * Hard-fails on the server: pair this with `./server` rather than
+ * guessing at runtime.
  */
 export function getSupabaseBrowserClient(): AppSupabaseClient {
   if (typeof window === "undefined") {
