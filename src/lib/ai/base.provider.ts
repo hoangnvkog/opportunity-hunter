@@ -19,6 +19,8 @@ export interface AIProviderConfig {
   type: AIProviderType;
   apiKey?: string;
   model?: string;
+  baseURL?: string;
+  embeddingsModel?: string;
 }
 
 /**
@@ -53,7 +55,7 @@ export function createAIProvider(config: AIProviderConfig): AIProvider {
       return new MockProvider();
 
     case "openai":
-      return new OpenAIProvider(config.apiKey, config.model);
+      return new OpenAIProvider(config.apiKey, config.model, config.baseURL, config.embeddingsModel);
 
     case "gemini":
       return new GeminiProvider(config.apiKey, config.model);
@@ -88,6 +90,8 @@ export function getAIProviderFromEnv(): AIProvider {
   if (providerType === "openai") {
     config.apiKey = process.env.OPENAI_API_KEY;
     config.model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+    config.baseURL = process.env.OPENAI_BASE_URL;
+    config.embeddingsModel = process.env.OPENAI_EMBEDDINGS_MODEL;
   } else if (providerType === "gemini") {
     config.apiKey = process.env.GEMINI_API_KEY;
     config.model = process.env.GEMINI_MODEL || "gemini-1.5-flash";

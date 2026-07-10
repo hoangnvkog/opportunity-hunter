@@ -49,10 +49,13 @@ import type { VentureProjectInput } from "@/types/venture-studio";
 
 export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
+  private readonly embeddingsModel: string;
 
   constructor(
     private readonly apiKey?: string,
     private readonly model: string = "gpt-4o-mini",
+    private readonly baseURL: string = "https://api.openai.com/v1",
+    embeddingsModel?: string,
   ) {
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY is required");
@@ -60,7 +63,11 @@ export class OpenAIProvider implements AIProvider {
 
     this.client = new OpenAI({
       apiKey,
+      baseURL: this.baseURL,
     });
+
+    // Default to text-embedding-3-small for OpenAI, but allow override for NVIDIA
+    this.embeddingsModel = embeddingsModel || "text-embedding-3-small";
   }
 
   private getUserId(): string | null {
@@ -997,12 +1004,18 @@ Rules:
     if (texts.length === 0) return [];
 
     try {
-      const response = await this.client.embeddings.create({
-        model: "text-embedding-3-small",
+      // For NVIDIA nv-embed models, the `input_type` parameter is required
+      // at the top level for asymmetric models (query vs passage). The
+      // OpenAI SDK type does not declare `input_type`, hence the cast.
+      const isNvidiaEmbed = this.embeddingsModel.startsWith("nvidia/");
+      const body = {
+        model: this.embeddingsModel,
         input: texts,
-      });
-
-      return response.data.map((item) => item.embedding);
+        ...(isNvidiaEmbed && { input_type: "query" as const }),
+      };
+      const response = await this.client.embeddings.create(body as Parameters<typeof this.client.embeddings.create>[0]);
+      const data = (response.data ?? []) as Array<{ embedding: number[] }>;
+      return data.map((item) => item.embedding);
     } catch (error) {
       console.error("generateEmbeddings failed:", error);
       throw error;

@@ -161,13 +161,13 @@ export async function generateOpportunitiesFromDatabase(limit = 50): Promise<{
         cluster_id: cluster.id,
         title: opportunity.cluster_name || cluster.name,
         description: opportunity.cluster_description || cluster.description,
-        score: score.toFixed(3),
+        score: Math.round(score).toString(), // Decimal6 = string
         frequency: opportunity.frequency,
-        severity: opportunity.severity.toFixed(3),
-        buying_intent: opportunity.buying_intent.toFixed(3),
+        severity: opportunity.severity.toFixed(3), // Decimal3 = string
+        buying_intent: opportunity.buying_intent.toFixed(3), // Decimal3 = string
         cluster_size: clusterSize,
-        recency_score: recencyScore.toFixed(3),
-        source_diversity: sourceDiversity.toFixed(3),
+        recency_score: recencyScore.toFixed(3), // Decimal3 = string
+        source_diversity: sourceDiversity.toFixed(3), // Decimal3 = string
       });
       inserted++;
 
