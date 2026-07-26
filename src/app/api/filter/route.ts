@@ -18,6 +18,7 @@ import {
   getFilteredStartupIdeas,
 } from "@/services/dashboard/dashboard.service";
 import type { OpportunityFilters } from "@/types/filters";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 function parseOptionalFloat(raw: string | null): number | undefined {
   if (raw === null || raw === "") return undefined;
@@ -33,6 +34,8 @@ function clampLimit(raw: string | null): number {
 }
 
 export async function GET(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { searchParams } = new URL(request.url);
 

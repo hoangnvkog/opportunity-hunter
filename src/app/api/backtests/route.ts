@@ -15,8 +15,11 @@ import {
   evaluateBatch,
 } from "@/services/backtesting/backtesting.service";
 import type { BacktestSearchFilters } from "@/types/backtesting";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const url = new URL(request.url);
     const sp = url.searchParams;
@@ -54,6 +57,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const body = await request.json().catch(() => ({}));
     const { action, opportunityId, providerType } = body as {

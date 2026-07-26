@@ -5,8 +5,11 @@
  */
 import { NextResponse } from "next/server";
 import { listCommittees } from "@/lib/services/committee.service";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const url = new URL(request.url);
     const finalDecision = url.searchParams.get("finalDecision") ?? undefined;

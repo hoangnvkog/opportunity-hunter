@@ -12,6 +12,7 @@
 import { NextResponse } from "next/server";
 import { getBacktestById } from "@/services/backtesting/backtesting.service";
 import { backtestFilename, mimeFor, type ExportFormat } from "@/lib/exports/backtest-export";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 const VALID_FORMATS: ReadonlySet<ExportFormat> = new Set(["csv", "json", "pdf"]);
 
@@ -19,6 +20,8 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { id } = await params;
     const url = new URL(request.url);

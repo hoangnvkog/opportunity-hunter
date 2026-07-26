@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { runFullPipeline } from "@/services/pipeline/run-full-pipeline.service";
 import type { PipelineRunResponse } from "@/types/pipeline-run";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function POST(): Promise<NextResponse<PipelineRunResponse>> {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response as NextResponse<PipelineRunResponse>;
   try {
     const stats = await runFullPipeline();
     return NextResponse.json(

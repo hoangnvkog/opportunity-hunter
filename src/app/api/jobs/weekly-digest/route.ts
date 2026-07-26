@@ -8,8 +8,11 @@
 
 import { NextResponse } from "next/server";
 import { runWeeklyDigestJob } from "@/lib/scheduler/weekly-digest-job";
+import { requireCronSecret } from "@/lib/auth/api-guard";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const guard = await requireCronSecret(request);
+  if (!guard.ok) return guard.response;
   try {
     const result = await runWeeklyDigestJob();
     if (!result) {

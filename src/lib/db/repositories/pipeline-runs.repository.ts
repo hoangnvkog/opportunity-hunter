@@ -107,6 +107,39 @@ export class PipelineRunsRepository {
     return data;
   }
 
+  /**
+   * Find pipeline runs that are stuck in 'running' status.
+   * Used to recover from server crashes that left orphan 'running' rows.
+   */
+  async findStuckRunning(stuckAfterMinutes = 30): Promise<PipelineRunHistory[]> {
+    const cutoff = new Date(Date.now() - stuckAfterMinutes * 60 * 1000).toISOString();
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("*")
+      .eq("status", "running")
+      .lt("started_at", cutoff);
+
+    if (error) throw translateError(ENTITY, error);
+    return data ?? [];
+  }
+
+  /**
+   * Mark a stuck 'running' run as failed (auto-recovery from crash).
+   */
+  async markStuckAsFailed(id: string, reason: string): Promise<void> {
+    const { error } = await this.client
+      .from(ENTITY)
+      .update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        error_message: `[auto-recovery] ${reason}`,
+      })
+      .eq("id", id)
+      .eq("status", "running"); // Only flip if still stuck
+
+    if (error) throw translateError(ENTITY, error);
+  }
+
   async latest(): Promise<PipelineRunHistory | null> {
     const { data, error } = await this.client
       .from(ENTITY)

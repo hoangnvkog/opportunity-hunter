@@ -6,11 +6,14 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getVentureScoreDetail } from "@/services/venture-score/venture-score.service";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ opportunityId: string }> },
 ) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { opportunityId } = await params;
 

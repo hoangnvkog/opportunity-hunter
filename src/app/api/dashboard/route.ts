@@ -10,8 +10,11 @@ import {
   getRecentOpportunities,
   getCategoryTrends,
 } from "@/services/dashboard";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET() {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const [metrics, recentOpportunities, categoryTrends] = await Promise.all([
       getDashboardMetrics(),

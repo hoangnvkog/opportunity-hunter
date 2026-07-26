@@ -7,6 +7,7 @@ import { getCommitteeWithVotes } from "@/lib/services/committee.service";
 import {
   runInvestmentCommittee,
 } from "@/services/investment-committee/committee.service";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,8 @@ export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { id } = await ctx.params;
     // Sprint 61: GET by committee ID
@@ -34,6 +37,8 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { id: opportunityId } = await ctx.params;
     const committee = await runInvestmentCommittee(opportunityId);

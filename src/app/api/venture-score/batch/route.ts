@@ -6,8 +6,11 @@
  */
 import { NextResponse } from "next/server";
 import { batchCalculateVentureScores } from "@/services/venture-score/venture-score.service";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function POST() {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response as NextResponse;
   try {
     const result = await batchCalculateVentureScores(100);
     return NextResponse.json(result, { status: 200 });

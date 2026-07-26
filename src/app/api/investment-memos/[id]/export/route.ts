@@ -18,6 +18,7 @@ import {
   memoFilename,
   type ExportFormat,
 } from "@/lib/exports/investment-memo-export";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 const VALID_FORMATS: ReadonlySet<ExportFormat> = new Set([
   "pdf",
@@ -30,6 +31,8 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { id } = await params;
     const url = new URL(request.url);

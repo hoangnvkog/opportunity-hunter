@@ -5,9 +5,12 @@
  */
 
 import { NextResponse } from "next/server";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 import { runPipeline } from "@/services/pipeline";
 
 export async function POST() {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const result = await runPipeline();
 

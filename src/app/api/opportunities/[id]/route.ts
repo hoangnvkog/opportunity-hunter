@@ -6,11 +6,14 @@
 
 import { NextResponse } from "next/server";
 import { getOpportunityById } from "@/services/opportunities";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { id } = await params;
     const opportunity = await getOpportunityById(id);

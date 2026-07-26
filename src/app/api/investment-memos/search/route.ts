@@ -13,8 +13,11 @@ import {
   searchMemosCount,
 } from "@/services/investment-memo/investment-memo.service";
 import type { InvestmentMemoSearchFilters } from "@/types/investment-memo";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const url = new URL(request.url);
     const sp = url.searchParams;

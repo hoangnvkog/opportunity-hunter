@@ -11,6 +11,39 @@ import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repo
 
 let isRunning = false;
 
+/**
+ * Try to recover any stuck 'running' pipeline runs from previous crashes.
+ * Runs older than 30 minutes are considered abandoned and marked as failed.
+ * This lets a fresh pipeline start even if the previous process died
+ * mid-execution.
+ */
+async function recoverStuckRuns(): Promise<void> {
+  try {
+    const repo = await PipelineRunsRepository.create();
+    const stuck = await repo.findStuckRunning(30);
+    if (stuck.length === 0) return;
+
+    console.warn(
+      `[Orchestrator] Recovering ${stuck.length} stuck pipeline run(s) from previous crash`
+    );
+    for (const run of stuck) {
+      try {
+        await repo.markStuckAsFailed(
+          run.id,
+          `Pre-existing running row recovered after > 30m (started ${run.started_at})`
+        );
+      } catch (err) {
+        console.error(
+          `[Orchestrator] Failed to mark stuck run ${run.id} as failed:`,
+          err
+        );
+      }
+    }
+  } catch (err) {
+    console.error(`[Orchestrator] Stuck-run recovery skipped:`, err);
+  }
+}
+
 export interface PipelineExecutionResult {
   startedAt: string;
   finishedAt: string;
@@ -37,6 +70,10 @@ export async function runPipelineWithTracking(): Promise<PipelineExecutionResult
   if (isRunning) {
     throw new Error("Pipeline already running");
   }
+
+  // Auto-recover any stuck 'running' rows from previous crashes so that
+  // a crashed run doesn't permanently block subsequent executions.
+  await recoverStuckRuns();
 
   isRunning = true;
   const startedAt = new Date().toISOString();

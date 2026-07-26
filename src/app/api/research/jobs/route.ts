@@ -10,8 +10,11 @@
 import { NextResponse } from "next/server";
 import { listResearchJobs, startResearch } from "@/lib/services/research-agent.service";
 import type { ResearchJobStatus, ResearchSourceName } from "@/types/research-job";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const url = new URL(request.url);
     const statusRaw = url.searchParams.get("status");
@@ -37,6 +40,8 @@ export async function GET(request: Request) {
  * Body: { source: string }
  */
 export async function POST(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const body = await request.json();
     const { source } = body;

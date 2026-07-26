@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+
 import { GET } from "@/app/api/search/route";
 import {
   getFilteredOpportunities,

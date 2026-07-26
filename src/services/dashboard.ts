@@ -12,7 +12,7 @@
  */
 
 import { OpportunitiesRepository } from "@/lib/db/repositories";
-import { findOpportunities, getCategoryCounts } from "@/services/opportunities";
+import { findOpportunities } from "@/services/opportunities";
 import type { OpportunityView } from "@/services/opportunities";
 
 /**
@@ -77,21 +77,12 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     (opp) => opp.score >= 70
   ).length;
 
-  // Get top category by count
-  const categories = [
-    "Customer Service",
-    "Productivity",
-    "Marketing",
-    "E-commerce",
-    "Finance",
-    "Healthcare",
-  ];
-  const counts = await getCategoryCounts(categories);
+  // Get top category by count (Sprint 68: read live cluster names from
+  // the database rather than a hard-coded label set that always
+  // returned `count: 0`).
+  const categoryTrends = await getCategoryTrends(6);
   const topCategory =
-    counts.length > 0
-      ? counts.reduce((max, curr) => (curr.count > max.count ? curr : max))
-          .category
-      : "None";
+    categoryTrends.length > 0 ? categoryTrends[0].category : "None";
 
   return {
     totalOpportunities,
@@ -214,18 +205,20 @@ export async function getOpportunitiesWithFilters(
 /**
  * Get category trends for the dashboard chart.
  *
- * @returns Array of {category, count} objects.
+ * Reads the *actual* top-N cluster names from the `opportunities` →
+ * `pain_clusters` join, ordered by opportunity count descending.
+ * Replaces the previous implementation that hard-coded a 6-element
+ * category list which always returned `count: 0` for AI-generated
+ * cluster names ("Regulatory Compliance & Platform Governance", etc.).
+ *
+ * @returns Array of {category, count} objects, length 0..limit.
  */
-export async function getCategoryTrends(): Promise<
-  Array<{ category: string; count: number }>
-> {
-  const categories = [
-    "Customer Service",
-    "Productivity",
-    "Marketing",
-    "E-commerce",
-    "Finance",
-    "Healthcare",
-  ];
-  return getCategoryCounts(categories);
+export async function getCategoryTrends(
+  limit = 6,
+): Promise<Array<{ category: string; count: number }>> {
+  const { OpportunitiesRepository } = await import(
+    "@/lib/db/repositories/opportunities.repository"
+  );
+  const repo = await OpportunitiesRepository.create();
+  return repo.topClusterNamesByOpportunityCount(limit);
 }

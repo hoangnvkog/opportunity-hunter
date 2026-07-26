@@ -50,15 +50,30 @@ export async function clusterPainPointsFromDatabase(limit = 100): Promise<{
     return { processed: 0, clustered: 0, inserted: 0, averageClusterSize: 0, largestClusterSize: 0 };
   }
 
-  // Cluster using semantic similarity
-  const similarityThreshold = parseFloat(process.env.SIMILARITY_THRESHOLD || "0.85");
+  // Cluster using semantic similarity.
+  //
+  // Threshold calibration note (Sprint 68):
+  // - NVIDIA `nv-embedqa-e5-v5` (1024d) produces cosine similarities in
+  //   the 0.45-0.85 range for *related* content and 0.15-0.45 for
+  //   *unrelated* content. The historical 0.85 default created a
+  //   similarity graph with zero edges in practice → every pain point
+  //   became its own cluster of size 1.
+  // - 0.7 is the empirically working default for this embedding model.
+  //   Operators can override per-deploy via `SIMILARITY_THRESHOLD`.
+  const similarityThreshold = parseFloat(process.env.SIMILARITY_THRESHOLD || "0.7");
   const semanticClusters = clusterPainPointsBySimilarity(embeddings, {
     similarityThreshold,
     minClusterSize: 1,
   });
 
-  console.log(`Created similarity graph with threshold ${similarityThreshold}`);
-  console.log(`Found ${semanticClusters.length} semantic clusters`);
+  console.log(`[Clusters] Similarity threshold: ${similarityThreshold}`);
+  console.log(
+    `[Clusters] Built semantic clusters: ${semanticClusters.length} (avg size ${
+      semanticClusters.length > 0
+        ? (semanticClusters.reduce((s, c) => s + c.members.length, 0) / semanticClusters.length).toFixed(2)
+        : 0
+    }, largest ${semanticClusters.length > 0 ? Math.max(...semanticClusters.map((c) => c.members.length)) : 0})`
+  );
 
   if (semanticClusters.length === 0) {
     return { processed: 0, clustered: 0, inserted: 0, averageClusterSize: 0, largestClusterSize: 0 };

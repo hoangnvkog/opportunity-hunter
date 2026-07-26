@@ -5,8 +5,11 @@
  */
 import { NextResponse } from "next/server";
 import { getCommitteeWithVotes } from "@/lib/services/committee.service";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export async function GET(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { id } = await ctx.params;
     const url = new URL(request.url);

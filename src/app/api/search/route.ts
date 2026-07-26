@@ -20,6 +20,7 @@ import {
   getFilteredOpportunities,
   getFilteredStartupIdeas,
 } from "@/services/dashboard/dashboard.service";
+import { requireUserAPI } from "@/lib/auth/api-guard";
 
 function clampLimit(raw: string | null): number {
   if (!raw) return 10;
@@ -29,6 +30,8 @@ function clampLimit(raw: string | null): number {
 }
 
 export async function GET(request: Request) {
+  const guard = await requireUserAPI();
+  if (!guard.ok) return guard.response;
   try {
     const { searchParams } = new URL(request.url);
     const q = (searchParams.get("q") ?? "").trim();

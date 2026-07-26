@@ -267,6 +267,38 @@ export class OpportunitiesRepository {
     return counts;
   }
 
+  /**
+   * Top-N cluster names ordered by opportunity count, descending.
+   *
+   * Replaces the previous hard-coded category list which always
+   * returned zero matches because AI-generated cluster names
+   * ("Regulatory Compliance & Platform Governance", etc.) did not
+   * overlap with the dashboard's static label set.
+   *
+   * @returns Array of {category, count} sorted desc by count.
+   */
+  async topClusterNamesByOpportunityCount(
+    limit = 6,
+  ): Promise<Array<{ category: string; count: number }>> {
+    const { data, error } = await this.client
+      .from(ENTITY)
+      .select("pain_clusters!inner(name)");
+
+    if (error) throw translateError(ENTITY, error);
+
+    const counts = new Map<string, number>();
+    for (const row of (data ?? []) as unknown as OpportunityClusterNameOnly[]) {
+      const name = row.pain_clusters?.name;
+      if (!name) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+
+    return Array.from(counts.entries())
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  }
+
   async listUnprocessedForIdeas(limit = 50): Promise<OpportunityRow[]> {
     const { data, error } = await this.client
       .from(ENTITY)
