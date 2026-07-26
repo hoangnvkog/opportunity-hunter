@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 
+import { NextResponse } from "next/server";
 import { GET } from "@/app/api/dashboard/route";
 import {
   getDashboardMetrics,
@@ -17,6 +18,22 @@ vi.mock("@/services/dashboard", () => ({
 describe("GET /api/dashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns 401 when no authenticated user", async () => {
+    // setup.ts provides a default mock that returns ok:true. We override
+    // here to exercise the unauthorized branch.
+    const { requireUserAPI } = await import("@/lib/auth/api-guard");
+    vi.mocked(requireUserAPI).mockResolvedValueOnce({
+      ok: false,
+      response: NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      ),
+    });
+
+    const res = await GET();
+    expect(res.status).toBe(401);
   });
 
   it("should return 200 with dashboard data", async () => {

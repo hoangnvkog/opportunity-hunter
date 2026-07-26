@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 
+import { NextResponse } from "next/server";
 import { POST } from "@/app/api/pipeline/route";
 import { runPipeline } from "@/services/pipeline";
 
@@ -11,6 +12,20 @@ vi.mock("@/services/pipeline", () => ({
 describe("POST /api/pipeline", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns 401 when no authenticated user", async () => {
+    const { requireUserAPI } = await import("@/lib/auth/api-guard");
+    vi.mocked(requireUserAPI).mockResolvedValueOnce({
+      ok: false,
+      response: NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      ),
+    });
+
+    const res = await POST();
+    expect(res.status).toBe(401);
   });
 
   it("should return 200 with pipeline result on success", async () => {
