@@ -1,5 +1,21 @@
-import { MetricCard } from "./metric-card";
-import { TrendingUp, AlertCircle, Target, Brain, Star, Eye, Bell, Mail, CalendarDays, CheckCircle, FileText, Percent, Zap, BarChart3, Flame } from "lucide-react";
+import { MetricCard } from "@/components/ui/metric-card";
+import {
+  TrendingUp,
+  AlertCircle,
+  Target,
+  Brain,
+  Star,
+  Eye,
+  Bell,
+  Mail,
+  CalendarDays,
+  CheckCircle,
+  FileText,
+  Percent,
+  Zap,
+  BarChart3,
+  Flame,
+} from "lucide-react";
 import type { DashboardStats } from "@/types/dashboard";
 
 interface MetricsGridProps {
@@ -8,7 +24,7 @@ interface MetricsGridProps {
 
 export default function MetricsGrid({ metrics }: MetricsGridProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <MetricCard
         title="Tổng cơ hội"
         value={metrics.opportunities}
@@ -27,11 +43,13 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
       <MetricCard
         title="Cơ hội đã xác thực"
         value={metrics.validated}
+        tone="hot"
         icon={<CheckCircle className="h-4 w-4" />}
       />
       <MetricCard
         title="Ý tưởng startup"
         value={metrics.ideas}
+        tone="ai"
         icon={<TrendingUp className="h-4 w-4" />}
       />
       <MetricCard
@@ -47,6 +65,7 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
       <MetricCard
         title="Cảnh báo chưa đọc"
         value={metrics.unreadAlertsCount}
+        tone="risk"
         icon={<Bell className="h-4 w-4" />}
       />
       <MetricCard
@@ -63,6 +82,7 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
       <MetricCard
         title="Bằng chứng thị trường"
         value={metrics.evidenceCount}
+        tone="info"
         icon={<FileText className="h-4 w-4" />}
       />
       <MetricCard
@@ -74,6 +94,7 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
       <MetricCard
         title="Cơ hội đã dự báo"
         value={metrics.forecastCount}
+        tone="ai"
         icon={<Zap className="h-4 w-4" />}
       />
       <MetricCard
@@ -89,6 +110,7 @@ export default function MetricsGrid({ metrics }: MetricsGridProps) {
       <MetricCard
         title="Hồ sơ tình báo thị trường"
         value={metrics.intelligenceCount}
+        tone="info"
         icon={<Flame className="h-4 w-4" />}
       />
       <MetricCard
