@@ -16,39 +16,39 @@ import {
 } from "lucide-react";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Bảng điều khiển", href: "/dashboard", icon: LayoutDashboard },
   {
-    name: "Opportunities",
+    name: "Cơ hội",
     href: "/opportunities",
     icon: Briefcase,
   },
   {
-    name: "Saved",
+    name: "Đã lưu",
     href: "/saved",
     icon: Star,
   },
   {
-    name: "Watchlists",
+    name: "Theo dõi",
     href: "/watchlists",
     icon: Eye,
   },
   {
-    name: "Alerts",
+    name: "Cảnh báo",
     href: "/alerts",
     icon: Bell,
   },
   {
-    name: "Insights",
+    name: "Nhận định",
     href: "/insights",
     icon: Brain,
   },
   {
-    name: "Weekly Digests",
+    name: "Tổng hợp tuần",
     href: "/digests",
     icon: CalendarDays,
   },
   {
-    name: "Settings",
+    name: "Cài đặt",
     href: "/settings/billing",
     icon: Settings,
   },

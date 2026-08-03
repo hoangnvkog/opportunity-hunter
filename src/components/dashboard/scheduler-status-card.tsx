@@ -48,7 +48,7 @@ export function SchedulerStatusCard() {
       const result = await runPipelineAction();
       
       if (result.success && result.result) {
-        setTriggerResult(`Pipeline completed! ${result.result.opportunities} opportunities generated.`);
+        setTriggerResult(`Pipeline đã chạy xong! Tạo được ${result.result.opportunities} cơ hội.`);
         setLatestRun({
           lastRun: result.result.finishedAt,
           lastStatus: result.result.success ? "success" : "failed",
@@ -60,18 +60,18 @@ export function SchedulerStatusCard() {
           ideas: result.result.ideas,
         });
       } else {
-        setTriggerError(result.error || "Pipeline execution failed");
+        setTriggerError(result.error || "Chạy pipeline thất bại");
       }
     } catch (error) {
-      setTriggerError(error instanceof Error ? error.message : "Unknown error");
+      setTriggerError(error instanceof Error ? error.message : "Lỗi không xác định");
     } finally {
       setIsTriggering(false);
     }
   };
 
   const formatDateTime = (dateStr: string | null) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleString("en-US", {
+    if (!dateStr) return "Chưa có";
+    return new Date(dateStr).toLocaleString("vi-VN", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -92,10 +92,10 @@ export function SchedulerStatusCard() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Pipeline Status
+              Trạng thái pipeline
             </CardTitle>
             <CardDescription>
-              Automated pipeline execution and monitoring
+              Theo dõi và chạy tự động luồng dữ liệu
             </CardDescription>
           </div>
           <Button
@@ -107,12 +107,12 @@ export function SchedulerStatusCard() {
             {isTriggering ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Running...
+                Đang chạy...
               </>
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
-                Run Now
+                Chạy ngay
               </>
             )}
           </Button>
@@ -123,7 +123,7 @@ export function SchedulerStatusCard() {
         <div className="space-y-1">
           <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            Last Run
+            Lần chạy gần nhất
           </p>
           <div className="flex items-center gap-2">
             {latestRun?.lastStatus === "success" ? (
@@ -132,7 +132,11 @@ export function SchedulerStatusCard() {
               <XCircle className="h-4 w-4 text-red-500" />
             ) : null}
             <Badge className={statusColor}>
-              {latestRun?.lastStatus?.toUpperCase() || "PENDING"}
+              {latestRun?.lastStatus === "success"
+                ? "THÀNH CÔNG"
+                : latestRun?.lastStatus === "failed"
+                  ? "THẤT BẠI"
+                  : "ĐANG CHỜ"}
             </Badge>
             <span className="text-sm text-muted-foreground">
               {formatDateTime(latestRun?.lastRun ?? null)}

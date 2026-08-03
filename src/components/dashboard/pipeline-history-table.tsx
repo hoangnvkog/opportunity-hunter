@@ -9,7 +9,7 @@ export function PipelineHistoryTable({ runs }: PipelineHistoryTableProps) {
   if (runs.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No pipeline runs yet.
+        Chưa có lần chạy pipeline nào.
       </div>
     );
   }
@@ -29,16 +29,16 @@ export function PipelineHistoryTable({ runs }: PipelineHistoryTableProps) {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left p-3 font-medium">Started At</th>
-              <th className="text-left p-3 font-medium">Duration</th>
-              <th className="text-center p-3 font-medium">Sources</th>
-              <th className="text-center p-3 font-medium">Raw Posts</th>
-              <th className="text-center p-3 font-medium">Pain Points</th>
-              <th className="text-center p-3 font-medium">Embeddings</th>
-              <th className="text-center p-3 font-medium">Clusters</th>
-              <th className="text-center p-3 font-medium">Opportunities</th>
-              <th className="text-center p-3 font-medium">Startup Ideas</th>
-              <th className="text-center p-3 font-medium">Status</th>
+              <th className="text-left p-3 font-medium">Bắt đầu</th>
+              <th className="text-left p-3 font-medium">Thời lượng</th>
+              <th className="text-center p-3 font-medium">Nguồn</th>
+              <th className="text-center p-3 font-medium">Bài thô</th>
+              <th className="text-center p-3 font-medium">Điểm đau</th>
+              <th className="text-center p-3 font-medium">Vector</th>
+              <th className="text-center p-3 font-medium">Cụm</th>
+              <th className="text-center p-3 font-medium">Cơ hội</th>
+              <th className="text-center p-3 font-medium">Ý tưởng startup</th>
+              <th className="text-center p-3 font-medium">Trạng thái</th>
             </tr>
           </thead>
           <tbody>

@@ -16,20 +16,20 @@ export function ClusterMetrics({
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Clusters</CardTitle>
+          <CardTitle className="text-sm font-medium">Tổng cụm</CardTitle>
           <Layers className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{clusterCount}</div>
           <p className="text-xs text-muted-foreground">
-            Semantic clusters formed
+            Cụm ngữ nghĩa đã hình thành
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Avg Cluster Size</CardTitle>
+          <CardTitle className="text-sm font-medium">Kích thước cụm TB</CardTitle>
           <Hash className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -37,20 +37,20 @@ export function ClusterMetrics({
             {averageClusterSize.toFixed(1)}
           </div>
           <p className="text-xs text-muted-foreground">
-            Pain points per cluster
+            Điểm đau trên mỗi cụm
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Largest Cluster</CardTitle>
+          <CardTitle className="text-sm font-medium">Cụm lớn nhất</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{largestClusterSize}</div>
           <p className="text-xs text-muted-foreground">
-            Max pain points in one cluster
+            Số điểm đau cao nhất trong một cụm
           </p>
         </CardContent>
       </Card>

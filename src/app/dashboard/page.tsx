@@ -39,10 +39,9 @@ export default async function DashboardPage() {
     <AppLayout>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
           <p className="text-muted-foreground mt-1">
-            Welcome back{profile?.name ? `, ${profile.name}` : ""}! Here&apos;s what&apos;s happening with your
-            opportunities.
+            Chào mừng{profile?.name ? `, ${profile.name}` : ""} quay lại! Đây là tình hình các cơ hội hiện tại.
           </p>
         </div>
         <div className="flex gap-2">

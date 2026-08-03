@@ -97,6 +97,8 @@ export class OpenAIProvider implements AIProvider {
             role: "system",
             content: `Extract one business pain point from each Reddit post.
 
+All generated user-facing text values (pain, category) MUST be written in Vietnamese. Keep JSON keys exactly as specified.
+
 Return ONLY a valid JSON object with this structure:
 
 {
@@ -168,6 +170,8 @@ Do NOT include markdown formatting or code blocks.`,
           {
             role: "system",
             content: `Group similar pain points into business clusters.
+
+All generated user-facing text values (cluster_name, description) MUST be written in Vietnamese. Keep JSON keys exactly as specified.
 
 Return ONLY a valid JSON object with this structure:
 
@@ -267,6 +271,8 @@ Do NOT include markdown formatting or code blocks.`,
             role: "system",
             content: `Analyze each pain cluster and generate one business opportunity per cluster.
 
+Use the input cluster text as-is; all generated user-facing text in later pipeline stages must be Vietnamese. Keep JSON keys exactly as specified.
+
 Return ONLY a valid JSON object with this structure:
 
 {
@@ -350,6 +356,8 @@ Do NOT include markdown formatting or code blocks.`,
             role: "system",
             content: `You are a startup strategist. For each opportunity below, produce ONE concise business insight in JSON.
 
+All generated user-facing text values (summary, market_size, recommended_mvp, recommended_channels) MUST be written in Vietnamese. Keep enum values and JSON keys exactly as specified.
+
 Return ONLY a valid JSON object with this structure:
 
 {
@@ -432,6 +440,8 @@ Do NOT include markdown formatting or code blocks.`,
             role: "system",
             content: `You are a startup founder. Generate one startup idea for each business opportunity.
 
+All generated user-facing text values MUST be written in Vietnamese. Keep JSON keys exactly as specified.
+
 Return ONLY a valid JSON object with this structure:
 
 {
@@ -510,6 +520,8 @@ Do NOT include markdown formatting or code blocks.`,
           {
             role: "system",
             content: `You are a startup validation expert. Evaluate each opportunity and score it across 4 dimensions.
+
+All generated user-facing text values (reasoning) MUST be written in Vietnamese. Keep JSON keys exactly as specified.
 
 Return ONLY a valid JSON object with this structure:
 
@@ -599,6 +611,8 @@ Do NOT include markdown formatting or code blocks.`,
           {
             role: "system",
             content: `You are a market research analyst. For each business opportunity generate 5-10 pieces of market evidence.
+
+All generated user-facing text values (source, title, summary) MUST be written in Vietnamese when they are descriptive text. Keep company/product names, URLs, enum values, and JSON keys exactly as specified.
 
 Evidence types to generate (use a mix of these):
 - competitor: Named companies solving the same problem (e.g. "Zapier", "Make", "Airtable")
@@ -700,6 +714,8 @@ Do NOT include markdown formatting or code blocks.`,
             role: "system",
             content: `You are a venture analyst. Predict future opportunity growth for each business opportunity.
 
+All generated user-facing text values (prediction_summary) MUST be written in Vietnamese. Keep JSON keys exactly as specified.
+
 Return ONLY a valid JSON object with this structure:
 
 {
@@ -786,6 +802,8 @@ Rules:
           {
             role: "system",
             content: `You are a venture capital market analyst.
+
+All generated user-facing text values (summary) MUST be written in Vietnamese. Keep JSON keys exactly as specified.
 
 Estimate external market signals for this opportunity.
 
@@ -892,6 +910,8 @@ Rules:
           {
             role: "system",
             content: `You are a venture capitalist.
+
+All generated user-facing text values (recommendation, summary) MUST be written in Vietnamese. Keep JSON keys exactly as specified.
 
 Evaluate this opportunity.
 
@@ -1036,6 +1056,8 @@ Rules:
             role: "system",
             content: `You are a Venture Capital partner writing an investment-grade startup research report.
 
+All generated user-facing text values MUST be written in Vietnamese. Keep JSON keys exactly as specified.
+
 Generate a comprehensive venture research report similar to documents used by YC, a16z, Sequoia, or internal VC research teams.
 
 Return ONLY a valid JSON object with this structure:
@@ -1166,6 +1188,8 @@ Rules:
             role: "system",
             content: `You are a VC Partner.
 
+All generated user-facing text values MUST be written in Vietnamese. Keep JSON keys exactly as specified.
+
 Write a concise internal investment memo.
 
 Use professional VC language and the same cadence as memos used by Y Combinator, Sequoia, Andreessen Horowitz, and Accel.
@@ -1281,7 +1305,7 @@ Rules:
         messages: [
           {
             role: 'system',
-            content: 'You are a prediction accuracy analyst. Evaluate each backtest prediction and determine the actual score and accuracy.',
+            content: 'You are a prediction accuracy analyst. Evaluate each backtest prediction and determine the actual score and accuracy. All generated user-facing text values, especially notes, MUST be written in Vietnamese. Keep JSON keys exactly as specified.',
           },
           {
             role: 'user',
@@ -1315,6 +1339,7 @@ Rules:
   async generateCommitteeVote(input: CommitteeVoteInput): Promise<CommitteeAgentVote[]> {
     try {
       const prompt = `You are simulating an AI Investment Committee with five independent VC partners.
+All generated user-facing text values, especially reasoning, MUST be written in Vietnamese. Keep JSON keys, enum values, and agent identifiers exactly as specified.
 Each partner evaluates the same opportunity from their unique perspective.
 
 Agents:
@@ -1343,7 +1368,7 @@ Each agent must vote independently. No agent sees another's vote.`;
         model: this.model,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: 'You are an AI Investment Committee simulator. Return valid JSON only.' },
+          { role: 'system', content: 'You are an AI Investment Committee simulator. Return valid JSON only. All generated user-facing text values MUST be written in Vietnamese. Keep JSON keys and enum values exactly as specified.' },
           { role: 'user', content: prompt },
         ],
       });
@@ -1376,6 +1401,8 @@ Each agent must vote independently. No agent sees another's vote.`;
   ): Promise<VentureProjectInput[]> {
     try {
       const prompt = `You are a venture studio AI. For each opportunity, generate a COMPLETE startup blueprint.
+
+All generated user-facing text values MUST be written in Vietnamese. Keep JSON keys exactly as specified.
 
 Return a JSON object with key "projects" containing an array of objects, each with:
 - name (string): venture project name
@@ -1506,7 +1533,7 @@ ${inputJson}` },
         messages: [
           {
             role: "system",
-            content: `You are a financial modeling expert for early-stage startups. Generate a comprehensive financial model. Return ONLY valid JSON matching this exact structure:\n${JSON.stringify({
+            content: `You are a financial modeling expert for early-stage startups. Generate a comprehensive financial model. All generated user-facing text values MUST be written in Vietnamese. Keep JSON keys exactly as specified. Return ONLY valid JSON matching this exact structure:\n${JSON.stringify({
               name: "string",
               tagline: "string",
               currency: "string",

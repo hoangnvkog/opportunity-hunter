@@ -10,7 +10,7 @@ export function PipelineHistorySection({ runs }: PipelineHistorySectionProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pipeline History</CardTitle>
+        <CardTitle>Lịch sử pipeline</CardTitle>
       </CardHeader>
       <CardContent>
         <PipelineHistoryTable runs={runs} />

@@ -18,7 +18,7 @@ export function PipelineHistoryClient() {
         setRuns(data);
         setError(null);
       } catch (err) {
-        setError("Unable to load pipeline history.");
+        setError("Không tải được lịch sử pipeline.");
         console.error("Failed to fetch pipeline runs:", err);
       } finally {
         setLoading(false);

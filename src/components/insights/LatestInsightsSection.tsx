@@ -35,14 +35,14 @@ export default function LatestInsightsSection({ insights }: LatestInsightsSectio
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
-            Latest AI Insights
+            Nhận định AI mới nhất
           </CardTitle>
           <Link href="/insights" className="text-sm text-primary hover:underline">
-            Open insights →
+            Mở nhận định →
           </Link>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          No insights generated yet. Trigger the AI pipeline from /insights to fill this card.
+          Chưa có nhận định nào. Chạy pipeline AI từ /insights để cập nhật thẻ này.
         </CardContent>
       </Card>
     );
@@ -53,10 +53,10 @@ export default function LatestInsightsSection({ insights }: LatestInsightsSectio
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-4 w-4" />
-          Latest AI Insights
+          Nhận định AI mới nhất
         </CardTitle>
         <Link href="/insights" className="text-sm text-primary hover:underline">
-          View all →
+          Xem tất cả →
         </Link>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -82,15 +82,15 @@ export default function LatestInsightsSection({ insights }: LatestInsightsSectio
               <span
                 className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${COMPETITION_STYLES[insight.competition_level]}`}
               >
-                Competition: {insight.competition_level}
+                Cạnh tranh: {insight.competition_level}
               </span>
               <span
                 className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${URGENCY_STYLES[insight.urgency]}`}
               >
-                Urgency: {insight.urgency}
+                Độ gấp: {insight.urgency}
               </span>
               <Badge variant="outline">{insight.market_size}</Badge>
-              <Badge variant="secondary">Confidence: {formatConfidence(insight.confidence_score)}</Badge>
+              <Badge variant="secondary">Độ tin cậy: {formatConfidence(insight.confidence_score)}</Badge>
             </div>
           </Link>
         ))}

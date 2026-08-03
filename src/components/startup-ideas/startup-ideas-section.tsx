@@ -9,7 +9,7 @@ export default function StartupIdeasSection({ ideas }: StartupIdeasSectionProps)
   if (ideas.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">No startup ideas yet</p>
+        <p className="text-muted-foreground">Chưa có ý tưởng startup nào</p>
       </div>
     );
   }
