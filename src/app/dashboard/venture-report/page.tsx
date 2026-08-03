@@ -1,39 +1,30 @@
 /**
  * Sprint 57: Dashboard Venture Report Page
- *
- * Displays AI-generated venture research reports for investment-grade
- * opportunities (startup_score overall_score >= 80).
+ * UI-4 polish — PageHeader, MetricCard, Badge variants, EmptyState, signal tones.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, scoreVariant, recommendationVariant } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/page-header";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { VentureReportRefreshButton } from "@/components/venture-report/venture-report-refresh-button";
 import {
   getTopReportsAction,
   getReportStatisticsAction,
 } from "@/actions/venture-report.actions";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
-import { FileText, Star, TrendingUp, Rocket } from "lucide-react";
+import { FileText, Star, TrendingUp, Rocket, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-function getScoreColor(score: number) {
-  if (score >= 90) return "text-green-700";
-  if (score >= 70) return "text-blue-600";
-  if (score >= 50) return "text-yellow-600";
-  return "text-gray-600";
-}
-
-function getRecommendationBadge(rec: string | null) {
-  if (!rec) return <Badge className="bg-gray-100 text-gray-800">—</Badge>;
-  if (rec === "STRONG BUY")
-    return <Badge className="bg-green-100 text-green-800">🚀 {rec}</Badge>;
-  if (rec === "BUY")
-    return <Badge className="bg-blue-100 text-blue-800">{rec}</Badge>;
-  if (rec === "HOLD")
-    return <Badge className="bg-yellow-100 text-yellow-800">{rec}</Badge>;
-  return <Badge className="bg-gray-100 text-gray-800">{rec}</Badge>;
+function confidenceTone(score: number): "hot" | "good" | "watch" | "cold" | "risk" | "info" | "default" {
+  if (score >= 90) return "hot";
+  if (score >= 75) return "good";
+  if (score >= 60) return "watch";
+  if (score >= 40) return "cold";
+  return "risk";
 }
 
 export default async function VentureReportPage() {
@@ -56,75 +47,57 @@ export default async function VentureReportPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Venture Research Reports</h1>
-            <p className="text-muted-foreground mt-1">
-              AI-generated investment-grade research reports for top opportunities
-            </p>
-          </div>
-          <VentureReportRefreshButton />
-        </div>
+        <PageHeader
+          title="Venture Research Reports"
+          description="Báo cáo nghiên cứu AI cho cơ hội đầu tư (startup_score ≥ 80)."
+          badge={<Badge variant="ai-soft">Sprint 57</Badge>}
+          actions={<VentureReportRefreshButton />}
+        />
 
-        {/* KPI Cards */}
+        {/* KPI Cards — MetricCard */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Confidence</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.averageConfidence ?? 0)}`}>
-                {Math.round(stats?.averageConfidence ?? 0)}%
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Investment Grade</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-700">
-                {stats?.investmentGradeCount ?? 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">confidence ≥ 80</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Strong Buy</CardTitle>
-              <Rocket className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-700">
-                {stats?.strongBuyCount ?? 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">recommendation == STRONG BUY</p>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Tổng báo cáo"
+            value={stats?.total ?? 0}
+            icon={<FileText className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Confidence trung bình"
+            value={`${Math.round(stats?.averageConfidence ?? 0)}%`}
+            tone={confidenceTone(stats?.averageConfidence ?? 0)}
+            icon={<MessageCircle className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Investment Grade"
+            value={stats?.investmentGradeCount ?? 0}
+            tone="hot"
+            icon={<Star className="h-4 w-4" />}
+            change="confidence ≥ 80"
+          />
+          <MetricCard
+            title="Strong Buy"
+            value={stats?.strongBuyCount ?? 0}
+            tone="hot"
+            icon={<Rocket className="h-4 w-4" />}
+            change="recommendation == STRONG BUY"
+          />
         </div>
 
-        {/* Reports Table */}
+        {/* Reports List */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Venture Reports</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Top Venture Reports
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {reports.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No venture reports generated yet. Reports are generated for opportunities with
-                startup_score overall_score ≥ 80.
-              </p>
+              <EmptyState
+                icon={<FileText className="h-5 w-5" />}
+                title="Chưa có venture report"
+                description="Báo cáo được tạo cho cơ hội có startup_score overall_score ≥ 80."
+              />
             ) : (
               <div className="space-y-4">
                 {reports.map((row) => {
@@ -138,16 +111,18 @@ export default async function VentureReportPage() {
                           </h3>
                           <p className="text-xs text-muted-foreground mt-1">
                             {row.cluster_name ?? "—"} • v{row.report_version} •{" "}
-                            {new Date(row.created_at).toLocaleDateString()}
+                            {new Date(row.created_at).toLocaleDateString("vi-VN")}
                           </p>
                         </div>
                         <div className="text-right space-y-1">
-                          {getRecommendationBadge(row.recommendation)}
+                          <Badge variant={recommendationVariant(row.recommendation)}>
+                            {row.recommendation ?? "—"}
+                          </Badge>
                           <div className="flex items-center gap-1 justify-end">
                             <span className="text-xs text-muted-foreground">Confidence:</span>
-                            <span className={`text-sm font-bold ${getScoreColor(row.confidence)}`}>
+                            <Badge variant={scoreVariant(row.confidence)}>
                               {row.confidence}%
-                            </span>
+                            </Badge>
                           </div>
                         </div>
                       </div>

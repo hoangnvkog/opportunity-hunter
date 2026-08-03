@@ -109,3 +109,16 @@ export function statusVariant(
   if (s === "watch" || s === "partial") return "watch-soft";
   return "outline";
 }
+
+/**
+ * Map an intelligence signal score (0-100) to a signal label Badge variant.
+ *   ≥90 hot (Massive) | ≥70 good (Strong) | ≥40 watch (Moderate) | else risk (Weak)
+ */
+export function signalVariant(
+  score: number,
+): VariantProps<typeof badgeVariants>["variant"] {
+  if (score >= 90) return "hot";
+  if (score >= 70) return "good";
+  if (score >= 40) return "watch";
+  return "risk";
+}

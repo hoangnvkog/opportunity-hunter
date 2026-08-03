@@ -1,13 +1,17 @@
-export const dynamic = "force-dynamic";
+/**
+ * Sprint 60: Portfolio Intelligence Dashboard Page
+ * UI-4 polish — AppLayout, PageHeader, MetricCard, signal tones, EmptyState.
+ */
 
-// Sprint 60: Portfolio Intelligence Engine - Dashboard Page
-// app/dashboard/portfolio/page.tsx
-
-import { Suspense } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Suspense } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/page-header";
+import { Badge, scoreVariant } from "@/components/ui/badge";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,148 +19,85 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Star, Archive, Eye, TrendingUp, TrendingDown } from 'lucide-react';
-import { getStatistics, listPortfolioCards } from '@/lib/services/portfolio.service';
-import { PortfolioStatusLabels, PriorityLabels } from '@/types/portfolio';
-import type { PortfolioCard, PortfolioStatistics } from '@/types/portfolio';
-import Link from 'next/link';
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Star, Archive, Eye, TrendingUp, TrendingDown } from "lucide-react";
+import { getStatistics, listPortfolioCards } from "@/lib/services/portfolio.service";
+import { PortfolioStatusLabels, PriorityLabels } from "@/types/portfolio";
+import type { PortfolioCard, PortfolioStatistics } from "@/types/portfolio";
+import Link from "next/link";
 
-export const metadata = {
-  title: 'Portfolio Intelligence | Opportunity Hunter',
-  description: 'Manage your opportunity portfolio',
-};
+export const dynamic = "force-dynamic";
 
 export default async function PortfolioPage() {
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Portfolio Intelligence</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your opportunity portfolio with health tracking and lifecycle monitoring
-        </p>
+    <AppLayout>
+      <div className="space-y-6">
+        <PageHeader
+          title="Portfolio Intelligence"
+          description="Quản lý danh mục cơ hội — health tracking, lifecycle monitoring."
+          badge={<Badge variant="ai-soft">Sprint 60</Badge>}
+        />
+
+        <Suspense fallback={<div className="h-8 animate-pulse bg-muted rounded" />}>
+          <PortfolioStatistics />
+        </Suspense>
+
+        <Suspense fallback={<div className="h-8 animate-pulse bg-muted rounded" />}>
+          <PortfolioTabs />
+        </Suspense>
       </div>
-
-      <Suspense fallback={<div>Loading statistics...</div>}>
-        <PortfolioStatistics />
-      </Suspense>
-
-      <Suspense fallback={<div>Loading portfolio...</div>}>
-        <PortfolioTabs />
-      </Suspense>
-    </div>
+    </AppLayout>
   );
 }
 
 // ==========================================
-// STATISTICS SECTION
+// STATISTICS SECTION — MetricCard grid
 // ==========================================
 
 async function PortfolioStatistics() {
   const stats = await getStatistics();
 
+  const healthTone =
+    stats.average_health !== null
+      ? stats.average_health >= 80
+        ? "hot"
+        : stats.average_health >= 60
+          ? "good"
+          : stats.average_health >= 40
+            ? "watch"
+            : "risk"
+      : "default";
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.total_items}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {stats.favorites} favorites • {stats.archived} archived
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Average Health</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {stats.average_health !== null ? stats.average_health.toFixed(1) : 'N/A'}
-          </div>
-          <HealthDistributionBadges health={stats.by_health} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Status Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Watchlist</span>
-              <span className="font-medium">{stats.by_status.WATCHLIST}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Researching</span>
-              <span className="font-medium">{stats.by_status.RESEARCHING}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Validated</span>
-              <span className="font-medium">{stats.by_status.VALIDATED}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Priority Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Critical</span>
-              <span className="font-medium text-red-600">{stats.by_priority.CRITICAL}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>High</span>
-              <span className="font-medium text-orange-600">{stats.by_priority.HIGH}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Medium</span>
-              <span className="font-medium">{stats.by_priority.MEDIUM}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function HealthDistributionBadges({ health }: { health: PortfolioStatistics['by_health'] }) {
-  return (
-    <div className="flex gap-1 mt-2 flex-wrap">
-      {health.excellent > 0 && (
-        <Badge variant="default" className="text-xs">
-          {health.excellent} excellent
-        </Badge>
-      )}
-      {health.good > 0 && (
-        <Badge variant="secondary" className="text-xs">
-          {health.good} good
-        </Badge>
-      )}
-      {health.fair > 0 && (
-        <Badge variant="outline" className="text-xs">
-          {health.fair} fair
-        </Badge>
-      )}
-      {health.poor > 0 && (
-        <Badge variant="destructive" className="text-xs">
-          {health.poor} poor
-        </Badge>
-      )}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <MetricCard
+        title="Tổng items"
+        value={stats.total_items}
+        icon={<Star className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Health trung bình"
+        value={stats.average_health !== null ? stats.average_health.toFixed(1) : "N/A"}
+        tone={healthTone}
+        icon={<TrendingUp className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Đang theo dõi"
+        value={stats.by_status.WATCHLIST ?? 0}
+        icon={<Eye className="h-4 w-4" />}
+      />
+      <MetricCard
+        title="Critical priority"
+        value={stats.by_priority.CRITICAL ?? 0}
+        tone="risk"
+        icon={<TrendingDown className="h-4 w-4" />}
+      />
     </div>
   );
 }
@@ -167,83 +108,73 @@ function HealthDistributionBadges({ health }: { health: PortfolioStatistics['by_
 
 async function PortfolioTabs() {
   const [all, favorites, needsReview, highHealth, lowHealth] = await Promise.all([
-    listPortfolioCards({ archived: false }, { field: 'created_at', direction: 'desc' }, 50),
-    listPortfolioCards({ favorite: true, archived: false }, { field: 'health_score', direction: 'desc' }, 20),
-    listPortfolioCards({ needs_review: true, archived: false }, { field: 'last_reviewed_at', direction: 'asc' }, 20),
-    listPortfolioCards({ min_health: 80, archived: false }, { field: 'health_score', direction: 'desc' }, 20),
-    listPortfolioCards({ max_health: 50, archived: false }, { field: 'health_score', direction: 'asc' }, 20),
+    listPortfolioCards({ archived: false }, { field: "created_at", direction: "desc" }, 50),
+    listPortfolioCards({ favorite: true, archived: false }, { field: "health_score", direction: "desc" }, 20),
+    listPortfolioCards({ needs_review: true, archived: false }, { field: "last_reviewed_at", direction: "asc" }, 20),
+    listPortfolioCards({ min_health: 80, archived: false }, { field: "health_score", direction: "desc" }, 20),
+    listPortfolioCards({ max_health: 50, archived: false }, { field: "health_score", direction: "asc" }, 20),
   ]);
 
   return (
     <Tabs defaultValue="all" className="w-full">
       <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="all">All ({all.length})</TabsTrigger>
-        <TabsTrigger value="favorites">Favorites ({favorites.length})</TabsTrigger>
-        <TabsTrigger value="needs-review">Needs Review ({needsReview.length})</TabsTrigger>
-        <TabsTrigger value="high-health">High Health ({highHealth.length})</TabsTrigger>
-        <TabsTrigger value="low-health">Low Health ({lowHealth.length})</TabsTrigger>
+        <TabsTrigger value="all">Tất cả ({all.length})</TabsTrigger>
+        <TabsTrigger value="favorites">Yêu thích ({favorites.length})</TabsTrigger>
+        <TabsTrigger value="needs-review">Cần review ({needsReview.length})</TabsTrigger>
+        <TabsTrigger value="high-health">Health cao ({highHealth.length})</TabsTrigger>
+        <TabsTrigger value="low-health">Health thấp ({lowHealth.length})</TabsTrigger>
       </TabsList>
 
       <TabsContent value="all">
-        <Card>
-          <CardHeader>
-            <CardTitle>All Portfolio Items</CardTitle>
-            <CardDescription>Complete portfolio overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PortfolioTable items={all} />
-          </CardContent>
-        </Card>
+        <PortfolioTableCard title="Tất cả items" description="Tổng quan danh mục" items={all} />
       </TabsContent>
 
       <TabsContent value="favorites">
-        <Card>
-          <CardHeader>
-            <CardTitle>Favorite Opportunities</CardTitle>
-            <CardDescription>Your starred opportunities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PortfolioTable items={favorites} />
-          </CardContent>
-        </Card>
+        <PortfolioTableCard title="Cơ hội yêu thích" description="Các cơ hội đã star" items={favorites} />
       </TabsContent>
 
       <TabsContent value="needs-review">
-        <Card>
-          <CardHeader>
-            <CardTitle>Needs Review</CardTitle>
-            <CardDescription>Not reviewed in 30+ days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PortfolioTable items={needsReview} />
-          </CardContent>
-        </Card>
+        <PortfolioTableCard title="Cần review" description="Chưa review 30+ ngày" items={needsReview} />
       </TabsContent>
 
       <TabsContent value="high-health">
-        <Card>
-          <CardHeader>
-            <CardTitle>Highest Health</CardTitle>
-            <CardDescription>Top performing opportunities (80+)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PortfolioTable items={highHealth} />
-          </CardContent>
-        </Card>
+        <PortfolioTableCard title="Health cao nhất" description="Top performing (80+)" items={highHealth} />
       </TabsContent>
 
       <TabsContent value="low-health">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lowest Health</CardTitle>
-            <CardDescription>Opportunities needing attention (&lt;50)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PortfolioTable items={lowHealth} />
-          </CardContent>
-        </Card>
+        <PortfolioTableCard title="Health thấp nhất" description="Cần chú ý (<50)" items={lowHealth} />
       </TabsContent>
     </Tabs>
+  );
+}
+
+function PortfolioTableCard({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description: string;
+  items: PortfolioCard[];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        {items.length === 0 ? (
+          <EmptyState
+            icon={<Star className="h-5 w-5" />}
+            title="Không có item"
+            description={description}
+          />
+        ) : (
+          <PortfolioTable items={items} />
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -252,26 +183,18 @@ async function PortfolioTabs() {
 // ==========================================
 
 function PortfolioTable({ items }: { items: PortfolioCard[] }) {
-  if (items.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        No portfolio items found
-      </div>
-    );
-  }
-
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Opportunity</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Priority</TableHead>
+          <TableHead>Cơ hội</TableHead>
+          <TableHead>Trạng thái</TableHead>
+          <TableHead>Ưu tiên</TableHead>
           <TableHead>Health</TableHead>
           <TableHead>Investment Score</TableHead>
           <TableHead>Backtest</TableHead>
           <TableHead>Trend</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="w-[80px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -301,7 +224,7 @@ function PortfolioTable({ items }: { items: PortfolioCard[] }) {
             <TableCell>
               {item.health_score !== null ? (
                 <div className="flex items-center gap-2">
-                  <span className={getHealthColor(item.health_score)}>
+                  <span className={getHealthToneClass(item.health_score)}>
                     {item.health_score.toFixed(1)}
                   </span>
                   {getHealthIcon(item.health_score)}
@@ -312,7 +235,9 @@ function PortfolioTable({ items }: { items: PortfolioCard[] }) {
             </TableCell>
             <TableCell>
               {item.investment_score !== null && item.investment_score !== undefined ? (
-                <span>{item.investment_score.toFixed(1)}</span>
+                <span className={getScoreToneClass(item.investment_score)}>
+                  {item.investment_score.toFixed(1)}
+                </span>
               ) : (
                 <span className="text-muted-foreground">—</span>
               )}
@@ -326,7 +251,9 @@ function PortfolioTable({ items }: { items: PortfolioCard[] }) {
             </TableCell>
             <TableCell>
               {item.trend_score !== null && item.trend_score !== undefined ? (
-                <span>{item.trend_score.toFixed(1)}</span>
+                <span className={item.trend_score >= 0 ? "text-signal-hot-foreground" : "text-signal-risk-foreground"}>
+                  {item.trend_score >= 0 ? "+" : ""}{item.trend_score.toFixed(1)}
+                </span>
               ) : (
                 <span className="text-muted-foreground">—</span>
               )}
@@ -342,16 +269,16 @@ function PortfolioTable({ items }: { items: PortfolioCard[] }) {
                   <DropdownMenuItem asChild>
                     <Link href={`/opportunities/${item.opportunity_id}`}>
                       <Eye className="h-4 w-4 mr-2" />
-                      View Details
+                      Xem chi tiết
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Star className="h-4 w-4 mr-2" />
-                    {item.favorite ? 'Remove Favorite' : 'Add Favorite'}
+                    {item.favorite ? "Bỏ yêu thích" : "Thêm yêu thích"}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Archive className="h-4 w-4 mr-2" />
-                    Archive
+                    Lưu trữ
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -364,56 +291,71 @@ function PortfolioTable({ items }: { items: PortfolioCard[] }) {
 }
 
 // ==========================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS — signal-aware variants
 // ==========================================
 
-function getStatusVariant(status: string): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getStatusVariant(status: string): "default" | "secondary" | "outline" | "destructive" {
   switch (status) {
-    case 'INVESTED':
-      return 'default';
-    case 'BUILDING':
-      return 'default';
-    case 'VALIDATED':
-      return 'secondary';
-    case 'RESEARCHING':
-      return 'outline';
-    case 'WATCHLIST':
-      return 'outline';
-    case 'ARCHIVED':
-      return 'destructive';
+    case "INVESTED":
+      return "default";
+    case "BUILDING":
+      return "default";
+    case "VALIDATED":
+      return "secondary";
+    case "RESEARCHING":
+      return "outline";
+    case "WATCHLIST":
+      return "outline";
+    case "ARCHIVED":
+      return "destructive";
     default:
-      return 'outline';
+      return "outline";
   }
 }
 
-function getPriorityVariant(priority: string): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getPriorityVariant(priority: string): "default" | "secondary" | "outline" | "destructive" {
   switch (priority) {
-    case 'CRITICAL':
-      return 'destructive';
-    case 'HIGH':
-      return 'default';
-    case 'MEDIUM':
-      return 'secondary';
-    case 'LOW':
-      return 'outline';
+    case "CRITICAL":
+      return "destructive";
+    case "HIGH":
+      return "default";
+    case "MEDIUM":
+      return "secondary";
+    case "LOW":
+      return "outline";
     default:
-      return 'outline';
+      return "outline";
   }
 }
 
-function getHealthColor(score: number): string {
-  if (score >= 90) return 'text-green-600 font-semibold';
-  if (score >= 70) return 'text-blue-600 font-medium';
-  if (score >= 50) return 'text-yellow-600';
-  return 'text-red-600';
+function getHealthToneClass(score: number): string {
+  if (score >= 80) return "text-signal-hot-foreground font-semibold";
+  if (score >= 60) return "text-signal-good-foreground font-medium";
+  if (score >= 40) return "text-signal-watch-foreground";
+  return "text-signal-risk-foreground";
 }
 
 function getHealthIcon(score: number) {
   if (score >= 70) {
-    return <TrendingUp className="h-4 w-4 text-green-600" />;
+    return <TrendingUp className="h-4 w-4 text-signal-hot-foreground" />;
   }
   if (score < 50) {
-    return <TrendingDown className="h-4 w-4 text-red-600" />;
+    return <TrendingDown className="h-4 w-4 text-signal-risk-foreground" />;
   }
   return null;
+}
+
+function getScoreToneClass(score: number): string {
+  const variant = scoreVariant(score) ?? "default";
+  const toneMap: Record<string, string> = {
+    hot: "text-signal-hot-foreground font-semibold",
+    good: "text-signal-good-foreground font-medium",
+    watch: "text-signal-watch-foreground",
+    cold: "text-signal-cold-foreground",
+    risk: "text-signal-risk-foreground",
+    ai: "text-signal-ai-foreground font-semibold",
+    info: "text-signal-info-foreground font-medium",
+    default: "",
+  };
+  return toneMap[variant] ?? "";
 }

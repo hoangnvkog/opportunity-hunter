@@ -1,19 +1,34 @@
 /**
  * Sprint 55: Dashboard Intelligence Page
- *
- * Displays market intelligence signals aggregated across 6 external sources
- * (Reddit, GitHub, Product Hunt, News, Google Trends, Jobs) for validated
- * opportunities.
+ * UI-4 polish — PageHeader, MetricCard, Badge variants, EmptyState, signal tones.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, scoreVariant, signalVariant } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/page-header";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getTopIntelligenceSignalsAction, getIntelligenceStatsAction } from "@/actions/market-intelligence.actions";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
-import { TrendingUp, BarChart3, Flame, MessageCircle } from "lucide-react";
+import { TrendingUp, BarChart3, Flame, MessageCircle, Zap } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+function intelligenceTone(score: number): "hot" | "good" | "watch" | "cold" | "risk" | "default" {
+  if (score >= 85) return "hot";
+  if (score >= 70) return "good";
+  if (score >= 50) return "watch";
+  if (score >= 30) return "cold";
+  return "risk";
+}
+
+function signalLabel(score: number): string {
+  if (score >= 90) return "🔥 Massive";
+  if (score >= 70) return "Strong";
+  if (score >= 40) return "Moderate";
+  return "Weak";
+}
 
 export default async function IntelligencePage() {
   const [signalsResult, statsResult] = await Promise.all([
@@ -35,124 +50,99 @@ export default async function IntelligencePage() {
     );
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return "text-green-600";
-    if (score >= 70) return "text-blue-600";
-    if (score >= 50) return "text-yellow-600";
-    return "text-gray-600";
-  };
-
-  const getSignalBadge = (score: number) => {
-    if (score >= 90) return <Badge className="bg-red-100 text-red-800">🔥 Massive</Badge>;
-    if (score >= 70) return <Badge className="bg-green-100 text-green-800">Strong</Badge>;
-    if (score >= 40) return <Badge className="bg-yellow-100 text-yellow-800">Moderate</Badge>;
-    return <Badge className="bg-gray-100 text-gray-800">Weak</Badge>;
-  };
-
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Market Intelligence</h1>
-          <p className="text-muted-foreground mt-1">
-            Aggregated external market signals for validated opportunities
-          </p>
-        </div>
+        <PageHeader
+          title="Market Intelligence"
+          description="Tín hiệu thị trường tổng hợp từ 6 nguồn bên ngoài cho cơ hội đã validate."
+          badge={<Badge variant="ai-soft">Sprint 55</Badge>}
+        />
 
-        {/* KPI Cards */}
+        {/* KPI Cards — MetricCard */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tracked Opportunities</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Highest Intelligence Score</CardTitle>
-              <Flame className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.highestOverallScore ?? 0)}`}>
-                {Math.round(stats?.highestOverallScore ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Intelligence</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.averageOverallScore ?? 0)}`}>
-                {Math.round(stats?.averageOverallScore ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Confidence</CardTitle>
-              <MessageCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.round(stats?.averageConfidence ?? 0)}%
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Cơ hội theo dõi"
+            value={stats?.total ?? 0}
+            icon={<BarChart3 className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Intelligence Score cao nhất"
+            value={Math.round(stats?.highestOverallScore ?? 0)}
+            tone={intelligenceTone(stats?.highestOverallScore ?? 0)}
+            icon={<Flame className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Intelligence trung bình"
+            value={Math.round(stats?.averageOverallScore ?? 0)}
+            tone={intelligenceTone(stats?.averageOverallScore ?? 0)}
+            icon={<TrendingUp className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Confidence trung bình"
+            value={`${Math.round(stats?.averageConfidence ?? 0)}%`}
+            tone={stats?.averageConfidence ?? 0 >= 80 ? "hot" : stats?.averageConfidence ?? 0 >= 60 ? "good" : "info"}
+            icon={<MessageCircle className="h-4 w-4" />}
+          />
         </div>
 
         {/* Intelligence Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Market Signals</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Top Market Signals
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {signals.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No market intelligence generated yet. Run the pipeline to aggregate signals for validated opportunities.
-              </p>
+              <EmptyState
+                icon={<Zap className="h-5 w-5" />}
+                title="Chưa có market intelligence"
+                description="Chạy pipeline để tổng hợp signals cho các cơ hội đã validated."
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Opportunity</th>
-                      <th className="text-left p-2">Overall</th>
-                      <th className="text-left p-2">Reddit</th>
-                      <th className="text-left p-2">GitHub</th>
-                      <th className="text-left p-2">Product Hunt</th>
-                      <th className="text-left p-2">News</th>
-                      <th className="text-left p-2">Google Trends</th>
-                      <th className="text-left p-2">Jobs</th>
-                      <th className="text-left p-2">Confidence</th>
-                      <th className="text-left p-2">Signal</th>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Cơ hội</th>
+                      <th className="px-3 py-2 font-medium">Overall</th>
+                      <th className="px-3 py-2 font-medium">Reddit</th>
+                      <th className="px-3 py-2 font-medium">GitHub</th>
+                      <th className="px-3 py-2 font-medium">Product Hunt</th>
+                      <th className="px-3 py-2 font-medium">News</th>
+                      <th className="px-3 py-2 font-medium">Google Trends</th>
+                      <th className="px-3 py-2 font-medium">Jobs</th>
+                      <th className="px-3 py-2 font-medium">Confidence</th>
+                      <th className="px-3 py-2 font-medium">Signal</th>
                     </tr>
                   </thead>
                   <tbody>
                     {signals.map((row) => {
                       const opp = opportunityMap.get(row.opportunity_id);
                       return (
-                        <tr key={row.id} className="border-b hover:bg-muted/50">
-                          <td className="p-2 font-medium">
+                        <tr key={row.id} className="border-b last:border-0 hover:bg-secondary/40">
+                          <td className="px-3 py-2 font-medium">
                             {opp?.title ?? "Unknown"}
                           </td>
-                          <td className="p-2">
-                            <span className={`font-bold ${getScoreColor(row.overall_score)}`}>
+                          <td className="px-3 py-2">
+                            <Badge variant={scoreVariant(row.overall_score)}>
                               {row.overall_score}
-                            </span>
+                            </Badge>
                           </td>
-                          <td className="p-2">{row.reddit_score}</td>
-                          <td className="p-2">{row.github_score}</td>
-                          <td className="p-2">{row.product_hunt_score}</td>
-                          <td className="p-2">{row.news_score}</td>
-                          <td className="p-2">{row.google_trends_score}</td>
-                          <td className="p-2">{row.jobs_score}</td>
-                          <td className="p-2">{row.confidence}%</td>
-                          <td className="p-2">{getSignalBadge(row.overall_score)}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.reddit_score}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.github_score}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.product_hunt_score}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.news_score}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.google_trends_score}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.jobs_score}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.confidence}%</td>
+                          <td className="px-3 py-2">
+                            <Badge variant={signalVariant(row.overall_score)}>
+                              {signalLabel(row.overall_score)}
+                            </Badge>
+                          </td>
                         </tr>
                       );
                     })}
