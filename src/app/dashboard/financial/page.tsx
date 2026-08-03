@@ -1,15 +1,29 @@
 /**
  * Sprint 64: Financial Dashboard
- *
- * KPI cards: Projected ARR, Runway, Burn Rate, Break Even, LTV/CAC, Projected Profit
- * Model list with links to detail
+ * UI-4 polish — AppLayout, MetricCard, EmptyState, signal tones.
  */
 
 import Link from "next/link";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   getDashboardStats,
   listModels,
 } from "@/services/financial/financial.service";
+import {
+  Coins,
+  Clock,
+  Flame,
+  TrendingUp,
+  Target,
+  BarChart3,
+  Rocket,
+  ArrowRight,
+} from "lucide-react";
 
 function formatCurrencyValue(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -17,17 +31,20 @@ function formatCurrencyValue(value: number): string {
   return `$${value.toFixed(0)}`;
 }
 
-export const dynamic = "force-dynamic";
-
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-bold">{value}</p>
-      {sub ? <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p> : null}
-    </div>
-  );
+function runwayTone(months: number): "hot" | "watch" | "risk" | "default" {
+  if (months >= 18) return "hot";
+  if (months >= 12) return "default";
+  if (months >= 6) return "watch";
+  return "risk";
 }
+
+function ltvCacTone(ratio: number): "hot" | "watch" | "risk" | "default" {
+  if (ratio >= 3) return "hot";
+  if (ratio >= 1) return "default";
+  return "risk";
+}
+
+export const dynamic = "force-dynamic";
 
 export default async function FinancialDashboardPage() {
   const [stats, models] = await Promise.all([
@@ -36,64 +53,108 @@ export default async function FinancialDashboardPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">💰 Financial Projections</h1>
-        <Link
-          href="/admin/financial"
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-        >
-          Admin
-        </Link>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="Total Models" value={String(stats.totalModels)} />
-        <StatCard label="Projected ARR" value={formatCurrencyValue(stats.projectedARR)} />
-        <StatCard label="Runway" value={`${stats.runwayMonths.toFixed(0)} mo`} />
-        <StatCard label="Burn Rate" value={formatCurrencyValue(stats.burnRate)} sub="/month" />
-        <StatCard label="Break Even" value={`Mo ${stats.breakEvenMonth}`} />
-        <StatCard
-          label="LTV/CAC"
-          value={`${stats.ltvCacRatio.toFixed(1)}x`}
+    <AppLayout>
+      <div className="space-y-6">
+        <PageHeader
+          title="Financial Projections"
+          description="Mô hình tài chính — Projected ARR, Runway, Burn Rate, Break-even."
+          badge={<Badge variant="ai-soft">Sprint 64</Badge>}
+          actions={
+            <Link
+              href="/dashboard/venture"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              Mở Venture Studio
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          }
         />
-      </div>
 
-      <StatCard
-        label="Projected Profit (Year 5)"
-        value={formatCurrencyValue(stats.projectedProfit)}
-      />
-
-      {/* Model List */}
-      <div className="rounded-lg border">
-        <div className="border-b px-4 py-3">
-          <h2 className="font-semibold">Financial Models</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          <MetricCard
+            title="Models"
+            value={stats.totalModels}
+            icon={<BarChart3 className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Projected ARR"
+            value={formatCurrencyValue(stats.projectedARR)}
+            tone="hot"
+            icon={<Coins className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Runway"
+            value={`${stats.runwayMonths.toFixed(0)} mo`}
+            tone={runwayTone(stats.runwayMonths)}
+            icon={<Clock className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Burn Rate"
+            value={formatCurrencyValue(stats.burnRate)}
+            change="per month"
+            tone="watch"
+            icon={<Flame className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Break Even"
+            value={`Mo ${stats.breakEvenMonth}`}
+            tone="info"
+            icon={<Target className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="LTV/CAC"
+            value={`${stats.ltvCacRatio.toFixed(1)}x`}
+            tone={ltvCacTone(stats.ltvCacRatio)}
+            icon={<TrendingUp className="h-4 w-4" />}
+          />
         </div>
-        {models.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No financial models yet. Generate from the Venture Studio.
-          </div>
-        ) : (
-          <div className="divide-y">
-            {models.map((m) => (
-              <Link
-                key={m.id}
-                href={`/dashboard/financial/${m.id}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
-              >
-                <div>
-                  <p className="font-medium">{m.currency} Model</p>
-                  <p className="text-xs text-muted-foreground">
-                    {m.projection_years}-year projection · Created {new Date(m.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="text-sm text-blue-600 hover:underline">View →</span>
-              </Link>
-            ))}
-          </div>
-        )}
+
+        <MetricCard
+          title="Projected Profit (Year 5)"
+          value={formatCurrencyValue(stats.projectedProfit)}
+          tone={stats.projectedProfit >= 0 ? "hot" : "risk"}
+          icon={<Rocket className="h-4 w-4" />}
+          className="max-w-md"
+        />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Financial Models</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {models.length === 0 ? (
+              <EmptyState
+                icon={<BarChart3 className="h-5 w-5" />}
+                title="Chưa có financial model"
+                description="Generate model từ Venture Studio."
+                action={{ label: "Mở Venture Studio", href: "/dashboard/venture" }}
+              />
+            ) : (
+              <div className="divide-y">
+                {models.map((m) => (
+                  <Link
+                    key={m.id}
+                    href={`/dashboard/financial/${m.id}`}
+                    className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-secondary/40"
+                  >
+                    <div>
+                      <p className="font-medium">{m.currency} Model</p>
+                      <p className="text-xs text-muted-foreground">
+                        {m.projection_years}-year projection · Created{" "}
+                        {new Date(m.created_at).toLocaleDateString("vi-VN")}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:underline">
+                      Mở
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </AppLayout>
   );
 }

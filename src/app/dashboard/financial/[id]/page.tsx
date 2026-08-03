@@ -1,53 +1,50 @@
 /**
  * Sprint 64: Financial Model Detail Page
- *
- * Full detail: projections table, unit economics, break-even, risks, investment recommendation
+ * UI-4 polish — tabs (Tổng quan / Projections / Unit Economics / Break-even / Rủi ro),
+ * design system tokens, signal tones.
  */
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getModelDetail, getInvestmentRecommendation, getRiskAssessment } from "@/services/financial/financial.service";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MetricCard } from "@/components/ui/metric-card";
+import { ArrowLeft, Coins, Clock, TrendingUp, Target, Flame, AlertTriangle } from "lucide-react";
+import {
+  getModelDetail,
+  getInvestmentRecommendation,
+  getRiskAssessment,
+} from "@/services/financial/financial.service";
 
 export const dynamic = "force-dynamic";
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-lg border p-4">
-      <h2 className="mb-3 text-lg font-semibold">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function DataTable({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-left text-muted-foreground">
-            {headers.map((h) => (
-              <th key={h} className="pb-2 pr-4 font-medium">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b last:border-0">
-              {row.map((cell, j) => (
-                <td key={j} className="py-2 pr-4">{cell}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 function fmt(value: number): string {
   if (Math.abs(value) >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   if (Math.abs(value) >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
   return `$${value.toFixed(0)}`;
+}
+
+function riskTone(level: string): "hot" | "watch" | "risk" {
+  if (level === "Low") return "hot";
+  if (level === "Medium") return "watch";
+  return "risk";
+}
+
+function stageVariant(stage: string): "default" | "info" | "hot" | "watch" | "risk" {
+  switch (stage) {
+    case "Series A":
+      return "hot";
+    case "Seed":
+      return "info";
+    case "Angel":
+      return "watch";
+    case "Bootstrap":
+      return "default";
+    default:
+      return "risk";
+  }
 }
 
 export default async function FinancialDetailPage({
@@ -63,132 +60,264 @@ export default async function FinancialDetailPage({
   const investment = getInvestmentRecommendation(detail);
   const risks = getRiskAssessment(detail);
 
+  const runwayTone =
+    ue?.payback_months !== undefined
+      ? ue.payback_months <= 12
+        ? "hot"
+        : ue.payback_months <= 24
+          ? "info"
+          : "watch"
+      : "default";
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard/financial" className="text-sm text-blue-600 hover:underline">← Back</Link>
-        <h1 className="text-2xl font-bold">Financial Model — {detail.ventureProjectName}</h1>
-      </div>
-
-      <div className="flex gap-2 text-sm text-muted-foreground">
-        <span className="rounded bg-muted px-2 py-0.5">{model.currency}</span>
-        <span className="rounded bg-muted px-2 py-0.5">{model.projection_years}-year projection</span>
-        <span className="rounded bg-muted px-2 py-0.5">
-          Created {new Date(model.created_at).toLocaleDateString()}
-        </span>
-      </div>
-
-      {/* Projections Table */}
-      {projections.length > 0 && (
-        <Section title="📊 Revenue & Profitability">
-          <DataTable
-            headers={["Year", "Revenue", "COGS", "Gross Profit", "OpEx", "EBITDA", "Net Profit", "Cash"]}
-            rows={projections.map((p) => [
-              `Year ${p.year}`,
-              fmt(p.revenue),
-              fmt(p.cogs),
-              fmt(p.gross_profit),
-              fmt(p.operating_expenses),
-              fmt(p.ebitda),
-              fmt(p.net_profit),
-              fmt(p.cash_balance),
-            ])}
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <PageHeader
+            title={`Financial Model — ${detail.ventureProjectName}`}
+            description={`${model.currency} · ${model.projection_years}-year projection`}
+            badge={
+              <Badge variant={stageVariant(investment.stage)}>
+                {investment.stage}
+              </Badge>
+            }
           />
-        </Section>
-      )}
-
-      {/* Unit Economics */}
-      {ue && (
-        <Section title="📈 Unit Economics">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div>
-              <p className="text-xs text-muted-foreground">CAC</p>
-              <p className="text-lg font-bold">{fmt(ue.cac)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">LTV</p>
-              <p className="text-lg font-bold">{fmt(ue.ltv)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">LTV/CAC</p>
-              <p className="text-lg font-bold">{ue.ltv_cac_ratio.toFixed(1)}x</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Payback</p>
-              <p className="text-lg font-bold">{ue.payback_months.toFixed(0)} mo</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">ARPU</p>
-              <p className="text-lg font-bold">{fmt(ue.arpu)}/mo</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Gross Margin</p>
-              <p className="text-lg font-bold">{ue.gross_margin.toFixed(0)}%</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Monthly Churn</p>
-              <p className="text-lg font-bold">{(ue.monthly_churn * 100).toFixed(1)}%</p>
-            </div>
-          </div>
-        </Section>
-      )}
-
-      {/* Break-Even */}
-      {be && (
-        <Section title="⚖️ Break-Even Analysis">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Monthly Fixed Cost</p>
-              <p className="text-lg font-bold">{fmt(be.monthly_fixed_cost)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Break-Even Revenue</p>
-              <p className="text-lg font-bold">{fmt(be.break_even_revenue)}/mo</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Break-Even Customers</p>
-              <p className="text-lg font-bold">{be.break_even_customers}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Estimated Month</p>
-              <p className="text-lg font-bold">Month {be.estimated_break_even_month}</p>
-            </div>
-          </div>
-        </Section>
-      )}
-
-      {/* Investment Recommendation */}
-      <Section title="💼 Investment Recommendation">
-        <div className="rounded-md border border-green-200 bg-green-50 p-3">
-          <p className="font-semibold text-green-800">{investment.stage}</p>
-          <p className="text-sm text-green-700">{investment.reasoning}</p>
+          <Link
+            href="/dashboard/financial"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Quay lại
+          </Link>
         </div>
-      </Section>
 
-      {/* Risk Assessment */}
-      <Section title="⚠️ Risk Assessment">
-        <div className="space-y-2">
-          {risks.map((r) => (
-            <div key={r.category} className="flex items-center justify-between rounded-md border p-2">
-              <div>
-                <p className="font-medium">{r.category}</p>
-                <p className="text-xs text-muted-foreground">{r.reasoning}</p>
+        <div className="grid gap-3 md:grid-cols-4">
+          <MetricCard
+            title="ARR (cuối kỳ)"
+            value={
+              projections.length > 0
+                ? fmt(projections[projections.length - 1].revenue)
+                : "—"
+            }
+            tone="hot"
+            icon={<Coins className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Net Profit (Y5)"
+            value={
+              projections.length > 0
+                ? fmt(projections[projections.length - 1].net_profit)
+                : "—"
+            }
+            tone={
+              projections.length > 0 && projections[projections.length - 1].net_profit >= 0
+                ? "hot"
+                : "risk"
+            }
+            icon={<TrendingUp className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Break Even"
+            value={be ? `Mo ${be.estimated_break_even_month}` : "—"}
+            tone="info"
+            icon={<Target className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Payback"
+            value={ue ? `${ue.payback_months.toFixed(0)} mo` : "—"}
+            tone={runwayTone}
+            icon={<Clock className="h-4 w-4" />}
+          />
+        </div>
+
+        {/* Investment Recommendation */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Investment Recommendation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant={stageVariant(investment.stage)}>{investment.stage}</Badge>
+              {investment.recommended ? (
+                <Badge variant="hot-soft">Recommended</Badge>
+              ) : (
+                <Badge variant="risk-soft">Không khuyến nghị</Badge>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {investment.reasoning}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Projections Table */}
+        {projections.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Coins className="h-4 w-4" />
+                Projections
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-4 py-2 font-medium">Năm</th>
+                      <th className="px-4 py-2 font-medium">Revenue</th>
+                      <th className="px-4 py-2 font-medium">COGS</th>
+                      <th className="px-4 py-2 font-medium">Gross Profit</th>
+                      <th className="px-4 py-2 font-medium">OpEx</th>
+                      <th className="px-4 py-2 font-medium">EBITDA</th>
+                      <th className="px-4 py-2 font-medium">Net Profit</th>
+                      <th className="px-4 py-2 font-medium">Cash</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projections.map((p) => (
+                      <tr key={p.year} className="border-b last:border-0">
+                        <td className="px-4 py-2 font-medium tabular-nums">
+                          Y{p.year}
+                        </td>
+                        <td className="px-4 py-2 tabular-nums">{fmt(p.revenue)}</td>
+                        <td className="px-4 py-2 tabular-nums text-muted-foreground">
+                          {fmt(p.cogs)}
+                        </td>
+                        <td className="px-4 py-2 tabular-nums">{fmt(p.gross_profit)}</td>
+                        <td className="px-4 py-2 tabular-nums text-muted-foreground">
+                          {fmt(p.operating_expenses)}
+                        </td>
+                        <td className="px-4 py-2 tabular-nums">{fmt(p.ebitda)}</td>
+                        <td
+                          className={`px-4 py-2 tabular-nums ${
+                            p.net_profit >= 0 ? "text-signal-hot-foreground" : "text-signal-risk-foreground"
+                          }`}
+                        >
+                          {fmt(p.net_profit)}
+                        </td>
+                        <td className="px-4 py-2 tabular-nums">{fmt(p.cash_balance)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <span
-                className={`rounded px-2 py-0.5 text-xs font-medium ${
-                  r.level === "Low"
-                    ? "bg-green-100 text-green-700"
-                    : r.level === "Medium"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
-                }`}
-              >
-                {r.level} ({r.score})
-              </span>
-            </div>
-          ))}
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Unit Economics */}
+          {ue && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Flame className="h-4 w-4" />
+                  Unit Economics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <Field label="CAC" value={fmt(ue.cac)} />
+                <Field label="LTV" value={fmt(ue.ltv)} />
+                <Field
+                  label="LTV/CAC"
+                  value={`${ue.ltv_cac_ratio.toFixed(1)}x`}
+                  tone={
+                    ue.ltv_cac_ratio >= 3
+                      ? "hot"
+                      : ue.ltv_cac_ratio >= 1
+                        ? "info"
+                        : "risk"
+                  }
+                />
+                <Field label="Payback" value={`${ue.payback_months.toFixed(0)} mo`} />
+                <Field label="ARPU" value={`${fmt(ue.arpu)}/mo`} />
+                <Field label="Gross Margin" value={`${ue.gross_margin.toFixed(0)}%`} />
+                <Field label="Monthly Churn" value={`${(ue.monthly_churn * 100).toFixed(1)}%`} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Break-Even */}
+          {be && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Break-Even
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <Field label="Monthly Fixed Cost" value={fmt(be.monthly_fixed_cost)} />
+                <Field label="Break-Even Revenue" value={`${fmt(be.break_even_revenue)}/mo`} />
+                <Field label="Break-Even Customers" value={String(be.break_even_customers)} />
+                <Field label="Estimated Month" value={`Month ${be.estimated_break_even_month}`} />
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </Section>
+
+        {/* Risk Assessment */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Risk Assessment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {risks.map((r) => (
+              <div
+                key={r.category}
+                className="flex items-start justify-between gap-3 rounded-lg border p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{r.category}</p>
+                  {r.reasoning && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{r.reasoning}</p>
+                  )}
+                </div>
+                <Badge variant={riskTone(r.level)}>
+                  {r.level} · {r.score}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
+  );
+}
+
+function Field({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "hot" | "info" | "risk" | "default";
+}) {
+  const toneClass = tone
+    ? {
+        hot: "text-signal-hot-foreground",
+        info: "text-signal-info-foreground",
+        risk: "text-signal-risk-foreground",
+        default: "",
+      }[tone]
+    : "";
+
+  return (
+    <div>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p className={`mt-0.5 text-lg font-bold tabular-nums ${toneClass}`}>
+        {value}
+      </p>
     </div>
   );
 }

@@ -1,17 +1,31 @@
 /**
  * Sprint 54: Dashboard Forecasts Page
- *
- * Displays forecasted opportunities sorted by forecast score.
+ * UI-4 polish — PageHeader, MetricCard, Badge variants, EmptyState.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, scoreVariant } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/ui/page-header";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getTopForecastsAction, getForecastStatsAction } from "@/actions/forecast.actions";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
 import { TrendingUp, BarChart3, Zap, Target } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+function momentumVariant(m: number): "hot" | "info" | "default" {
+  if (m >= 80) return "hot";
+  if (m >= 60) return "info";
+  return "default";
+}
+
+function momentumLabel(m: number): string {
+  if (m >= 80) return "Cao";
+  if (m >= 60) return "Trung bình";
+  return "Thấp";
+}
 
 export default async function ForecastsPage() {
   const [forecastsResult, statsResult] = await Promise.all([
@@ -31,113 +45,96 @@ export default async function ForecastsPage() {
     opportunityMap = new Map(opps.map((o) => [o.id, o.title]));
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return "text-green-600";
-    if (score >= 70) return "text-blue-600";
-    if (score >= 50) return "text-yellow-600";
-    return "text-gray-600";
-  };
-
-  const getMomentumBadge = (momentum: number) => {
-    if (momentum >= 80) return <Badge className="bg-green-100 text-green-800">High</Badge>;
-    if (momentum >= 60) return <Badge className="bg-blue-100 text-blue-800">Medium</Badge>;
-    return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
-  };
+  const top = Math.round(stats?.topForecastScore ?? 0);
+  const avg = Math.round(stats?.averageForecastScore ?? 0);
+  const avgGrowth = Math.round(stats?.averageGrowthProbability ?? 0);
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Opportunity Forecasts</h1>
-          <p className="text-muted-foreground mt-1">
-            AI-powered predictions for opportunity growth
-          </p>
-        </div>
+        <PageHeader
+          title="Opportunity Forecasts"
+          description="Dự đoán tăng trưởng bằng AI — momentum, growth probability, confidence."
+          badge={<Badge variant="ai-soft">Sprint 54</Badge>}
+        />
 
-        {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Forecasted Winners</CardTitle>
-              <Zap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Highest Forecast Score</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.topForecastScore ?? 0)}`}>
-                {Math.round(stats?.topForecastScore ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Forecast Score</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.averageForecastScore ?? 0)}`}>
-                {Math.round(stats?.averageForecastScore ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Growth Probability</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.round(stats?.averageGrowthProbability ?? 0)}%
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Forecasted Winners"
+            value={stats?.total ?? 0}
+            icon={<Zap className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Highest Score"
+            value={top}
+            tone={top >= 85 ? "hot" : top >= 70 ? "ai" : "info"}
+            icon={<TrendingUp className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Avg Score"
+            value={avg}
+            tone={avg >= 75 ? "hot" : avg >= 60 ? "info" : "default"}
+            icon={<BarChart3 className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Avg Growth Probability"
+            value={avgGrowth}
+            suffix="%"
+            tone={avgGrowth >= 70 ? "hot" : avgGrowth >= 50 ? "info" : "default"}
+            icon={<Target className="h-4 w-4" />}
+          />
         </div>
 
-        {/* Forecasts Table */}
         <Card>
           <CardHeader>
             <CardTitle>Top Forecasted Opportunities</CardTitle>
           </CardHeader>
           <CardContent>
             {forecasts.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No forecasts generated yet. Run the pipeline to generate forecasts for validated opportunities.
-              </p>
+              <EmptyState
+                icon={<TrendingUp className="h-5 w-5" />}
+                title="Chưa có forecast"
+                description="Chạy pipeline để generate forecasts cho validated opportunities."
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Opportunity</th>
-                      <th className="text-left p-2">Forecast Score</th>
-                      <th className="text-left p-2">Growth Probability</th>
-                      <th className="text-left p-2">Confidence</th>
-                      <th className="text-left p-2">Momentum</th>
-                      <th className="text-left p-2">Summary</th>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Opportunity</th>
+                      <th className="px-3 py-2 font-medium">Forecast Score</th>
+                      <th className="px-3 py-2 font-medium">Growth Probability</th>
+                      <th className="px-3 py-2 font-medium">Confidence</th>
+                      <th className="px-3 py-2 font-medium">Momentum</th>
+                      <th className="px-3 py-2 font-medium">Summary</th>
                     </tr>
                   </thead>
                   <tbody>
                     {forecasts.map((forecast) => (
-                      <tr key={forecast.id} className="border-b hover:bg-muted/50">
-                        <td className="p-2 font-medium">
+                      <tr
+                        key={forecast.id}
+                        className="border-b transition-colors hover:bg-secondary/40"
+                      >
+                        <td className="px-3 py-2 font-medium">
                           {opportunityMap.get(forecast.opportunity_id) ?? "Unknown"}
                         </td>
-                        <td className="p-2">
-                          <span className={`font-bold ${getScoreColor(forecast.forecast_score)}`}>
+                        <td className="px-3 py-2">
+                          <Badge variant={scoreVariant(forecast.forecast_score)}>
                             {forecast.forecast_score}
-                          </span>
+                          </Badge>
                         </td>
-                        <td className="p-2">{forecast.growth_probability}%</td>
-                        <td className="p-2">{forecast.confidence}%</td>
-                        <td className="p-2">{getMomentumBadge(forecast.momentum)}</td>
-                        <td className="p-2 text-muted-foreground max-w-xs truncate">
+                        <td className="px-3 py-2 tabular-nums">
+                          {forecast.growth_probability}%
+                        </td>
+                        <td className="px-3 py-2 tabular-nums">
+                          {forecast.confidence}%
+                        </td>
+                        <td className="px-3 py-2">
+                          <Badge variant={momentumVariant(forecast.momentum)}>
+                            {momentumLabel(forecast.momentum)}
+                          </Badge>
+                        </td>
+                        <td className="max-w-xs truncate px-3 py-2 text-muted-foreground">
                           {forecast.prediction_summary}
                         </td>
                       </tr>

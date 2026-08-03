@@ -1,20 +1,34 @@
 /**
  * Sprint 56: Dashboard Investment Page
- *
- * Displays VC-style investment scores for opportunities that passed the
- * 3-gate pipeline (validation >= 70, forecast >= 70, market_intelligence >= 70).
+ * UI-4 polish — PageHeader, MetricCard, Badge variants, EmptyState.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { getTopScoresAction, getScoreStatisticsAction } from "@/actions/startup-score.actions";
+import { PageHeader } from "@/components/ui/page-header";
+import { Badge, scoreVariant, recommendationVariant } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  getTopScoresAction,
+  getScoreStatisticsAction,
+} from "@/actions/startup-score.actions";
 import { OpportunitiesRepository } from "@/lib/db/repositories/opportunities.repository";
-import { TrendingUp, Star, BarChart3, Target } from "lucide-react";
+import {
+  Target,
+  Star,
+  TrendingUp,
+  BarChart3,
+  ArrowRight,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-const DIMENSION_COLUMNS: Array<{ key: keyof import("@/types/startup-score").StartupScoreCardData; label: string }> = [
+const DIMENSION_COLUMNS: Array<{
+  key: keyof import("@/types/startup-score").StartupScoreCardData;
+  label: string;
+}> = [
   { key: "tam_score", label: "TAM" },
   { key: "market_timing_score", label: "Timing" },
   { key: "competition_score", label: "Competition" },
@@ -41,123 +55,144 @@ export default async function InvestmentPage() {
     opportunityMap = new Map(opps.map((o) => [o.id, { title: o.title }]));
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-green-700";
-    if (score >= 70) return "text-blue-600";
-    if (score >= 50) return "text-yellow-600";
-    return "text-gray-600";
-  };
-
-  const getRecommendationBadge = (rec: string | null) => {
-    if (!rec) return <Badge className="bg-gray-100 text-gray-800">—</Badge>;
-    if (rec.toLowerCase().includes("strong"))
-      return <Badge className="bg-green-100 text-green-800">⭐ {rec}</Badge>;
-    if (rec.toLowerCase().includes("watch"))
-      return <Badge className="bg-yellow-100 text-yellow-800">{rec}</Badge>;
-    return <Badge className="bg-gray-100 text-gray-800">{rec}</Badge>;
-  };
+  const highest = Math.round(stats?.highestOverallScore ?? 0);
+  const average = Math.round(stats?.averageOverallScore ?? 0);
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Investment Scoring</h1>
-          <p className="text-muted-foreground mt-1">
-            VC-style due diligence scores for validated opportunities
-          </p>
-        </div>
+        <PageHeader
+          title="Investment Scoring"
+          description="VC-style due diligence scores — 7 chiều, triple-gate pipeline."
+          badge={<Badge variant="ai-soft">Sprint 56</Badge>}
+          actions={
+            <Link
+              href="/dashboard/validated"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              Xem validated
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          }
+        />
 
-        {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Scored Opportunities</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Highest Investment Score</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.highestOverallScore ?? 0)}`}>
-                {Math.round(stats?.highestOverallScore ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Investment Score</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getScoreColor(stats?.averageOverallScore ?? 0)}`}>
-                {Math.round(stats?.averageOverallScore ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Investment Grade Opportunities</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-700">
-                {stats?.investmentGradeCount ?? 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">overall_score ≥ 90</p>
-            </CardContent>
-          </Card>
+          <MetricCard
+            title="Scored Opportunities"
+            value={stats?.total ?? 0}
+            icon={<Target className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Highest Score"
+            value={highest}
+            tone={highest >= 90 ? "hot" : highest >= 70 ? "ai" : "info"}
+            icon={<Star className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Average Score"
+            value={average}
+            tone={average >= 75 ? "hot" : average >= 60 ? "info" : "default"}
+            icon={<TrendingUp className="h-4 w-4" />}
+          />
+          <MetricCard
+            title="Investment Grade"
+            value={stats?.investmentGradeCount ?? 0}
+            tone="hot"
+            icon={<BarChart3 className="h-4 w-4" />}
+            change="score ≥ 90"
+          />
         </div>
 
-        {/* Investment Table */}
         <Card>
           <CardHeader>
             <CardTitle>Investment-Grade Opportunities</CardTitle>
           </CardHeader>
           <CardContent>
             {scores.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No investment scores generated yet. Run the pipeline to score validated opportunities.
-              </p>
+              <EmptyState
+                icon={<Target className="h-5 w-5" />}
+                title="Chưa có investment score"
+                description="Chạy pipeline để score các validated opportunities."
+                action={{ label: "Mở Pipeline", href: "/admin/pipeline" }}
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Opportunity</th>
-                      <th className="text-left p-2">Overall</th>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Opportunity</th>
+                      <th className="px-3 py-2 font-medium">Overall</th>
                       {DIMENSION_COLUMNS.map((d) => (
-                        <th key={d.key} className="text-left p-2">{d.label}</th>
+                        <th key={d.key} className="px-3 py-2 font-medium">
+                          {d.label}
+                        </th>
                       ))}
-                      <th className="text-left p-2">Confidence</th>
-                      <th className="text-left p-2">Recommendation</th>
+                      <th className="px-3 py-2 font-medium">Confidence</th>
+                      <th className="px-3 py-2 font-medium">Recommendation</th>
                     </tr>
                   </thead>
                   <tbody>
                     {scores.map((row) => {
                       const opp = opportunityMap.get(row.opportunity_id);
                       return (
-                        <tr key={row.id} className="border-b hover:bg-muted/50">
-                          <td className="p-2 font-medium">
-                            {opp?.title ?? "Unknown"}
+                        <tr
+                          key={row.id}
+                          className="border-b transition-colors hover:bg-secondary/40"
+                        >
+                          <td className="px-3 py-2 font-medium">
+                            {opp ? (
+                              <Link
+                                href={`/opportunities/${row.opportunity_id}`}
+                                className="hover:underline"
+                              >
+                                {opp.title}
+                              </Link>
+                            ) : (
+                              <span className="text-muted-foreground">Unknown</span>
+                            )}
                           </td>
-                          <td className="p-2">
-                            <span className={`font-bold ${getScoreColor(row.overall_score)}`}>
+                          <td className="px-3 py-2">
+                            <Badge variant={scoreVariant(row.overall_score)}>
                               {row.overall_score}
-                            </span>
+                            </Badge>
                           </td>
-                          {DIMENSION_COLUMNS.map((d) => (
-                            <td key={d.key} className="p-2">
-                              {row[d.key] as number}
-                            </td>
-                          ))}
-                          <td className="p-2">{row.confidence}%</td>
-                          <td className="p-2">{getRecommendationBadge(row.recommendation)}</td>
+                          {DIMENSION_COLUMNS.map((d) => {
+                            const v = row[d.key] as number;
+                            return (
+                              <td
+                                key={d.key}
+                                className="px-3 py-2 tabular-nums"
+                              >
+                                {typeof v === "number" ? (
+                                  <span
+                                    className={
+                                      v >= 80
+                                        ? "text-signal-hot-foreground"
+                                        : v >= 60
+                                          ? "text-signal-info-foreground"
+                                          : "text-muted-foreground"
+                                    }
+                                  >
+                                    {v}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="px-3 py-2 tabular-nums">
+                            {row.confidence}%
+                          </td>
+                          <td className="px-3 py-2">
+                            {row.recommendation ? (
+                              <Badge variant={recommendationVariant(row.recommendation)}>
+                                {row.recommendation}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}

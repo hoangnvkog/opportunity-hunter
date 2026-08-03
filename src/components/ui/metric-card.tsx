@@ -10,6 +10,9 @@ const metricCardVariants = cva(
       tone: {
         default: "",
         hot: "border-signal-hot/30 surface-hot",
+        good: "border-signal-good/30 surface-good",
+        watch: "border-signal-watch/30",
+        cold: "border-signal-cold/30",
         risk: "border-signal-risk/30 surface-risk",
         ai: "border-signal-ai/30 surface-ai",
         info: "border-signal-info/30",
@@ -34,6 +37,9 @@ const iconWrapVariants = cva(
       tone: {
         default: "bg-primary/10 text-primary",
         hot: "bg-signal-hot/15 text-signal-hot",
+        good: "bg-signal-good/15 text-signal-good",
+        watch: "bg-signal-watch/15 text-signal-watch",
+        cold: "bg-signal-cold/15 text-signal-cold",
         risk: "bg-signal-risk/15 text-signal-risk",
         ai: "bg-signal-ai/15 text-signal-ai",
         info: "bg-signal-info/15 text-signal-info",

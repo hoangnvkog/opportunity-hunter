@@ -220,6 +220,12 @@ a {
     color-mix(in oklab, var(--color-signal-info) 6%, transparent));
 }
 
+.surface-good {
+  background-image: linear-gradient(135deg,
+    color-mix(in oklab, var(--color-signal-good) 10%, transparent),
+    color-mix(in oklab, var(--color-signal-info) 4%, transparent));
+}
+
 .surface-risk {
   background-image: linear-gradient(135deg,
     color-mix(in oklab, var(--color-signal-risk) 10%, transparent),

@@ -65,6 +65,20 @@ export function Badge({ children, variant, className, ...props }: BadgeProps) {
 export { badgeVariants };
 
 /**
+ * Map a 0-100 score to a Badge variant.
+ *   ≥90 hot | ≥75 good | ≥60 watch | ≥40 cold | else risk
+ */
+export function scoreVariant(
+  score: number,
+): VariantProps<typeof badgeVariants>["variant"] {
+  if (score >= 90) return "hot";
+  if (score >= 75) return "good";
+  if (score >= 60) return "watch";
+  if (score >= 40) return "cold";
+  return "risk";
+}
+
+/**
  * Map a recommendation string ("Strong Buy" | "Buy" | "Watch" | "Pass" | "Reject")
  * to a Badge variant. Centralized so every surface looks the same.
  */
