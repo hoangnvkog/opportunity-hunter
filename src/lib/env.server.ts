@@ -89,6 +89,27 @@ const ServerEnvSchema = z.object({
     .string()
     .min(1, "REDDIT_USER_AGENT is required for Reddit collector")
     .optional(),
+  // Sentry (optional — error monitoring; off when DSN is empty)
+  SENTRY_DSN: z
+    .string()
+    .url("SENTRY_DSN must be a valid Sentry DSN URL")
+    .optional()
+    .or(z.literal("")),
+  SENTRY_AUTH_TOKEN: z
+    .string()
+    .min(1, "SENTRY_AUTH_TOKEN required for source map upload at build time")
+    .optional()
+    .or(z.literal("")),
+  SENTRY_ORG: z
+    .string()
+    .min(1, "SENTRY_ORG required for source map upload at build time")
+    .optional()
+    .or(z.literal("")),
+  SENTRY_PROJECT: z
+    .string()
+    .min(1, "SENTRY_PROJECT required for source map upload at build time")
+    .optional()
+    .or(z.literal("")),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
@@ -114,6 +135,10 @@ export function getServerEnv(): ServerEnv {
     REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID,
     REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET,
     REDDIT_USER_AGENT: process.env.REDDIT_USER_AGENT,
+    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
   });
 
   if (!parsed.success) {

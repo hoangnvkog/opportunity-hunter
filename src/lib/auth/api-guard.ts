@@ -23,6 +23,7 @@
 
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { setSentryUser } from "@/lib/sentry";
 import type { User } from "@supabase/supabase-js";
 
 export type ApiGuardSuccess = { ok: true; user: User };
@@ -50,6 +51,9 @@ export async function requireUserAPI(): Promise<ApiGuardResult> {
       ),
     };
   }
+
+  // Attach user to Sentry context (no-op when SENTRY_DSN is empty).
+  setSentryUser({ id: user.id, email: user.email ?? null });
 
   return { ok: true, user };
 }
