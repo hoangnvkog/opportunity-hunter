@@ -54,6 +54,41 @@ const ServerEnvSchema = z.object({
     .string()
     .min(1, "INDIEHACKERS_API_KEY is required for IndieHackers integration")
     .optional(),
+  // Stripe (optional — required only when billing endpoints are hit)
+  STRIPE_SECRET_KEY: z
+    .string()
+    .min(1, "STRIPE_SECRET_KEY is required for Stripe billing")
+    .optional(),
+  STRIPE_WEBHOOK_SECRET: z
+    .string()
+    .min(1, "STRIPE_WEBHOOK_SECRET is required for Stripe webhooks")
+    .optional(),
+  // Email (optional — required only when notifications are sent)
+  RESEND_API_KEY: z
+    .string()
+    .min(1, "RESEND_API_KEY is required for email notifications")
+    .optional(),
+  // Cron auth (optional — required only when Vercel Cron hits /api/jobs/*)
+  CRON_SECRET: z
+    .string()
+    .min(
+      16,
+      "CRON_SECRET must be at least 16 chars for cron endpoint security",
+    )
+    .optional(),
+  // Reddit collector
+  REDDIT_CLIENT_ID: z
+    .string()
+    .min(1, "REDDIT_CLIENT_ID is required for Reddit collector")
+    .optional(),
+  REDDIT_CLIENT_SECRET: z
+    .string()
+    .min(1, "REDDIT_CLIENT_SECRET is required for Reddit collector")
+    .optional(),
+  REDDIT_USER_AGENT: z
+    .string()
+    .min(1, "REDDIT_USER_AGENT is required for Reddit collector")
+    .optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
@@ -72,6 +107,13 @@ export function getServerEnv(): ServerEnv {
     PRODUCT_HUNT_TOKEN: process.env.PRODUCT_HUNT_TOKEN,
     TWITTER_BEARER_TOKEN: process.env.TWITTER_BEARER_TOKEN,
     INDIEHACKERS_API_KEY: process.env.INDIEHACKERS_API_KEY,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    CRON_SECRET: process.env.CRON_SECRET,
+    REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID,
+    REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET,
+    REDDIT_USER_AGENT: process.env.REDDIT_USER_AGENT,
   });
 
   if (!parsed.success) {
