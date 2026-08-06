@@ -27,16 +27,40 @@ export async function generateMetadata({
   const { id } = await params;
   const detail = await getOpportunityDetailAction(id);
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunityhunter.app";
+  const canonical = `${baseUrl}/opportunities/${id}`;
+
   if (!detail) {
     return {
       title: "Opportunity Not Found",
       description: "The requested opportunity could not be found.",
+      robots: { index: false, follow: false },
     };
   }
 
+  const description =
+    detail.cluster_description?.slice(0, 160) ??
+    "An AI-discovered startup opportunity from Opportunity Hunter.";
+
   return {
-    title: detail.cluster_name,
-    description: detail.cluster_description,
+    title: `${detail.cluster_name} | Opportunity Hunter`,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title: detail.cluster_name,
+      description,
+      url: canonical,
+      siteName: "Opportunity Hunter",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: detail.cluster_name,
+      description,
+    },
   };
 }
 
