@@ -28,7 +28,7 @@ export async function generateMetadata({
   const detail = await getOpportunityDetailAction(id);
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunityhunter.app";
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunity-hunter-hn.vercel.app";
   const canonical = `${baseUrl}/opportunities/${id}`;
 
   if (!detail) {

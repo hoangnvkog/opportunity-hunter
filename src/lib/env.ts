@@ -19,6 +19,12 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()
     .min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required"),
+  // Site URL used for SEO canonical, sitemap, and OG metadata. Optional —
+  // falls back to the production default (overridden at build time).
+  NEXT_PUBLIC_SITE_URL: z
+    .string()
+    .url("NEXT_PUBLIC_SITE_URL must be a valid URL")
+    .optional(),
 });
 
 export type PublicEnv = z.infer<typeof PublicEnvSchema>;
@@ -37,6 +43,7 @@ export function getPublicEnv(): PublicEnv {
   const parsed = PublicEnvSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   });
 
   if (!parsed.success) {

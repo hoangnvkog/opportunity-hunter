@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 
 const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunityhunter.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunity-hunter-hn.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

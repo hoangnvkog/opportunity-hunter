@@ -13,7 +13,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunityhunter.app";
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://opportunity-hunter-hn.vercel.app";
 
   const staticPages: MetadataRoute.Sitemap = [
     {
