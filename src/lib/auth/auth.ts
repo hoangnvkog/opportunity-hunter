@@ -32,6 +32,14 @@ export async function signInWithEmail(
 
 /**
  * Sign up with email and password
+ *
+ * `emailRedirectTo` tells Supabase where to redirect after the user clicks
+ * the confirmation link in their email. Without this, Supabase falls back
+ * to the project's default Site URL (currently `http://localhost:3000` in
+ * dev), which produces broken confirmation links in production.
+ *
+ * Sprint 72: pass `window.location.origin` so the redirect always matches
+ * the current deployment (preview, production, local dev).
  */
 export async function signUpWithEmail(
   email: string,
@@ -39,7 +47,7 @@ export async function signUpWithEmail(
   name?: string
 ): Promise<{ error: AuthError | null }> {
   const supabase = getSupabaseBrowserClient();
-  
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -47,6 +55,7 @@ export async function signUpWithEmail(
       data: {
         name: name || email.split("@")[0],
       },
+      emailRedirectTo: `${window.location.origin}/auth/auth-code-callback`,
     },
   });
 

@@ -9,7 +9,7 @@ const MAX_ATTEMPTS = 3;
 const EMAIL_SUBJECT_PREFIX = "[Opportunity Hunter] New match in";
 
 function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
 /**

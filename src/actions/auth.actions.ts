@@ -57,7 +57,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/auth-code-callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/auth-code-callback`,
     },
   });
 
@@ -76,7 +76,7 @@ export async function signInWithGithub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/auth-code-callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/auth-code-callback`,
     },
   });
 
