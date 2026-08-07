@@ -71,10 +71,22 @@ export async function optionalUserAPI(): Promise<OptionalUserResult> {
 }
 
 /**
- * Require a valid `x-cron-secret` header. Compares against `CRON_SECRET`
- * env var using `crypto.timingSafeEqual` to avoid timing leaks. Returns
- * 503 when the secret is not configured (server misconfig) and 401 when
- * the header is missing or mismatched.
+ * Require a valid cron secret header. Accepts BOTH:
+ *   - `Authorization: Bearer <CRON_SECRET>` (Vercel Cron default; Vercel
+ *     automatically sends `CRON_SECRET` env as a bearer token when the
+ *     env var is set on the project.)
+ *   - `x-cron-secret: <CRON_SECRET>` (manual trigger / non-Vercel schedulers)
+ *
+ * Compares with `crypto.timingSafeEqual` to avoid timing leaks.
+ *
+ * Returns:
+ *   - 503 when `CRON_SECRET` env is missing (server misconfig — fail closed)
+ *   - 401 when header is missing, length mismatches, or value mismatches
+ *   - ok=true with a synthetic `{ id: "cron" }` user otherwise
+ *
+ * NOTE on Vercel Cron behaviour: when `CRON_SECRET` env is set, Vercel
+ * automatically includes `Authorization: Bearer <CRON_SECRET>` on every
+ * cron invocation. No `vercel.json` header config needed.
  */
 export async function requireCronSecret(
   request: Request,
@@ -91,7 +103,15 @@ export async function requireCronSecret(
     };
   }
 
-  const provided = request.headers.get("x-cron-secret");
+  // Prefer Authorization: Bearer (Vercel standard). Fall back to x-cron-secret.
+  let provided: string | null = null;
+  const authHeader = request.headers.get("authorization");
+  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+    provided = authHeader.slice("bearer ".length).trim();
+  } else {
+    provided = request.headers.get("x-cron-secret");
+  }
+
   if (!provided || provided.length === 0) {
     return {
       ok: false,
