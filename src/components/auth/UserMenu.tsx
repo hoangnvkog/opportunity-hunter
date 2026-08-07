@@ -48,12 +48,20 @@ export function UserMenu() {
   async function handleSignOut() {
     setSigningOut(true);
     try {
-      // Use the server action so the HTTP-only auth cookie set by
-      // Supabase SSR is cleared server-side. The browser-side
-      // `auth.signOut()` only clears localStorage — it cannot touch
-      // HTTP-only cookies, so the user would still appear signed in
-      // when the server re-renders `/dashboard`.
+      // Step 1: clear local browser state FIRST so the UI doesn't
+      // bounce back to "signed in" if any state read happens before
+      // the navigation completes.
+      const client = getSupabaseBrowserClient();
+      await client.auth.signOut();
+
+      // Step 2: ask the server to clear the HTTP-only auth cookie.
+      // The browser client cannot touch HTTP-only cookies, so the
+      // server action is required.
       await signOutClient();
+
+      // Step 3: navigate away. `refresh` forces the server tree to
+      // re-render so /dashboard (if user navigates back) reads a
+      // fresh session.
       router.push("/login");
       router.refresh();
     } catch {
