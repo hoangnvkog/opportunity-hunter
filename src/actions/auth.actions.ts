@@ -45,10 +45,33 @@ export async function signUp(formData: FormData) {
   redirect("/auth/auth-code-callback");
 }
 
+/**
+ * Server-only sign out — clears the HTTP-only auth cookie via
+ * `cookies()` API and redirects to /login. Use from server components
+ * or `<form action={signOut}>`.
+ *
+ * IMPORTANT: throws `redirect()` (Next.js signal). Client components
+ * calling this directly will surface the error; use `signOutClient()`
+ * from a button instead.
+ */
 export async function signOut() {
   const supabase = await getSupabaseServerClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+/**
+ * Client-friendly sign out — clears the HTTP-only auth cookie server-side
+ * but does NOT redirect. Returns a result so the caller can navigate
+ * (e.g. `router.push("/login")`) without tripping Next.js's internal
+ * `redirect()` throw.
+ *
+ * Use from Client Components like the user dropdown menu.
+ */
+export async function signOutClient(): Promise<{ success: boolean }> {
+  const supabase = await getSupabaseServerClient();
+  const { error } = await supabase.auth.signOut();
+  return { success: !error };
 }
 
 export async function signInWithGoogle() {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { signOutClient } from "@/actions/auth.actions";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,10 +43,24 @@ export function UserMenu() {
     getUser();
   }, []);
 
+  const [signingOut, setSigningOut] = useState(false);
+
   async function handleSignOut() {
-    await getSupabaseBrowserClient().auth.signOut();
-    router.push("/login");
-    router.refresh();
+    setSigningOut(true);
+    try {
+      // Use the server action so the HTTP-only auth cookie set by
+      // Supabase SSR is cleared server-side. The browser-side
+      // `auth.signOut()` only clears localStorage — it cannot touch
+      // HTTP-only cookies, so the user would still appear signed in
+      // when the server re-renders `/dashboard`.
+      await signOutClient();
+      router.push("/login");
+      router.refresh();
+    } catch {
+      // Silent failure — user can retry from /login.
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   if (!user) {
@@ -96,8 +111,8 @@ export function UserMenu() {
           <Link href="/settings">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-          Log out
+        <DropdownMenuItem onClick={handleSignOut} disabled={signingOut} className="text-red-600">
+          {signingOut ? "Signing out…" : "Log out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
