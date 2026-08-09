@@ -13,6 +13,14 @@ import {
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+// Sprint 72 H2: Pipeline server action runs ~2-4 min via AI calls.
+// Vercel default page-level maxDuration on Hobby is 15s, which causes
+// "An unexpected response was received from the server." (504 HTML page)
+// because the server action timeout hits before the response returns.
+// 300s = 5min gives the pipeline headroom on Hobby plan.
+// Per Next.js 16 docs: maxDuration at page level sets default timeout
+// for ALL Server Actions used on that page.
+export const maxDuration = 300;
 
 export default async function AdminPage() {
   const [analyticsService, revenueService, monitoringService, pipelineRunsRepo] = await Promise.all([
