@@ -67,11 +67,36 @@ export async function signOut() {
  * `redirect()` throw.
  *
  * Use from Client Components like the user dropdown menu.
+ *
+ * IMPORTANT: must NEVER throw. If this action throws, Next.js wraps the
+ * 4xx/5xx HTML response in the server-action protocol and the client
+ * surfaces `"An unexpected response was received from the server."`
+ * (see node_modules/next/dist/client/components/router-reducer/reducers/
+ * server-action-reducer.js:117). Always return a structured result.
+ *
+ * Sprint 72 follow-up: when `client.auth.signOut()` already cleared the
+ * browser cookies, the server-side `getSupabaseServerClient()` reads an
+ * empty cookie jar → Supabase JS SDK throws when calling
+ * `/auth/v1/logout` without a session token. We now catch every
+ * exception so the UI can navigate to /login cleanly.
  */
-export async function signOutClient(): Promise<{ success: boolean }> {
-  const supabase = await getSupabaseServerClient();
-  const { error } = await supabase.auth.signOut();
-  return { success: !error };
+export async function signOutClient(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await getSupabaseServerClient();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    // Catch Supabase SDK throws (e.g. "An unexpected response was received
+    // from the server.") so the client-side handler can still navigate.
+    // The browser-side `client.auth.signOut()` already cleared local
+    // cookies + storage; this server call is best-effort.
+    const message = err instanceof Error ? err.message : "Sign out failed";
+    console.warn("[auth] signOutClient server-side error (ignored):", message);
+    return { success: false, error: message };
+  }
 }
 
 export async function signInWithGoogle() {

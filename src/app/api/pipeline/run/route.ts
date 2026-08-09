@@ -3,6 +3,12 @@ import { runFullPipeline } from "@/services/pipeline/run-full-pipeline.service";
 import type { PipelineRunResponse } from "@/types/pipeline-run";
 import { requireUserAPI } from "@/lib/auth/api-guard";
 
+// Pipeline runs 13 stages with AI calls. Vercel default maxDuration on
+// Hobby is 10s → guarantees "FUNCTION_INVOCATION_TIMEOUT" mid-run.
+// 300s = 5min, which covers a full pipeline with headroom.
+export const maxDuration = 300;
+export const dynamic = "force-dynamic";
+
 export async function POST(): Promise<NextResponse<PipelineRunResponse>> {
   const guard = await requireUserAPI();
   if (!guard.ok) return guard.response as NextResponse<PipelineRunResponse>;

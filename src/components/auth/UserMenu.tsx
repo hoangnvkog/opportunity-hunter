@@ -55,8 +55,10 @@ export function UserMenu() {
       await client.auth.signOut();
 
       // Step 2: ask the server to clear the HTTP-only auth cookie.
-      // The browser client cannot touch HTTP-only cookies, so the
-      // server action is required.
+      // Best-effort — signOutClient() now catches its own errors so
+      // an empty cookie jar (already cleared in Step 1) doesn't throw
+      // "An unexpected response was received from the server." back
+      // at the client.
       await signOutClient();
 
       // Step 3: navigate away. `refresh` forces the server tree to
@@ -65,7 +67,15 @@ export function UserMenu() {
       router.push("/login");
       router.refresh();
     } catch {
-      // Silent failure — user can retry from /login.
+      // Catch any unexpected error from Step 1 (e.g. Supabase SDK
+      // throwing despite our defensive try/catch on the server side).
+      // Still navigate so the user can sign in again.
+      try {
+        router.push("/login");
+        router.refresh();
+      } catch {
+        // Last resort — give up silently.
+      }
     } finally {
       setSigningOut(false);
     }
