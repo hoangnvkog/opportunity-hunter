@@ -39,3 +39,4 @@ tsconfig.tsbuildinfo
 .supabase-token
 coverage/
 .vercel
+.env.vercel
