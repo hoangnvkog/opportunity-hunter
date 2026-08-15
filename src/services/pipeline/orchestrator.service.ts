@@ -67,6 +67,16 @@ export interface PipelineExecutionResult {
  * - Returns an execution summary
  */
 export async function runPipelineWithTracking(): Promise<PipelineExecutionResult> {
+  const { runId, startedAt } = await createPipelineRunRecord();
+  return executePipelineRun(runId, startedAt);
+}
+
+/**
+ * Create a tracked pipeline run without waiting for the expensive AI pipeline.
+ * Useful for Server Actions on Vercel Hobby: the UI gets a fast structured
+ * response, while Next.js `after()`/Vercel keeps the background work alive.
+ */
+export async function createPipelineRunRecord(): Promise<{ runId: string; startedAt: string }> {
   if (isRunning) {
     throw new Error("Pipeline already running");
   }
@@ -79,8 +89,6 @@ export async function runPipelineWithTracking(): Promise<PipelineExecutionResult
   const startedAt = new Date().toISOString();
   const repo = await PipelineRunsRepository.create();
 
-  // Create initial "running" record
-  let runId: string;
   try {
     const runRecord = await repo.create({
       started_at: startedAt,
@@ -96,27 +104,43 @@ export async function runPipelineWithTracking(): Promise<PipelineExecutionResult
       status: "running",
       error_message: null,
     });
-    runId = runRecord.id;
+
+    console.info(`[Orchestrator] Pipeline run ${runRecord.id} started at ${startedAt}`);
+    return { runId: runRecord.id, startedAt };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[Orchestrator] Failed to create pipeline run record: ${message}`);
     isRunning = false;
     throw new Error(`Failed to create pipeline run record: ${message}`);
   }
+}
 
-  console.info(`[Orchestrator] Pipeline run ${runId} started at ${startedAt}`);
+/**
+ * Execute the expensive pipeline work for an already-created run record.
+ */
+export async function executePipelineRun(
+  runId: string,
+  startedAt: string,
+): Promise<PipelineExecutionResult> {
+  const repo = await PipelineRunsRepository.create();
 
   try {
-    // Execute the core pipeline
     const result: PipelineRunResult = await runPipelineCore();
     const finishedAt = new Date().toISOString();
     const durationMs = Math.round(
       new Date(finishedAt).getTime() - new Date(startedAt).getTime()
     );
 
-    // Update success record with final counts
     await repo.update(runId, {
       finished_at: finishedAt,
+      duration_ms: durationMs,
+      sources: result.sources,
+      raw_posts: result.rawPosts,
+      pain_points: result.painPoints,
+      embeddings: result.embeddings,
+      clusters: result.clusters,
+      opportunities: result.opportunities,
+      startup_ideas: result.ideas,
       status: "success",
       error_message: null,
     });
@@ -146,10 +170,10 @@ export async function runPipelineWithTracking(): Promise<PipelineExecutionResult
 
     console.error(`[Orchestrator] Pipeline run ${runId} failed: ${errorMessage}`);
 
-    // Update failure record
     try {
       await repo.update(runId, {
         finished_at: finishedAt,
+        duration_ms: durationMs,
         status: "failed",
         error_message: errorMessage,
       });

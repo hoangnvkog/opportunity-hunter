@@ -5,9 +5,14 @@
  */
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { PipelineRunsRepository } from "@/lib/db/repositories/pipeline-runs.repository";
-import { runPipelineWithTracking, getLatestExecution } from "@/services/pipeline/orchestrator.service";
+import {
+  createPipelineRunRecord,
+  executePipelineRun,
+  getLatestExecution,
+} from "@/services/pipeline/orchestrator.service";
 import type { PipelineRunHistory } from "@/types/pipeline-run-history";
 import { requireUserAPI } from "@/lib/auth/api-guard";
 
@@ -24,23 +29,35 @@ export async function runPipelineAction() {
     };
   }
   try {
-    const result = await runPipelineWithTracking();
-    revalidatePath("/admin");
-    revalidatePath("/admin/pipeline-runs");
+    const { runId, startedAt } = await createPipelineRunRecord();
+
+    // Do not keep the Server Action request open for the full AI pipeline.
+    // On Vercel Hobby, long Server Action responses can surface in the browser
+    // as Next's generic "An unexpected response was received from the server".
+    // `after()` lets Next/Vercel continue the work after a fast structured
+    // response; the UI polls getLatestPipelineRunAction() for completion.
+    after(async () => {
+      await executePipelineRun(runId, startedAt);
+      revalidatePath("/admin");
+      revalidatePath("/admin/pipeline-runs");
+      revalidatePath("/dashboard");
+    });
+
     return {
       success: true,
       result: {
-        startedAt: result.startedAt,
-        finishedAt: result.finishedAt,
-        durationMs: result.durationMs,
-        rawPosts: result.rawPosts,
-        painPoints: result.painPoints,
-        clusters: result.clusters,
-        opportunities: result.opportunities,
-        ideas: result.ideas,
-        success: result.success,
-        errorMessage: result.errorMessage,
-        runId: result.runId,
+        startedAt,
+        finishedAt: startedAt,
+        durationMs: 0,
+        rawPosts: 0,
+        painPoints: 0,
+        clusters: 0,
+        opportunities: 0,
+        ideas: 0,
+        success: true,
+        errorMessage: null,
+        runId,
+        status: "running",
       },
     };
   } catch (err) {

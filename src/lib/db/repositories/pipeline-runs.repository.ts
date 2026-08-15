@@ -92,6 +92,14 @@ export class PipelineRunsRepository {
     id: string,
     patch: {
       finished_at?: string;
+      duration_ms?: number;
+      sources?: number;
+      raw_posts?: number;
+      pain_points?: number;
+      embeddings?: number;
+      clusters?: number;
+      opportunities?: number;
+      startup_ideas?: number;
       status?: string;
       error_message?: string | null;
     },
