@@ -18,6 +18,7 @@ import {
   getOpportunityEvidence,
   getEvidenceStats,
 } from "@/services/evidence/evidence.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface GenerateEvidenceResult {
   success: boolean;
@@ -31,6 +32,8 @@ export interface GenerateEvidenceResult {
 export async function generateEvidenceAction(
   opportunityId: string,
 ): Promise<GenerateEvidenceResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateEvidenceForOpportunity(opportunityId);
     revalidatePath(`/opportunities/${opportunityId}`);
@@ -51,6 +54,8 @@ export async function generateEvidenceBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<GenerateEvidenceResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateEvidenceBatch(limit, providerType);
     revalidatePath("/admin/evidence");
@@ -69,6 +74,8 @@ export async function generateEvidenceBatchAction(
 export async function regenerateEvidenceAction(
   opportunityId: string,
 ): Promise<GenerateEvidenceResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await regenerateEvidence(opportunityId);
     revalidatePath(`/opportunities/${opportunityId}`);
@@ -88,6 +95,8 @@ export async function regenerateEvidenceAction(
 export async function getEvidenceAction(
   opportunityId: string,
 ) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const evidence = await getOpportunityEvidence(opportunityId);
     return { success: true, data: evidence };
@@ -100,6 +109,8 @@ export async function getEvidenceAction(
 }
 
 export async function getEvidenceStatsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const stats = await getEvidenceStats();
     return { success: true, data: stats };

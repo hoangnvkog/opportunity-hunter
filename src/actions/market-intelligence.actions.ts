@@ -12,6 +12,7 @@ import {
   getStats,
   getOpportunityIntelligence,
 } from "@/services/market-intelligence/market-intelligence.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface GenerateIntelligenceResult {
   success: boolean;
@@ -25,6 +26,8 @@ export interface GenerateIntelligenceResult {
 export async function generateIntelligenceAction(
   opportunityId: string,
 ): Promise<GenerateIntelligenceResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generate(opportunityId);
     revalidatePath(`/opportunities/${opportunityId}`);
@@ -40,6 +43,8 @@ export async function generateIntelligenceBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<GenerateIntelligenceResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateBatch(limit, providerType);
     revalidatePath("/dashboard/intelligence");
@@ -51,6 +56,8 @@ export async function generateIntelligenceBatchAction(
 }
 
 export async function getTopIntelligenceSignalsAction(limit?: number) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getTopSignals(limit);
     return { success: true, data };
@@ -60,6 +67,8 @@ export async function getTopIntelligenceSignalsAction(limit?: number) {
 }
 
 export async function getIntelligenceStatsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getStats();
     return { success: true, data };
@@ -69,6 +78,8 @@ export async function getIntelligenceStatsAction() {
 }
 
 export async function getOpportunityIntelligenceAction(opportunityId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getOpportunityIntelligence(opportunityId);
     return { success: true, data };

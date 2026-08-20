@@ -13,6 +13,7 @@ import {
   getOpportunityReport,
   getInvestmentGradeCount,
 } from "@/services/venture-report/venture-report.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface GenerateReportResult {
   success: boolean;
@@ -26,6 +27,8 @@ export interface GenerateReportResult {
 export async function generateReportAction(
   opportunityId: string,
 ): Promise<GenerateReportResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generate(opportunityId);
     revalidatePath(`/opportunities/${opportunityId}`);
@@ -41,6 +44,8 @@ export async function generateReportBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<GenerateReportResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateBatch(limit, providerType);
     revalidatePath("/dashboard/venture-report");
@@ -52,6 +57,8 @@ export async function generateReportBatchAction(
 }
 
 export async function getTopReportsAction(limit?: number) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getTopReports(limit);
     return { success: true, data };
@@ -61,6 +68,8 @@ export async function getTopReportsAction(limit?: number) {
 }
 
 export async function getReportStatisticsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getStatistics();
     return { success: true, data };
@@ -70,6 +79,8 @@ export async function getReportStatisticsAction() {
 }
 
 export async function getOpportunityReportAction(opportunityId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getOpportunityReport(opportunityId);
     return { success: true, data };
@@ -79,6 +90,8 @@ export async function getOpportunityReportAction(opportunityId: string) {
 }
 
 export async function getInvestmentGradeReportCountAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getInvestmentGradeCount();
     return { success: true, data };

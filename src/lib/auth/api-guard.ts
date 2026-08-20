@@ -164,3 +164,49 @@ export function isGuardFailure(
 ): result is ApiGuardFailure {
   return result.ok === false;
 }
+
+/**
+ * Server action guard (Sprint 73).
+ *
+ * Server actions cannot return a `NextResponse` directly — they are
+ * serialised through Next.js's action runtime. When a server action
+ * throws an unhandled exception, the client sees a generic
+ * "An unexpected response was received from the server." error, which
+ * is impossible to debug end-to-end.
+ *
+ * This helper does two things:
+ *  1. Reads the current Supabase user (server-side, via cookie).
+ *  2. Returns a discriminated `{ user } | { error }` so the action
+ *     can short-circuit with a structured response.
+ *
+ * Usage in a server action:
+ *
+ *   "use server";
+ *   export async function generateEvidenceAction(opportunityId: string) {
+ *     const auth = await requireUserAction();
+ *     if (!auth.ok) return { success: false, error: auth.error };
+ *     // ... continue, mutations scoped to auth.user
+ *   }
+ *
+ * IMPORTANT: callers should NOT throw on `!auth.ok`. Returning a
+ * structured `{ success: false, error }` keeps the action response
+ * JSON-parseable on the client and avoids the Next.js 5xx wrap.
+ */
+export type ActionAuthSuccess = { ok: true; user: User };
+export type ActionAuthFailure = { ok: false; error: string };
+export type ActionAuthResult = ActionAuthSuccess | ActionAuthFailure;
+
+export async function requireUserAction(): Promise<ActionAuthResult> {
+  const supabase = await getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  setSentryUser({ id: user.id, email: user.email ?? null });
+
+  return { ok: true, user };
+}

@@ -6,6 +6,7 @@ import {
   getFilteredOpportunities,
   getFilteredStartupIdeas,
 } from "@/services/dashboard/dashboard.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 interface ActionResponse<T> {
   success: boolean;
@@ -16,6 +17,8 @@ interface ActionResponse<T> {
 export async function getFilteredOpportunitiesAction(
   filters: OpportunityFilters
 ): Promise<ActionResponse<OpportunityCardData[]>> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getFilteredOpportunities(filters);
     return { success: true, data };
@@ -31,6 +34,8 @@ export async function getFilteredOpportunitiesAction(
 export async function getFilteredStartupIdeasAction(
   filters: StartupIdeaFilters
 ): Promise<ActionResponse<StartupIdeaCardData[]>> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getFilteredStartupIdeas(filters);
     return { success: true, data };

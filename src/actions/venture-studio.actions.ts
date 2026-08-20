@@ -15,6 +15,7 @@ import {
   deleteProject,
   archiveProject,
 } from "@/services/venture-studio/venture-studio.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface GenerateProjectResult {
   success: boolean;
@@ -28,6 +29,8 @@ export interface GenerateProjectResult {
 export async function generateProjectAction(
   opportunityId: string,
 ): Promise<GenerateProjectResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateVentureProject(opportunityId);
     revalidatePath("/dashboard/venture");
@@ -42,6 +45,8 @@ export async function generateProjectBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<GenerateProjectResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateBatch(limit, providerType);
     revalidatePath("/dashboard/venture");
@@ -53,6 +58,8 @@ export async function generateProjectBatchAction(
 }
 
 export async function getTopProjectsAction(limit?: number) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getTopProjects(limit);
     return { success: true, data };
@@ -62,6 +69,8 @@ export async function getTopProjectsAction(limit?: number) {
 }
 
 export async function getStatisticsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getStatistics();
     return { success: true, data };
@@ -71,6 +80,8 @@ export async function getStatisticsAction() {
 }
 
 export async function getProjectDetailAction(projectId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getProjectDetail(projectId);
     return { success: true, data };
@@ -80,6 +91,8 @@ export async function getProjectDetailAction(projectId: string) {
 }
 
 export async function regenerateProjectAction(projectId: string): Promise<GenerateProjectResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await regenerateProject(projectId);
     revalidatePath("/dashboard/venture");
@@ -91,6 +104,8 @@ export async function regenerateProjectAction(projectId: string): Promise<Genera
 }
 
 export async function deleteProjectAction(projectId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     await deleteProject(projectId);
     revalidatePath("/dashboard/venture");
@@ -102,6 +117,8 @@ export async function deleteProjectAction(projectId: string) {
 }
 
 export async function archiveProjectAction(projectId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     await archiveProject(projectId);
     revalidatePath("/dashboard/venture");

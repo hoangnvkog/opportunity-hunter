@@ -17,6 +17,13 @@ import {
 import type { BacktestSearchFilters } from "@/types/backtesting";
 import { requireUserAPI } from "@/lib/auth/api-guard";
 
+export const dynamic = "force-dynamic";
+
+// Backtest POST triggers AI provider.evaluateBacktest() which can run
+// 30–60s for a 50-row batch on Vercel Hobby default. 60s budget keeps
+// the endpoint safe across cold starts.
+export const maxDuration = 60;
+
 export async function GET(request: Request) {
   const guard = await requireUserAPI();
   if (!guard.ok) return guard.response;

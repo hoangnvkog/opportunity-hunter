@@ -12,6 +12,7 @@ import {
   getStatistics,
   getOpportunityScore,
 } from "@/services/startup-score/startup-score.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface GenerateScoreResult {
   success: boolean;
@@ -25,6 +26,8 @@ export interface GenerateScoreResult {
 export async function generateScoreAction(
   opportunityId: string,
 ): Promise<GenerateScoreResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generate(opportunityId);
     revalidatePath(`/opportunities/${opportunityId}`);
@@ -40,6 +43,8 @@ export async function generateScoreBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<GenerateScoreResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateBatch(limit, providerType);
     revalidatePath("/dashboard/investment");
@@ -51,6 +56,8 @@ export async function generateScoreBatchAction(
 }
 
 export async function getTopScoresAction(limit?: number) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getTopScores(limit);
     return { success: true, data };
@@ -60,6 +67,8 @@ export async function getTopScoresAction(limit?: number) {
 }
 
 export async function getScoreStatisticsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getStatistics();
     return { success: true, data };
@@ -69,6 +78,8 @@ export async function getScoreStatisticsAction() {
 }
 
 export async function getOpportunityScoreAction(opportunityId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getOpportunityScore(opportunityId);
     return { success: true, data };

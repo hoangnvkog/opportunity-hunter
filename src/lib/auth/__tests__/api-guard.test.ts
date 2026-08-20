@@ -1,5 +1,6 @@
 /**
- * Tests for `requireCronSecret` — Sprint 68 Phase 1 hardening.
+ * Tests for `requireCronSecret` and `requireUserAction` — Sprint 68 Phase 1
+ * hardening + Sprint 73 server-action guard.
  *
  * The global vitest setup (`src/test/setup.ts`) auto-mocks
  * `@/lib/auth/api-guard` for routes that call it indirectly. We override
@@ -13,6 +14,9 @@
  *  - Vercel-style `Authorization: Bearer <CRON_SECRET>` → ok
  *  - Manual `x-cron-secret: <CRON_SECRET>` → ok
  *  - Reject x-cron-secret wrong value
+ *  - requireUserAction returns structured auth result (Sprint 73):
+ *    - no user → ok=false with error string
+ *    - user    → ok=true with user object
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -26,7 +30,19 @@ vi.mock("@/lib/auth/api-guard", async () => {
   return actual;
 });
 
-import { requireCronSecret } from "../api-guard";
+import { requireCronSecret, requireUserAction } from "../api-guard";
+
+// Mock the Supabase server client so requireUserAction can be exercised
+// without booting the real Next.js cookies() runtime.
+const mockGetUser = vi.fn();
+
+vi.mock("@/lib/supabase/server", () => ({
+  getSupabaseServerClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser: () => mockGetUser(),
+    },
+  }),
+}));
 
 const ORIGINAL_CRON_SECRET = process.env.CRON_SECRET;
 
@@ -143,5 +159,58 @@ describe("requireCronSecret", () => {
 
     // Authorization is correct → should succeed regardless of x-cron-secret.
     expect(guard.ok).toBe(true);
+  });
+});
+
+describe("requireUserAction (Sprint 73)", () => {
+  beforeEach(() => {
+    mockGetUser.mockReset();
+  });
+
+  it("returns ok=false with error string when no session", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const auth = await requireUserAction();
+
+    expect(auth.ok).toBe(false);
+    if (!auth.ok) {
+      expect(auth.error).toMatch(/unauthorized/i);
+    }
+  });
+
+  it("returns ok=false when getUser reports an error", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: null },
+      error: new Error("JWT expired"),
+    });
+
+    const auth = await requireUserAction();
+
+    expect(auth.ok).toBe(false);
+    if (!auth.ok) {
+      expect(auth.error).toMatch(/unauthorized/i);
+    }
+  });
+
+  it("returns ok=true with user when session is valid", async () => {
+    const fakeUser = {
+      id: "user-123",
+      email: "q@example.com",
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: "2026-01-01T00:00:00Z",
+      role: "authenticated",
+      updated_at: "2026-01-01T00:00:00Z",
+    };
+    mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null });
+
+    const auth = await requireUserAction();
+
+    expect(auth.ok).toBe(true);
+    if (auth.ok) {
+      expect(auth.user.id).toBe("user-123");
+      expect(auth.user.email).toBe("q@example.com");
+    }
   });
 });

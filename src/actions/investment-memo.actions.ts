@@ -19,6 +19,7 @@ import {
   trackMemoExported,
 } from "@/services/investment-memo/investment-memo.service";
 import type { InvestmentMemoSearchFilters } from "@/types/investment-memo";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface GenerateMemoResult {
   success: boolean;
@@ -32,6 +33,8 @@ export interface GenerateMemoResult {
 export async function generateMemoAction(
   opportunityId: string,
 ): Promise<GenerateMemoResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generate(opportunityId);
     revalidatePath(`/opportunities/${opportunityId}`);
@@ -47,6 +50,8 @@ export async function generateMemoBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<GenerateMemoResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await generateBatch(limit, providerType);
     revalidatePath("/dashboard/memos");
@@ -58,6 +63,8 @@ export async function generateMemoBatchAction(
 }
 
 export async function getTopMemosAction(limit?: number) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getTopMemos(limit);
     return { success: true, data };
@@ -67,6 +74,8 @@ export async function getTopMemosAction(limit?: number) {
 }
 
 export async function getMemoStatisticsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getStatistics();
     return { success: true, data };
@@ -76,6 +85,8 @@ export async function getMemoStatisticsAction() {
 }
 
 export async function getOpportunityMemoAction(opportunityId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getOpportunityMemo(opportunityId);
     if (data) trackMemoViewed(data.id, data.opportunity_id);
@@ -86,6 +97,8 @@ export async function getOpportunityMemoAction(opportunityId: string) {
 }
 
 export async function getMemoByIdAction(memoId: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getMemoById(memoId);
     if (data) trackMemoViewed(data.id, data.opportunity_id);
@@ -96,6 +109,8 @@ export async function getMemoByIdAction(memoId: string) {
 }
 
 export async function getStrongBuyMemoCountAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const data = await getStrongBuyCount();
     return { success: true, data };
@@ -105,6 +120,8 @@ export async function getStrongBuyMemoCountAction() {
 }
 
 export async function searchMemosAction(filters: InvestmentMemoSearchFilters) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const [results, total] = await Promise.all([
       searchMemos(filters),
@@ -121,6 +138,9 @@ export async function recordMemoExportAction(
   opportunityId: string,
   format: "pdf" | "markdown" | "json" | "docx",
 ): Promise<{ success: boolean; error?: string }> {
+  // Analytics-only — keep unguarded so the API route (which already required
+  // auth) can still record exports without depending on the server-action
+  // helper. The route itself enforces the user check.
   try {
     trackMemoExported(memoId, opportunityId, format);
     return { success: true };

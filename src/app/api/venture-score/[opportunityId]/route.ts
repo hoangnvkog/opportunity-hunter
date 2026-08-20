@@ -8,6 +8,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVentureScoreDetail } from "@/services/venture-score/venture-score.service";
 import { requireUserAPI } from "@/lib/auth/api-guard";
 
+export const dynamic = "force-dynamic";
+
+// Single-opportunity venture score invokes the OpenAI provider when the
+// score is not yet cached. Use 60s budget — a single 7-dimension scoring
+// call rarely exceeds 30s, but a cold start on Vercel Hobby can stretch
+// that. 60s is a safe ceiling that still trips the per-page timeout
+// faster than the whole 300s we reserve for batch/pipeline endpoints.
+export const maxDuration = 60;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ opportunityId: string }> },

@@ -15,6 +15,7 @@ import {
   getOpportunityBacktests,
   getAccuracyDistribution,
 } from "@/services/backtesting/backtesting.service";
+import { requireUserAction } from "@/lib/auth/api-guard";
 
 export interface BacktestResult {
   success: boolean;
@@ -29,6 +30,8 @@ export interface BacktestResult {
 export async function createBacktestAction(
   opportunityId: string,
 ): Promise<BacktestResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await evaluateOpportunity(opportunityId);
     revalidatePath("/dashboard/backtesting");
@@ -43,6 +46,8 @@ export async function evaluateBatchAction(
   limit?: number,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<BacktestResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await evaluateBatch(limit, providerType);
     revalidatePath("/dashboard/backtesting");
@@ -58,6 +63,8 @@ export async function evaluateBacktestAction(
   backtestId: string,
   providerType?: "mock" | "openai" | "gemini",
 ): Promise<BacktestResult> {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     const result = await evaluateBacktest(backtestId, providerType);
     revalidatePath("/dashboard/backtesting");
@@ -69,6 +76,8 @@ export async function evaluateBacktestAction(
 }
 
 export async function getBacktestStatsAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     return { success: true, data: await getStatistics() };
   } catch (error) {
@@ -83,6 +92,8 @@ export async function getBacktestsListAction(filters: {
   limit?: number;
   offset?: number;
 }) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     return {
       success: true,
@@ -100,6 +111,8 @@ export async function getBacktestsListAction(filters: {
 }
 
 export async function getBacktestByIdAction(id: string) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     return { success: true, data: await getBacktestById(id) };
   } catch (error) {
@@ -108,6 +121,8 @@ export async function getBacktestByIdAction(id: string) {
 }
 
 export async function getOpportunityBacktestsAction(opportunityId: string, limit = 20) {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     return { success: true, data: await getOpportunityBacktests(opportunityId, limit) };
   } catch (error) {
@@ -116,6 +131,8 @@ export async function getOpportunityBacktestsAction(opportunityId: string, limit
 }
 
 export async function getAccuracyDistributionAction() {
+  const auth = await requireUserAction();
+  if (!auth.ok) return { success: false, error: auth.error };
   try {
     return { success: true, data: await getAccuracyDistribution() };
   } catch (error) {
@@ -124,6 +141,7 @@ export async function getAccuracyDistributionAction() {
 }
 
 export async function trackBacktestViewedAction(backtestId: string): Promise<void> {
+  // Analytics-only — intentionally no auth (so we can track pre-login previews).
   console.info("[analytics] backtest_viewed", { backtestId });
 }
 
@@ -131,5 +149,6 @@ export async function trackBacktestExportedAction(
   backtestId: string,
   format: "csv" | "json" | "pdf",
 ): Promise<void> {
+  // Analytics-only — intentionally no auth.
   console.info("[analytics] backtest_exported", { backtestId, format });
 }

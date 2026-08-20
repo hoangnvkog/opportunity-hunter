@@ -42,6 +42,21 @@ vi.mock("@/lib/auth/api-guard", () => ({
     },
   }),
   requireCronSecret: vi.fn().mockResolvedValue({ ok: true }),
+  // Sprint 73 — server-action guard. Tests that exercise individual
+  // actions need an auth override; default to a successful session.
+  requireUserAction: vi.fn().mockResolvedValue({
+    ok: true,
+    user: {
+      id: "test-user-id",
+      email: "test@example.com",
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: "2026-01-01T00:00:00Z",
+      role: "authenticated",
+      updated_at: "2026-01-01T00:00:00Z",
+    },
+  }),
 }));
 
 // ---------------------------------------------------------------------------

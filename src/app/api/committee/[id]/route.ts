@@ -11,6 +11,13 @@ import { requireUserAPI } from "@/lib/auth/api-guard";
 
 export const dynamic = "force-dynamic";
 
+// Committee POST runs 5 AI agents in sequence (Market, Product, Financial,
+// Technical, VC Partner). Each agent makes an OpenAI call → 60–120s budget
+// for the whole committee. Vercel Hobby default `maxDuration=10s` would
+// guarantee a 504 mid-run. 300s covers a full 5-agent committee with
+// headroom; matches the pipeline-route precedent (Sprint 72 H1).
+export const maxDuration = 300;
+
 export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
